@@ -1,0 +1,23 @@
+{
+  "name": "dialectica",
+  "version": "0.1.0",
+  "description": "Like jsx but for your domain logic",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/krasimir/dialectica.git"
+  },
+  "keywords": [
+    "dialect",
+    "jsx"
+  ],
+  "author": "Krasimir Tsonev",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/krasimir/dialectica/issues"
+  },
+  "homepage": "https://github.com/krasimir/dialectica#readme"
+}
