@@ -3,17 +3,92 @@
 
 var _src = require('../../src');
 
-var a = (0, _src.dialectica)('fetch', null); /** @jsx dialectica */
+var _src2 = _interopRequireDefault(_src);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function MyLogic(props) {
+  console.log('MyLogic a = ', props.a);
+  return props.a * 4;
+} /** @jsx dialectica */
+
+function Foo(_ref) {
+  var data = _ref.data;
+
+  console.log('Foo parent = ' + data);
+}
+function Bar(_ref2) {
+  var data = _ref2.data;
+
+  console.log('Bar parent = ' + data);
+}
+
+var dialect = (0, _src2.default)(
+  MyLogic,
+  { a: 10 },
+  function (result) {
+    return (0, _src2.default)(
+      _src.Dialect,
+      null,
+      (0, _src2.default)(Foo, { data: result }),
+      (0, _src2.default)(Bar, { data: result })
+    );
+  }
+);
+
+_src2.default.speak(dialect);
 
 },{"../../src":2}],2:[function(require,module,exports){
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.dialectica = dialectica;
-function dialectica(node) {
-  console.log(node);
+exports.default = dialectica;
+exports.Dialect = Dialect;
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var DIALECTICA_TYPE = '__dialectica';
+
+function dialectica(func, params) {
+  for (var _len = arguments.length, children = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+    children[_key - 2] = arguments[_key];
+  }
+
+  return _defineProperty({
+    func: func,
+    params: params,
+    children: children
+  }, DIALECTICA_TYPE, true);
 }
+
+function speak(_ref2) {
+  var func = _ref2.func,
+      params = _ref2.params,
+      children = _ref2.children;
+
+  if (typeof func === 'function') {
+    var result = func.call(this, params);
+
+    if (children) {
+      if (children.length === 1 && !children[0][DIALECTICA_TYPE]) {
+        speak(children[0](result));
+      } else {
+        children.forEach(function (c) {
+          speak({
+            func: c.func,
+            params: Object.assign({}, c.params, { parent: result }),
+            children: c.children
+          });
+        });
+      }
+    }
+  }
+}
+
+dialectica.speak = speak;
+
+function Dialect() {}
 
 },{}]},{},[1]);
