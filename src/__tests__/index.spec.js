@@ -97,5 +97,18 @@ describe('Given the Dialectica library', () => {
       );
       expect(print).toBeCalledWith('XXX');
     });
+    it('should return the context as a result of the async speak command', async () => {
+      const GetAnswer = async () => fakeAsync(21, 20);
+      const Calc = ({ answer }) => fakeAsync(answer * 2, 30);
+      const App = () => {};
+      const { result } = await speak(
+        <App>
+          <GetAnswer exports='answer' />
+          <Calc answer exports='result' />
+        </App>
+      );
+
+      expect(result).toBe(42);
+    });
   });
 });
