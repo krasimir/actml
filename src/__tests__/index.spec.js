@@ -22,7 +22,7 @@ describe('Given the Dialectica library', () => {
     });
   });
   describe('when having nested functions', () => {
-    it('should run all of them and return the result', () => {
+    it('should run all the children', () => {
       const Foo = jest.fn();
       const Bar = jest.fn();
       const Zar = jest.fn();
@@ -45,4 +45,21 @@ describe('Given the Dialectica library', () => {
       expect(Bar).toBeCalledWith({ answer: 42 });
     });
   });
+  describe('when using asynchronous functions', () => {
+    it('should wait till the promise is resolved', async () => {
+      const Foo = async function() { return 42; };
+      const result = await speak(<Foo />);
+
+      expect(result).toBe(42);
+    });
+    describe('and we have nested functions', () => {
+      it('should wait till the promise is resolved before running the other nested functions', async () => {
+        const Foo = async function() { return 42; };
+        const Bar = jest.fn();
+        const result = await speak(<Foo>{ answer => <Bar answer={ answer } /> }</Foo>);
+
+        expect(Bar).toBeCalledWith({ answer: 42 });
+      });
+    });
+  })
 });

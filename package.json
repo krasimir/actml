@@ -2,9 +2,10 @@
   "name": "dialectica",
   "version": "0.1.0",
   "description": "Like jsx but for your domain logic",
-  "main": "index.js",
+  "main": "lib/dialectica.js",
   "scripts": {
-    "test": "BABEL_ENV=development ./node_modules/.bin/jest \"(.*)\\.spec\\.js\""
+    "test": "BABEL_ENV=development ./node_modules/.bin/jest \"(.*)\\.spec\\.js\"",
+    "build": "npm run test && browserify ./src/index.js -o ./lib/dialectica.js -t babelify && uglifyjs ./lib/dialectica.js -o ./lib/dialectica.min.js"
   },
   "repository": {
     "type": "git",
@@ -27,7 +28,10 @@
   },
   "devDependencies": {
     "babel-jest": "23.4.2",
+    "babelify": "8.0.0",
+    "browserify": "16.2.2",
     "jest": "23.5.0",
-    "regenerator-runtime": "0.12.1"
+    "regenerator-runtime": "0.12.1",
+    "uglifyjs": "2.4.11"
   }
 }

@@ -1,11 +1,9 @@
-const DIALECT_TYPE = '__dialect';
-
 class Word {
   constructor(func, params, children) {
     this.func = func;
     this.params = params;
     this.children = children;
-    this[DIALECT_TYPE] = true;
+    this.__D = true;
   }
   say(params) {
     if (Word.isItAWord(this.func)) {
@@ -14,7 +12,7 @@ class Word {
     return this.func.call(this.func, Object.assign({}, this.params, params));
   }
   static isItAWord(word) {
-    return word && word[DIALECT_TYPE] === true;
+    return word && word.__D === true;
   }
 }
 
@@ -24,19 +22,28 @@ class Dialect {
       let result;
 
       result = word.say();
-
-      if (word.children) {
-        if (word.children.length === 1 && !Word.isItAWord(word.children[0])) {
-          this.speak(word.children[0](result));
-        } else {
-          word.children.forEach(w => this.speak(w));
-        }
+      if (result && result['then']) {
+        result
+          .then(r => this._processChildren(word.children, r))
+          .catch(error => {});
+      } else {
+        this._processChildren(word.children, result);
       }
+      
       return result;
     }
   }
   create(func, params, ...children) {
     return new Word(func, params, children);
+  }
+  _processChildren(children, result) {
+    if (children) {
+      if (children.length === 1 && !Word.isItAWord(children[0])) {
+        this.speak(children[0](result));
+      } else {
+        children.forEach(w => this.speak(w));
+      }
+    }
   }
 }
 
