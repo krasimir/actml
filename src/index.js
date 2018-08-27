@@ -1,4 +1,3 @@
-import "regenerator-runtime/runtime";
 import Dialect from './Dialect';
 
 const d = new Dialect();

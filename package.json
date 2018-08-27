@@ -1,6 +1,6 @@
 {
   "name": "dialectica",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Like jsx but for your domain logic",
   "main": "lib/dialectica.js",
   "scripts": {
@@ -23,17 +23,17 @@
     "url": "https://github.com/krasimir/dialectica/issues"
   },
   "homepage": "https://github.com/krasimir/dialectica#readme",
-  "dependencies": {
-    "@babel/core": "7.0.0-rc.3",
-    "@babel/preset-env": "7.0.0-rc.3",
-    "@babel/preset-react": "7.0.0-rc.3",
-    "rollup": "0.65.0",
-    "rollup-plugin-babel": "4.0.0-beta.8"
-  },
   "devDependencies": {
     "babel-core": "^7.0.0-0",
     "babel-jest": "23.4.2",
     "jest": "23.5.0",
-    "regenerator-runtime": "0.12.1"
+    "regenerator-runtime": "0.12.1",
+    "@babel/core": "7.0.0-rc.3",
+    "@babel/plugin-transform-runtime": "7.0.0-rc.4",
+    "@babel/preset-env": "7.0.0-rc.3",
+    "@babel/preset-react": "7.0.0-rc.3",
+    "@babel/runtime": "7.0.0-rc.4",
+    "rollup": "0.65.0",
+    "rollup-plugin-babel": "4.0.0-beta.8"
   }
 }

@@ -1,7 +1,8 @@
 var presets = [
   '@babel/env',
   '@babel/preset-react'
-]
+];
+var plugins = [];
 
 if (process.env['PROCESS'] === 'build') {
   presets = [
@@ -12,7 +13,10 @@ if (process.env['PROCESS'] === 'build') {
         }
     ],
     '@babel/preset-react'
-  ]
+  ];
+  plugins = [
+    '@babel/plugin-transform-runtime'
+  ];
 }
 
-module.exports = { presets };
+module.exports = { presets, plugins };

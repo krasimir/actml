@@ -7,5 +7,5 @@ export default {
     format: 'umd',
     name: 'dialectica'
   },
-  plugins: [ babel() ]
+  plugins: [ babel({ runtimeHelpers: true }) ]
 };
