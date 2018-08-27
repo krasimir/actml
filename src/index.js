@@ -5,11 +5,18 @@ class Word {
     this.children = children;
     this.__D = true;
   }
-  say(params) {
+  say(context) {
     if (Word.isItAWord(this.func)) {
-      return this.func.say(this.params);
+      return this.func.mergeParams(this.params).say(context);
     }
-    return this.func.call(this.func, Object.assign({}, this.params, params));
+    this.params && Object.keys(this.params).forEach(param => {
+      if (context[param]) this.params[param] = context[param];
+    })
+    return this.func.call(this, this.params);
+  }
+  mergeParams(params) {
+    this.params = Object.assign({}, this.params, params);
+    return this;
   }
   static isItAWord(word) {
     return word && word.__D === true;
@@ -17,33 +24,36 @@ class Word {
 }
 
 class Dialect {
-  speak(word) {
+  async speak(word, context = {}) {
     if (Word.isItAWord(word)) {
-      let result;
+      var result = await word.say(context);
 
-      result = word.say();
-      if (result && result['then']) {
-        result
-          .then(r => this._processChildren(word.children, r))
-          .catch(error => {});
-      } else {
-        this._processChildren(word.children, result);
+      if (word.params && word.params['exports']) {
+        context[word.params.exports] = result;
       }
-      
-      return result;
+
+      if (word.children && word.children.length > 0) {
+        if (word.children.length === 1 && !Word.isItAWord(word.children[0])) {
+          this.speak(word.children[0](result), context);
+        } else {
+          let pointer = 0;
+          let self = this;
+          async function process(w) {
+            await self.speak(w, context);
+            if (++pointer < word.children.length) {
+              return process(word.children[pointer]);
+            }
+          }
+          
+          await process(word.children[0]);
+        }
+      }
+    } else {
+      throw new Error('Unexpected word! word = ' + word);
     }
   }
   create(func, params, ...children) {
     return new Word(func, params, children);
-  }
-  _processChildren(children, result) {
-    if (children) {
-      if (children.length === 1 && !Word.isItAWord(children[0])) {
-        this.speak(children[0](result));
-      } else {
-        children.forEach(w => this.speak(w));
-      }
-    }
   }
 }
 
