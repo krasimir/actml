@@ -47,17 +47,6 @@ describe('Given the Dialectica library', () => {
       expect(Zar).toBeCalled();
     });
   });
-  describe('when using FACC pattern', () => {
-    it('should pass down the result of the function as param for the FACC', async () => {
-      const Foo = jest.fn(() => 42);
-      const Bar = jest.fn();
-      const language = <Foo>{ answer => <Bar answer={ answer } /> }</Foo>;
-      await speak(language);
-
-      expect(Foo).toBeCalled();
-      expect(Bar).toBeCalledWith({ answer: 42 });
-    });
-  });
   describe('when using asynchronous functions', () => {
     it('should wait till the promise is resolved', async () => {
       let result = 0;
@@ -68,11 +57,13 @@ describe('Given the Dialectica library', () => {
     });
     describe('and we have nested functions', () => {
       it('should wait till the promise is resolved before running the other nested functions', async () => {
-        const Foo = async function() { return 42; };
-        const Bar = jest.fn();
-        const result = await speak(<Foo>{ answer => <Bar answer={ answer } /> }</Foo>);
+        var x = 0;
+        var total = 0;
+        const Foo = async function() { x = 42; };
+        const Bar = ({ answer }) => total = answer() * 2;
+        await speak(<Foo><Bar answer={ () => x } /></Foo>);
 
-        expect(Bar).toBeCalledWith({ answer: 42 });
+        expect(total).toBe(84);
       });
       it('should handle multiple async children', async () => {
         const flow = [];

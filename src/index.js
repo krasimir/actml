@@ -7,15 +7,23 @@ class Word {
   }
   say(context) {
     if (Word.isItAWord(this.func)) {
-      return this.func.mergeParams(this.params).say(context);
+      return this
+        .func
+        .mergeParams(this.params)
+        .say(context);
     }
-    this.params && Object.keys(this.params).forEach(param => {
-      if (context[param]) this.params[param] = context[param];
-    })
-    return this.func.call(this, this.params);
+    return this
+      .contextifyParams(context)
+      .func(this.params);
   }
   mergeParams(params) {
     this.params = Object.assign({}, this.params, params);
+    return this;
+  }
+  contextifyParams(context) {
+    this.params && Object.keys(this.params).forEach(param => {
+      if (context[param]) this.params[param] = context[param];
+    });
     return this;
   }
   static isItAWord(word) {
@@ -28,25 +36,21 @@ class Dialect {
     if (Word.isItAWord(word)) {
       var result = await word.say(context);
 
+      // registering exports in the current context
       if (word.params && word.params['exports']) {
         context[word.params.exports] = result;
       }
 
       if (word.children && word.children.length > 0) {
-        if (word.children.length === 1 && !Word.isItAWord(word.children[0])) {
-          this.speak(word.children[0](result), context);
-        } else {
-          let pointer = 0;
-          let self = this;
-          async function process(w) {
-            await self.speak(w, context);
-            if (++pointer < word.children.length) {
-              return process(word.children[pointer]);
-            }
+        let pointer = 0;
+        let self = this;
+        async function process(w) {
+          await self.speak(w, context);
+          if (++pointer < word.children.length) {
+            return process(word.children[pointer]);
           }
-          
-          await process(word.children[0]);
         }
+        await process(word.children[0]);
       }
     } else {
       throw new Error('Unexpected word! word = ' + word);
