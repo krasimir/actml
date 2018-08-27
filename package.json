@@ -1,6 +1,6 @@
 {
   "name": "dialectica",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Like jsx but for your domain logic",
   "main": "lib/dialectica.js",
   "scripts": {
