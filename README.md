@@ -21,7 +21,7 @@ speak(<Foo name='programmer'/>); // Hello dear programmer!
 
 ## How it works
 
-The code that we write follows the [JSX syntax](https://facebook.github.io/jsx/). You don't have to learn anything new. If you ever worked with React you already know how to write code that Dactory understands.
+The code that we write follows the [JSX syntax](https://facebook.github.io/jsx/). You don't have to learn anything new. If you ever worked with React you already know how to write code that Dactory understands. Grab the library by running `npm install dactory` or `yarn install dactory` and you are ready to go. Dactory assumes that you already have setup that transpiles JSX.
 
 ### Core API
 
