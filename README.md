@@ -25,7 +25,7 @@ The code that we write follows the [JSX syntax](https://facebook.github.io/jsx/)
 
 ### Core API
 
-The core API of Dactory is just two functions. `dialect` is the first one and it is not used directly. Every tag that we write gets transpiled to `dialect()` calls similarly to `React.createElement`. The more interesting one is `speak`. It accepts a markup-like code which we will define as **dialect**. The dialect describes in a declarative fashion what our program must do.
+The core API of Dactory is just two functions. `dialect` is the first one and it is not used directly. Every tag that we write gets transpiled to `dialect()` calls similarly to `React.createElement`. The more interesting one is `speak`. It accepts a markup-like code which we will define as **dialect**. The dialect describes in a declarative fashion what our program does.
 
 ### Order of execution
 
@@ -70,7 +70,7 @@ If there are multiple asynchronous functions they are executed one after each ot
 
 ### Passing data around
 
-Every dialect gets executed with a given context. The context in Dactory is just a plain JavaScript object. The `speak` function accepts one as a second argument and we also receive it when the promise returned by `speak` is resolved. Which means that if want to get something back we have to inject it into the context because that's the only one output of the `speak`'s call. This happen by using the special `export` prop like so:
+Every dialect gets executed with a given context. The context in Dactory is just a plain JavaScript object. In fact the `speak` function accepts one as a second argument. We also receive the context when the promise returned by `speak` is resolved. Which means that if we want to get something back we have to inject it into the context because that's the only one output of the `speak`'s call. This happens by using the special `export` prop like so:
 
 ```js
 const GetSettings = async () => {
