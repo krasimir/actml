@@ -1,13 +1,10 @@
 {
   "name": "dialectica",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Like jsx but for your domain logic",
-  "main": "lib/dialectica.js",
+  "main": "src/index.js",
   "scripts": {
-    "test": "BABEL_ENV=development ./node_modules/.bin/jest \"(.*)\\.spec\\.js\"",
-    "minify": "uglifyjs ./lib/dialectica.js -o ./lib/dialectica.min.js",
-    "build": "PROCESS=build ./node_modules/.bin/rollup -c ./rollup.config.js && npm run minify",
-    "release": "npm run test && npm run build"
+    "test": "BABEL_ENV=development ./node_modules/.bin/jest \"(.*)\\.spec\\.js\""
   },
   "repository": {
     "type": "git",
@@ -24,16 +21,18 @@
   },
   "homepage": "https://github.com/krasimir/dialectica#readme",
   "devDependencies": {
-    "babel-core": "^7.0.0-0",
+    "babel-core": "6.26.3",
     "babel-jest": "23.4.2",
+    "babel-preset-es2015": "6.24.1",
+    "babel-preset-react": "6.24.1",
+    "babelify": "8.0.0",
+    "browserify": "14.5.0",
+    "fsevents": "1.2.4",
     "jest": "23.5.0",
+    "nan": "2.11.0",
+    "react": "16.0.0",
+    "react-dom": "16.0.0",
     "regenerator-runtime": "0.12.1",
-    "@babel/core": "7.0.0-rc.3",
-    "@babel/plugin-transform-runtime": "7.0.0-rc.4",
-    "@babel/preset-env": "7.0.0-rc.3",
-    "@babel/preset-react": "7.0.0-rc.3",
-    "@babel/runtime": "7.0.0-rc.4",
-    "rollup": "0.65.0",
-    "rollup-plugin-babel": "4.0.0-beta.8"
+    "watchify": "3.9.0"
   }
 }
