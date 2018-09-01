@@ -1,6 +1,4 @@
-import Dialect from './Dialect';
+import { create, speak } from './Dactory';
 
-const d = new Dialect();
-
-export const dialect = d.create.bind(d);
-export const speak = d.speak.bind(d);
+export const D = create;
+export const speak = speak;

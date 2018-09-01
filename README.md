@@ -55,8 +55,10 @@ Mar
 The `speak` function is always asynchronous. It returns a promise. The dialect that we pass could be also made of asynchronous functions. Like for example:
 
 ```js
-const Fetch = async ({ url }) => (await fetch(url)).json();
-const App = () => {};
+const Fetch = async function ({ url }) {
+  return (await fetch(url)).json();
+}
+const App = function () {}
 
 await speak(
   <App>
@@ -70,10 +72,10 @@ If there are multiple asynchronous functions they are executed one after each ot
 
 ### Passing data around
 
-Every dialect gets executed with a given context. The context in Dactory is just a plain JavaScript object. In fact the `speak` function accepts one as a second argument. We also receive the context when the promise returned by `speak` is resolved. Which means that if we want to get something back we have to inject it into the context because that's the only one output of the `speak`'s call. This happens by using the special `export` prop like so:
+Every dialect gets executed with a given context. The context in Dactory is just a plain JavaScript object. In fact the `speak` function accepts one as a second argument (by default set to `{}`). We also receive the context when the promise returned by `speak` is resolved. Which means that if we want to get something back we have to inject it into the context because that's the only one output of the `speak`'s call. This happens by using the special `exports` prop like so:
 
 ```js
-const GetSettings = async () => {
+const GetSettings = async function () {
   return { answer: 42 };
 };
 
@@ -86,18 +88,51 @@ speak(<GetSettings exports="settings" />)
 Passing data between functions happens by adding a prop with no value and same name. For example:
 
 ```js
-const GetSettings = async () => {
+const GetSettings = async function () {
   return { answer: 42 };
 };
-const Print = ({ settings }) => {
+const Print = function ({ settings }) {
   console.log(`The answer is ${settings.answer}.`);
 }
-const App = () => {};
+const App = function () {}
 
 speak(
   <App>
     <GetSettings exports="settings" />
     <Print settings />
+  </App>
+);
+```
+
+### Error handling
+
+Because `speak` returns a promise we can just `catch` the error at a _global_ level:
+
+```js
+const Problem = function() {
+  return iDontExist; // throws an error "iDontExist is not defined"
+};
+const App = function() {};
+
+speak(
+  <App>
+    <Problem />
+  </App>
+).catch(error => {
+  console.log('Ops, an error: ', error.message);
+  // Ops, an error:  iDontExist is not defined
+});
+```
+
+```js
+const Problem = function() {
+  return iDontExist; // throws an error "iDontExist is not defined"
+};
+const App = function() {};
+
+speak(
+  <App>
+    <Problem onError={ <HandleError /> } />
   </App>
 );
 ```
