@@ -1,4 +1,3 @@
-import { create, speak } from './Dactory';
+import { create as D, speak } from './Dactory';
 
-export const D = create;
-export const speak = speak;
+export { speak, D };

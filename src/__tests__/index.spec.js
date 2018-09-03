@@ -7,7 +7,7 @@ const fakeAsync = (resolveWith, delay) => new Promise(done => {
 
 describe('Given the Dialectica library', () => {
   describe('when running a simple function', () => {
-    it.only('should execute the function with the given params and return the result', async () => {
+    it('should execute the function with the given params and return the result', async () => {
       const Func = jest.fn();
       const Word = <Func foo={ 10 }/>;
       await speak(Word);
@@ -111,7 +111,7 @@ describe('Given the Dialectica library', () => {
       expect(result).toBe(42);
     });
   });
-  describe('when there is an error', () => {
+  describe.skip('when there is an error', () => {
     it('should fire the onError handler with the given error', async () => {
       const Problem = function() {
         return iDontExist; // throws an error "iDontExist is not defined"

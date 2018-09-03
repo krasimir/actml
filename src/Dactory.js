@@ -1,10 +1,9 @@
+import Word from "./Word";
+import Story from './Story';
+
 export function create(func, props, ...children) {
-  return {
-    func,
-    props,
-    children
-  }
+  return Word(func, props, children);
 }
-export function speak(word) {
-  
+export async function speak(word, context = {}) {
+  return await Story([ word ], context);
 }
