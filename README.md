@@ -7,8 +7,8 @@
 *Dactory* is a library that allows you to use React's transpiler for different purpose. React is our view layer. It takes care for the rendering part. *Dactory* is opposite. It is dealing with the business logic of our applications. It allows us to write our own [dialect](https://en.wikipedia.org/wiki/Dialect) based on the [JSX syntax](https://facebook.github.io/jsx/).
 
 ```js
-/** @jsx dialect */
-import { dialect, speak } from 'dactory';
+/** @jsx D */
+import { D, speak } from 'dactory';
 
 const Foo = function ({ name }) {
   console.log(`Hello dear ${ name }!`);
@@ -17,15 +17,15 @@ const Foo = function ({ name }) {
 speak(<Foo name='programmer'/>); // Hello dear programmer!
 ```
 
-*You **must** add the `@jsx` comment at the top of your files. And you **must** import `dialect` function. Otherwise Dactory will not work.*
+*You **must** add the `@jsx` comment at the top of your files. And you **must** import `D` function. Otherwise Dactory will not work.*
 
 ## How it works
 
-The code that we write follows the [JSX syntax](https://facebook.github.io/jsx/). You don't have to learn anything new. If you ever worked with React you already know how to write code that Dactory understands. Grab the library by running `npm install dactory` or `yarn install dactory` and you are ready to go. Dactory assumes that you already have setup that transpiles JSX.
+The code that we write follows the [JSX syntax](https://facebook.github.io/jsx/). You don't have to learn anything new. If you ever worked with React you already know how to write code that Dactory understands. Grab the library by running `npm install dactory` or `yarn install dactory` and run your usual React setup. As long as there's Babel involved everything will be transpiled correctly.
 
 ### Core API
 
-The core API of Dactory is just two functions. `dialect` is the first one and it is not used directly. Every tag that we write gets transpiled to `dialect()` calls similarly to `React.createElement`. The more interesting one is `speak`. It accepts a markup-like code which we will define as **dialect**. The dialect describes in a declarative fashion what our program does.
+The core API of Dactory is just two functions. `D` is the first one and you'll probably never use it directly. Every tag that we write gets transpiled to `D()` calls similarly to `React.createElement`. The more interesting one is `speak`. It accepts a markup-like code which we will define as **dialect**. The dialect describes in a declarative fashion what our program does.
 
 ### Order of execution
 
@@ -56,7 +56,7 @@ The `speak` function is always asynchronous. It returns a promise. The dialect t
 
 ```js
 const Fetch = async function ({ url }) {
-  return (await fetch(url)).json();
+  return await fetch(url);
 }
 const App = function () {}
 
@@ -84,6 +84,8 @@ speak(<GetSettings exports="settings" />)
     console.log(context.settings.answer); // 42
   });
 ```
+
+Think about `exports` as something that defines a property in the dialect's context. The value of that new property is what our function returns.
 
 Passing data between functions happens by adding a prop with no value and same name. For example:
 
@@ -124,11 +126,14 @@ speak(
 });
 ```
 
+That's all fine but it is not really flexible. What we may want is to handle the error inside our dialect. In such cases we have the special `onError` prop. It accepts another dialect which receives the error as a prop.
+
 ```js
 const Problem = function() {
-  return iDontExist; // throws an error "iDontExist is not defined"
+  return iDontExist;
 };
 const App = function() {};
+const HandleError = ({ error }) => console.log(error.message); // logs "iDontExist is not defined"
 
 speak(
   <App>
@@ -136,3 +141,51 @@ speak(
   </App>
 );
 ```
+
+Usually Dactory stops the execution of the current dialect. However, if our handler returns `true` it continues. For example:
+
+```js
+const Problem = function() {
+  return iDontExist;
+};
+const App = function() {};
+const HandleError = () => true;
+const AfterError = () => console.log('I am still here :)');
+
+await speak(
+  <App exports='answer'>
+    <Problem onError={ <HandleError /> } />
+    <AfterError />
+  </App>
+);
+// outputs "I am still here :)" even tho there's an error
+```
+
+And by stopping the execution we mean only the current branch of the dialect. For example:
+
+```js
+const Problem = function() {
+  return iDontExist; // throws an error "iDontExist is not defined"
+};
+const App = function() {};
+const Wrapper = function() {};
+const HandleError = () => {};
+const A = () => console.log('A');
+const B = () => console.log('B');
+const C = () => console.log('C');
+
+await speak(
+  <App exports='answer'>
+    <Wrapper>
+      <Problem onError={ <HandleError /> } />
+      <A />
+    </Wrapper>
+    <Wrapper>
+      <B />
+      <C />
+    </Wrapper>
+  </App>
+);
+```
+
+We will see `B` followed by `C` but not `A` because there's an error at that level.
