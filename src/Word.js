@@ -12,6 +12,8 @@ const normalizeProps = (props, context) => {
 export default function Word(func, props, children) {
   return {
     say: async (context, additionalProps) => {
+      let result;
+
       try {
         if (Word.isItAWord(func)) {
           return await func.say(context, props);
@@ -20,20 +22,25 @@ export default function Word(func, props, children) {
           additionalProps ? Object.assign({}, props, additionalProps) : props,
           context
         );
-        const result = parameters ? await func(parameters) : await func();
+
+        result = parameters ? await func(parameters) : await func();
 
         if (props && props.exports) {
           context[props.exports] = result;
         }
       } catch (error) {
-        console.log(error);
+        if (props.onError) {
+          if (await props.onError.say(context, { error }) !== true) {
+            throw error;
+          }
+        }
       }
       
       if (children && children.length > 0) {
         await Story(children, context);
       }
 
-      return context;
+      return result;
     }
   }
 }

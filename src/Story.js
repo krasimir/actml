@@ -4,7 +4,11 @@ export default async function Story(words, context) {
   while(pointer < words.length) {
     const word = words[pointer];
 
-    await word.say(context);
+    try {
+      await word.say(context);
+    } catch (error) {
+      break;
+    }
     pointer++;
   }
   return context;

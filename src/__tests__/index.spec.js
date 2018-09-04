@@ -5,9 +5,9 @@ const fakeAsync = (resolveWith, delay) => new Promise(done => {
   setTimeout(() => done(resolveWith), delay);
 });
 
-describe('Given the Dialectica library', () => {
+describe('Given the Dactory library', () => {
   describe('when running a simple function', () => {
-    it('should execute the function with the given params and return the result', async () => {
+    it('should execute the function with the given params', async () => {
       const Func = jest.fn();
       const Word = <Func foo={ 10 }/>;
       await speak(Word);
@@ -29,7 +29,7 @@ describe('Given the Dialectica library', () => {
       const Bar = jest.fn();
       const Zar = jest.fn();
       const language = <Foo><Bar><Zar /></Bar></Foo>;
-      const result = await speak(language);
+      await speak(language);
 
       expect(Foo).toBeCalled();
       expect(Bar).toBeCalled();
@@ -40,7 +40,8 @@ describe('Given the Dialectica library', () => {
       const Bar = jest.fn();
       const Zar = jest.fn();
       const language = <Foo><Bar /><Zar /></Foo>;
-      const result = await speak(language);
+
+      await speak(language);
 
       expect(Foo).toBeCalled();
       expect(Bar).toBeCalled();
@@ -61,6 +62,7 @@ describe('Given the Dialectica library', () => {
         var total = 0;
         const Foo = async function() { x = 42; };
         const Bar = ({ answer }) => total = answer() * 2;
+
         await speak(<Foo><Bar answer={ () => x } /></Foo>);
 
         expect(total).toBe(84);
@@ -84,8 +86,8 @@ describe('Given the Dialectica library', () => {
   });
   describe('when using the context', () => {
     it('should pass variables between siblings', async () => {
-      const GetToken = async () => fakeAsync('XXX', 50);
       const print = jest.fn();
+      const GetToken = async () => fakeAsync('XXX', 50);
       const UseToken = ({ token }) => print(token);
       const App = () => {};
 
@@ -97,7 +99,7 @@ describe('Given the Dialectica library', () => {
       );
       expect(print).toBeCalledWith('XXX');
     });
-    it('should return the context as a result of the async speak command', async () => {
+    it('should return the context as a result of the async `speak` command', async () => {
       const GetAnswer = async () => fakeAsync(21, 20);
       const Calc = ({ answer }) => fakeAsync(answer * 2, 30);
       const App = () => {};
@@ -111,7 +113,7 @@ describe('Given the Dialectica library', () => {
       expect(result).toBe(42);
     });
   });
-  describe.skip('when there is an error', () => {
+  describe('when there is an error', () => {
     it('should fire the onError handler with the given error', async () => {
       const Problem = function() {
         return iDontExist; // throws an error "iDontExist is not defined"
@@ -182,8 +184,8 @@ describe('Given the Dialectica library', () => {
       };
       const App = function() {};
       const Wrapper = function() {};
-      const HandleErrorA = jest.fn();
       const Dummy = () => 42;
+      const HandleErrorA = jest.fn();
       const AfterErrorA = jest.fn();
       const B = jest.fn();
       const C = jest.fn();
