@@ -56,7 +56,7 @@ exports.default = async function Story(words, context) {
       if (_Word2.default.isItAWord(word)) {
         await word.say(context);
       } else {
-        console.log(word.toString());
+        await Story([(0, _Word2.default)(word, null)], context);
       }
     } catch (error) {
       break;
@@ -23341,9 +23341,7 @@ exports.default = StartUp;
 
 var _dactory = require('dactory');
 
-function StartUp() {
-  console.log('aaa');
-} /** @jsx D */
+function StartUp() {} /** @jsx D */
 
 },{"dactory":4}],69:[function(require,module,exports){
 'use strict';

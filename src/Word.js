@@ -1,6 +1,6 @@
 import Story from "./Story";
 
-const normalizeProps = (props, context) => {
+const normalizeProps = function (props, context) {
   props && Object.keys(props).forEach(prop => {
     if (context[prop] && props[prop] === true) {
       props[prop] = context[prop];
@@ -9,32 +9,39 @@ const normalizeProps = (props, context) => {
   return props;
 };
 
+const sayIt = async function (func, props, additionalProps, context) {
+  let result;
+
+  try {
+    if (Word.isItAWord(func)) {
+      return await func.say(context, props);
+    }
+    const parameters = normalizeProps(
+      additionalProps ? Object.assign({}, props, additionalProps) : props,
+      context
+    );
+
+    result = parameters ? await func(parameters) : await func();
+
+    if (props && props.exports) {
+      context[props.exports] = result;
+    }
+  } catch (error) {
+    if (props && props.onError) {
+      if (await props.onError.say(context, { error }) !== true) {
+        throw error;
+      }
+    }
+  }
+
+  return result;
+}
+
 export default function Word(func, props, children) {
   return {
     say: async (context, additionalProps) => {
-      let result;
-
-      try {
-        if (Word.isItAWord(func)) {
-          return await func.say(context, props);
-        }
-        const parameters = normalizeProps(
-          additionalProps ? Object.assign({}, props, additionalProps) : props,
-          context
-        );
-
-        result = parameters ? await func(parameters) : await func();
-
-        if (props && props.exports) {
-          context[props.exports] = result;
-        }
-      } catch (error) {
-        if (props && props.onError) {
-          if (await props.onError.say(context, { error }) !== true) {
-            throw error;
-          }
-        }
-      }
+      // running the function + error handling
+      const result = await sayIt(func, props, additionalProps, context);
 
       // when the result of a Word is another word
       if (Word.isItAWord(result)) {
