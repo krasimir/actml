@@ -1,3 +1,5 @@
+import Word from './Word';
+
 export default async function Story(words, context) {
   let pointer = 0;
 
@@ -5,7 +7,11 @@ export default async function Story(words, context) {
     const word = words[pointer];
 
     try {
-      await word.say(context);
+      if (Word.isItAWord(word)) {
+        await word.say(context);
+      } else {
+        console.log(word.toString());
+      }
     } catch (error) {
       break;
     }

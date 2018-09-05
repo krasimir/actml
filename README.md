@@ -165,7 +165,7 @@ And by stopping the execution we mean only the current branch of the dialect. Fo
 
 ```js
 const Problem = function() {
-  return iDontExist; // throws an error "iDontExist is not defined"
+  return iDontExist;
 };
 const App = function() {};
 const Wrapper = function() {};
@@ -189,3 +189,34 @@ await speak(
 ```
 
 We will see `B` followed by `C` but not `A` because there's an error at that level.
+
+## Branching your logic
+
+Obviously we don't have a straight business logic. It has branches. Dactory has no API specific API for this. The recommended solution is the so called [function as children](https://github.com/krasimir/react-in-patterns/blob/master/book/chapter-4/README.md#function-as-a-children-render-prop) pattern:
+
+```js
+function MyLogic({ answer }) {
+  if (answer === 42) {
+    return true;
+  }
+  return false;
+}
+function PrintCorrectAnswer() {
+  console.log('Correct!');
+}
+function PrintWrongAnswer() {
+  console.log('Wrong!');
+}
+function App() {}
+
+await speak(
+  <App>
+    <MyLogic answer={ 42 }>
+      {
+        isCorrect => isCorrect ? <PrintCorrectAnswer /> : <PrintWrongAnswer />
+      }
+    </MyLogic>
+  </App>
+);
+
+```

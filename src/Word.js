@@ -29,14 +29,24 @@ export default function Word(func, props, children) {
           context[props.exports] = result;
         }
       } catch (error) {
-        if (props.onError) {
+        if (props && props.onError) {
           if (await props.onError.say(context, { error }) !== true) {
             throw error;
           }
         }
       }
+
+      // when the result of a Word is another word
+      if (Word.isItAWord(result)) {
+        await Story([ result ], context);
+      }
+
+      // FACC pattern
+      if (children && children.length === 1 && !Word.isItAWord(children[0])) {
+        await Story([ Word(children[0], result) ], context);
       
-      if (children && children.length > 0) {
+      // processing the children
+      } else if (children && children.length > 0) {
         await Story(children, context);
       }
 
@@ -45,4 +55,4 @@ export default function Word(func, props, children) {
   }
 }
 
-Word.isItAWord = word => !!word.say;
+Word.isItAWord = word => word && !!word.say;

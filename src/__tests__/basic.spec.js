@@ -1,5 +1,5 @@
 /** @jsx D */
-import { D, speak } from '../';
+import { D, speak } from '..';
 
 const fakeAsync = (resolveWith, delay) => new Promise(done => {
   setTimeout(() => done(resolveWith), delay);
@@ -21,6 +21,22 @@ describe('Given the Dactory library', () => {
       await speak(<Word bar={ 20 }/>);
 
       expect(Func).toBeCalledWith({ foo: 10, bar: 20 });
+    });
+    it(`work continue processing dialects if we return such as a result`, async () => {
+      const Bar = jest.fn();
+      const Foo = jest.fn().mockImplementation(() => {
+        return <Bar answer />;
+      });
+      const App = () => 42;
+
+      await speak(
+        <App exports='answer'>
+          <Foo />
+        </App>
+      );
+
+      expect(Foo).toBeCalled();
+      expect(Bar).toBeCalledWith({ answer: 42 });
     });
   });
   describe('when having nested functions', () => {
@@ -206,6 +222,27 @@ describe('Given the Dactory library', () => {
       expect(AfterErrorA).not.toBeCalled();
       expect(B).toBeCalled();
       expect(C).toBeCalledWith({ answer: 42 });
+    });
+  });
+  describe('when we have the FACC pattern', () => {
+    it(`- should run the FACC with the return as a param
+        - should continue processing the dialect returned by the FACC`, async () => {
+      const A = jest.fn();
+      const B = jest.fn();
+      const Logic = async () => fakeAsync(false, 20);
+      const App = () => {};
+      await speak(
+        <App>
+          <Logic>
+            {
+              status => status ? <A /> : <B />
+            }
+          </Logic>
+        </App>
+      );
+
+      expect(A).not.toBeCalled();
+      expect(B).toBeCalled();
     });
   });
 });
