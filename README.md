@@ -1,6 +1,17 @@
-# Dactory
+# Dactory :speak_no_evil: :factory:
 
 > **D**ialect  f**ACTORY**
+
+---
+
+- [Dactory :speak_no_evil: :factory:](#dactory-speaknoevil-factory)
+  - [How it works](#how-it-works)
+    - [Core API](#core-api)
+    - [Order of execution](#order-of-execution)
+    - [Handling asynchronous processes](#handling-asynchronous-processes)
+    - [Passing data around](#passing-data-around)
+    - [Error handling](#error-handling)
+    - [Branching your logic](#branching-your-logic)
 
 ---
 
@@ -210,7 +221,7 @@ await speak(
 
 We will see `B` followed by `C` but not `A` because there's an error at that level.
 
-## Branching your logic
+### Branching your logic
 
 Obviously we don't have a straight business logic. It has branches. Dactory has no API specific API for this. The recommended solution is the [function as children pattern](https://github.com/krasimir/react-in-patterns/blob/master/book/chapter-4/README.md#function-as-a-children-render-prop):
 
