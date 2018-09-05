@@ -1,17 +1,16 @@
-# Dactory :speak_no_evil: :factory:
+# Dactory :speak_no_evil: :factory: <!-- omit in toc -->
 
 > **D**ialect  f**ACTORY**
 
 ---
 
-- [Dactory :speak_no_evil: :factory:](#dactory-speaknoevil-factory)
-  - [How it works](#how-it-works)
-    - [Core API](#core-api)
-    - [Order of execution](#order-of-execution)
-    - [Handling asynchronous processes](#handling-asynchronous-processes)
-    - [Passing data around](#passing-data-around)
-    - [Error handling](#error-handling)
-    - [Branching your logic](#branching-your-logic)
+- [How it works](#how-it-works)
+  - [Core API](#core-api)
+  - [Order of execution](#order-of-execution)
+  - [Handling asynchronous processes](#handling-asynchronous-processes)
+  - [Passing data around](#passing-data-around)
+  - [Error handling](#error-handling)
+  - [Branching your logic](#branching-your-logic)
 
 ---
 
@@ -133,6 +132,18 @@ function App() {
 speak(
   <App exports="name">
     <GetTitle>{ title => <PrintUser title={title} name /> }</GetTitle>
+  </App>
+);
+```
+
+It's just sometimes easier to write it as markup:
+
+```js
+speak(
+  <App exports="name">
+    <GetTitle exports="title">
+      <PrintUser title name />
+    </GetTitle>
   </App>
 );
 ```
