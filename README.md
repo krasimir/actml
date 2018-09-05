@@ -106,6 +106,26 @@ speak(
 );
 ```
 
+That's not the only one way to pass data around. The [function as children pattern](https://github.com/krasimir/react-in-patterns/blob/master/book/chapter-4/README.md#function-as-a-children-render-prop) works here too:
+
+```js
+function GetTitle() {
+  return 'developer';
+}
+function PrintUser({ title, name }) {
+  console.log(`Hello ${name} ${title}!`);
+}
+function App() {
+  return 'Boobooo';
+}
+
+speak(
+  <App exports="name">
+    <GetTitle>{ title => <PrintUser title={title} name /> }</GetTitle>
+  </App>
+);
+```
+
 ### Error handling
 
 Because `speak` returns a promise we can just `catch` the error at a _global_ level:
@@ -192,7 +212,7 @@ We will see `B` followed by `C` but not `A` because there's an error at that lev
 
 ## Branching your logic
 
-Obviously we don't have a straight business logic. It has branches. Dactory has no API specific API for this. The recommended solution is the so called [function as children](https://github.com/krasimir/react-in-patterns/blob/master/book/chapter-4/README.md#function-as-a-children-render-prop) pattern:
+Obviously we don't have a straight business logic. It has branches. Dactory has no API specific API for this. The recommended solution is the [function as children pattern](https://github.com/krasimir/react-in-patterns/blob/master/book/chapter-4/README.md#function-as-a-children-render-prop):
 
 ```js
 function MyLogic({ answer }) {
