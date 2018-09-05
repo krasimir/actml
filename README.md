@@ -279,5 +279,5 @@ const Foo = function () {
   console.log(`Hello world!`);
 }
 
-speak(<D><Foo /></ D>);
+speak(<D><Foo /></D>);
 ```
