@@ -10,7 +10,7 @@ export default async function Story(words, context) {
       if (Word.isItAWord(word)) {
         await word.say(context);
       } else {
-        console.log(word.toString());
+        await Story([ Word(word, null) ], context);
       }
     } catch (error) {
       break;

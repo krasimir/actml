@@ -7,6 +7,27 @@ const fakeAsync = (resolveWith, delay) => new Promise(done => {
 
 describe('Given the Dactory library', () => {
   describe('when running a simple function', () => {
+    it('should run the function as it is a jsx syntax', async () => {
+      const Func = jest.fn();
+
+      await speak(Func);
+
+      expect(Func).toBeCalled();
+    });
+    it('should run the function and its children as it is a jsx syntax', async () => {
+      const A = jest.fn();
+      const B = jest.fn();
+      const Func = function () {
+        return <D><A /><B /></D>;
+      };
+
+      await speak(Func);
+
+      expect(A).toBeCalled();
+      expect(B).toBeCalled();
+    });
+  });
+  describe('when running a jsx function', () => {
     it('should execute the function with the given params', async () => {
       const Func = jest.fn();
       const Word = <Func foo={ 10 }/>;

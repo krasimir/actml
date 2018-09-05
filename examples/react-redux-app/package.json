@@ -18,7 +18,7 @@
     "babel-preset-react": "^6.24.1",
     "babelify": "^8.0.0",
     "browserify": "^14.5.0",
-    "dactory": "0.1.7",
+    "dactory": "0.1.8",
     "fsevents": "^1.2.4",
     "nan": "^2.11.0",
     "react": "^16.0.0",
@@ -28,6 +28,8 @@
     "watchify": "^3.9.0"
   },
   "browserify": {
-    "transform": ["babelify"]
+    "transform": [
+      "babelify"
+    ]
   }
 }

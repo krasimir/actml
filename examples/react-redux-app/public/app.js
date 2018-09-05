@@ -23342,7 +23342,7 @@ exports.default = StartUp;
 var _dactory = require('dactory');
 
 function StartUp() {
-  console.log('startUp');
+  console.log('aaa');
 } /** @jsx D */
 
 },{"dactory":4}],69:[function(require,module,exports){
