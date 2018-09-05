@@ -11,6 +11,8 @@
   - [Passing data around](#passing-data-around)
   - [Error handling](#error-handling)
   - [Branching your logic](#branching-your-logic)
+- [Build-in helpers](#build-in-helpers)
+  - [Wrapper (`<D />`)](#wrapper-d)
 
 ---
 
@@ -261,4 +263,21 @@ await speak(
   </App>
 );
 
+```
+
+## Build-in helpers
+
+### Wrapper (`<D />`)
+
+So far in the examples above we had to define a wrapper function like `function App() {}`. Instead we can simply use `<D />`. For example:
+
+```js
+/** @jsx D */
+import { D, speak } from 'dactory';
+
+const Foo = function () {
+  console.log(`Hello world!`);
+}
+
+speak(<D><Foo /></ D>);
 ```
