@@ -12,7 +12,7 @@
   - [Error handling](#error-handling)
   - [Branching your logic](#branching-your-logic)
 - [Build-in helpers](#build-in-helpers)
-  - [Wrapper `<D />`](#wrapper-d)
+  - [Wrapper (`D`)](#wrapper-d)
 
 ---
 
@@ -267,7 +267,7 @@ await speak(
 
 ## Build-in helpers
 
-### Wrapper `<D />`
+### Wrapper (`D`)
 
 So far in the examples above we had to define a wrapper function like `function App() {}`. Instead we can simply use `<D />`. For example:
 
