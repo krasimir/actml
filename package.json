@@ -1,6 +1,6 @@
 {
   "name": "dactory",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Like jsx but for your business logic",
   "main": "src/index.js",
   "scripts": {
@@ -34,5 +34,8 @@
     "react-dom": "16.0.0",
     "regenerator-runtime": "0.12.1",
     "watchify": "3.9.0"
+  },
+  "browserify": {
+    "transform": ["babelify"]
   }
 }

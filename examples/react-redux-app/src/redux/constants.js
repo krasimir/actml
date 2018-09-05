@@ -1,1 +1,1 @@
-export const USERS_FETCHED = 'USERS_FETCHED';
+export const GET_POSTS = 'GET_POSTS';

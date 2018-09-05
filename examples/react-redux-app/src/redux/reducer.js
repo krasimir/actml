@@ -1,12 +1,12 @@
-import { USERS_FETCHED } from './constants';
+import { GET_POSTS } from './constants';
 
 const initialState = {
-
+  posts: null
 }
 
 const reducer = function (oldState = initialState, action) {
-  if (action.type === USERS_FETCHED) {
-    return { users: action.response.data };
+  if (action.type === GET_POSTS) {
+    return { posts: null };
   }
   return oldState;
 };

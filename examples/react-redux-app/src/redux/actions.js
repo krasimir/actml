@@ -1,3 +1,3 @@
-import { USERS_FETCHED } from './constants';
+import { GET_POSTS } from './constants';
 
-export const usersFetched = response => ({ type: USERS_FETCHED, response });
+export const getPosts = () => ({ type: GET_POSTS });
