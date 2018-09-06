@@ -290,6 +290,54 @@ describe('Given the Dactory library', () => {
       expect(shouldProcessResult).toBeCalledWith({ foo: 'bar' }, 'result');
       expect(shouldProcessChildren).toBeCalledWith({ foo: 'bar' }, 'result');
     });
+    it('should consider all the lifecycle hooks async functions', async () => {
+      const temp = [];
+      const before = () => new Promise((done) => {
+        setTimeout(() => {
+          temp.push('before');
+          done();
+        }, 20);
+      });
+      const after = () => new Promise((done) => {
+        setTimeout(() => {
+          temp.push('after');
+          done();
+        }, 20);
+      });
+      const shouldProcessResult = () => new Promise((done) => {
+        setTimeout(() => {
+          temp.push('shouldProcessResult');
+          done(true);
+        }, 20);
+      });
+      const shouldProcessChildren = () => new Promise((done) => {
+        setTimeout(() => {
+          temp.push('shouldProcessChildren');
+          done(true);
+        }, 20);
+      });
+      const Func = jest.fn().mockImplementation(() => <Foo />);
+      const Foo = jest.fn().mockImplementation(() => temp.push('Foo'));
+      const Bar = jest.fn().mockImplementation(() => temp.push('Bar'));
+
+      Func.before = before;
+      Func.after = after;
+      Func.shouldProcessResult = shouldProcessResult;
+      Func.shouldProcessChildren = shouldProcessChildren;
+
+      await speak(<Func><Bar /></Func>);
+
+      expect(Foo).toBeCalled();
+      expect(Bar).toBeCalled();
+      expect(temp).toEqual([
+        'before',
+        'after',
+        'shouldProcessResult',
+        'Foo',
+        'shouldProcessChildren',
+        'Bar'
+      ]);
+    });
     describe('and when `shouldProcessResult` returns `false`', () => {
       it('should not process the result', async () => {
         const A = jest.fn();

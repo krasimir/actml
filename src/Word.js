@@ -42,17 +42,17 @@ export default function Word(func, originalProps, children) {
       );
 
       // before lifecycle
-      if (func.before) func.before(props);
+      if (func.before) await func.before(props);
 
       // running the function + error handling
       const result = await sayIt(func, props, context);
 
       // after lifecycle
-      if (func.after) func.after(props, result);
+      if (func.after) await func.after(props, result);
 
       // shouldProcessResult lifecycle
       let shouldProcessResultFlag = true;
-      if (func.shouldProcessResult) shouldProcessResultFlag = func.shouldProcessResult(props, result);
+      if (func.shouldProcessResult) shouldProcessResultFlag = await func.shouldProcessResult(props, result);
 
       // when the result of a Word is another word
       if (shouldProcessResultFlag && Word.isItAWord(result)) {
@@ -61,7 +61,7 @@ export default function Word(func, originalProps, children) {
 
       // shouldProcessChildren lifecycle
       let shouldProcessChildrenFlag = true;
-      if (func.shouldProcessChildren) shouldProcessChildrenFlag = func.shouldProcessChildren(props, result);
+      if (func.shouldProcessChildren) shouldProcessChildrenFlag = await func.shouldProcessChildren(props, result);
 
       // processing children
       if (shouldProcessChildrenFlag) {

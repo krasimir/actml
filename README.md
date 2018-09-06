@@ -292,7 +292,7 @@ await speak(
 
 ```
 
-The [livecycle hooks](livecycle-hooks) become also handy if we want to stop processing or prevent the running of nested words.
+The [livecycle hooks](#livecycle-hooks) become also handy if we want to stop processing or prevent the running of nested words.
 
 ### Livecycle hooks
 
