@@ -17,6 +17,7 @@
   - [Behavior options](#behavior-options)
 - [Dictionary](#dictionary)
   - [Wrapper (`D`)](#wrapper-d)
+  - [Run words in parallel (`Parallel`)](#run-words-in-parallel-parallel)
 
 ---
 
@@ -339,6 +340,8 @@ function B() {
 }
 function C() {}
 
+C.processChildrenInParallel = true;
+
 speak(
   <C>
     <A />
@@ -346,6 +349,8 @@ speak(
   </C>
 );
 ```
+
+Without ``C.processChildrenInParallel = true` we will get `A` followed by `B`. That's because Dactory will wait till A finishes to run `B`. However, `processChildrenInParallel` makes `A` and `B` run in parallel and we are getting `B` followed by `A`.
 
 ## Dictionary
 
@@ -365,3 +370,17 @@ const Foo = function () {
 
 speak(<D><Foo /></D>);
 ```
+
+### Run words in parallel (`Parallel`)
+
+```js
+/** @jsx D */
+import { D, speak, Parallel } from 'dactory';
+
+const A = async function() {}
+const B = async function() {}
+
+speak(<Parallel><A /><B /></Parallel>);
+```
+
+Dactory runs `B` without waiting for `A` to be resolved.
