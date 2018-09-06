@@ -71,7 +71,7 @@ export default function Word(func, originalProps, children) {
         
         // nested tags
         } else if (children && children.length > 0) {
-          await Story(children, context);
+          await Story(children, context, !!func.processChildrenInParallel);
         }
       }
 

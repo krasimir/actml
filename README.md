@@ -14,7 +14,8 @@
   - [Error handling](#error-handling)
   - [Branching your logic](#branching-your-logic)
   - [Livecycle hooks](#livecycle-hooks)
-- [Build-in helpers](#build-in-helpers)
+  - [Behavior options](#behavior-options)
+- [Dictionary](#dictionary)
   - [Wrapper (`D`)](#wrapper-d)
 
 ---
@@ -62,7 +63,7 @@ The core API of Dactory is just two functions. `D` is the first one. Every tag t
 
 ### Order of execution
 
-The order of the execution is from top to bottom and from outer to inner words.
+The order of the execution is from top to bottom and from outer to inner _words_.
 
 ```js
 const Foo = () => console.log('Foo');
@@ -85,7 +86,7 @@ Mar
 
 ### Everything is considered asynchronous
 
-The `speak` function is asynchronous. Dactory makes an assumption that all the words in our dialect are also asynchronous. For example:
+The `speak` function is asynchronous. Dactory makes an assumption that all the _words_ in our dialect are also asynchronous. For example:
 
 ```js
 const Fetch = async function ({ url }) {
@@ -101,7 +102,7 @@ await speak(
 );
 ```
 
-If there are multiple asynchronous functions they are executed one after each other. If you need to run something in parallel keep reading. There's a [built-in helper](#build-in-helpers) for that. 
+If there are multiple asynchronous functions they are executed one after each other. If you need to run something in parallel keep reading. There's a _word_ in the [built-in dictionary](#dictionary) for that. 
 
 ### Passing data around
 
@@ -119,9 +120,9 @@ speak(<GetAnswer exports="answer" />)
   });
 ```
 
-Think about `exports` as something that defines a property in context. The value of that newly defined property is what our word returns.
+Think about `exports` as something that defines a property in context. The value of that newly defined property is what our _word_ returns.
 
-Passing data between words happens by adding a prop with no value and same name. For example:
+Passing data between _words_ happens by adding a prop with no value and same name. For example:
 
 ```js
 const GetAnswer = async function() {
@@ -292,11 +293,11 @@ await speak(
 
 ```
 
-The [livecycle hooks](#livecycle-hooks) become also handy if we want to stop processing or prevent the running of nested words.
+The [livecycle hooks](#livecycle-hooks) become also handy if we want to stop processing or prevent the running of nested _words_.
 
 ### Livecycle hooks
 
-There are couple of hooks that you may define which are triggered while Dactory runs your words. For example:
+There are couple of hooks that you may define which are triggered while Dactory runs your _words_. For example:
 
 ```js
 const before = () => {};
@@ -316,11 +317,39 @@ speak(<Foo><Bar /></Foo>);
 ```
 
 * The order of execution is `before`, `Foo`, `after`, `shouldProcessResult`, `Zar`, `shouldProcessChildren` and `Bar`.
-* Notice that `shouldProcessResult` should return `true`. Otherwise `Zar` will NOT be processed (as a reslut of `Func`).
+* Notice that `shouldProcessResult` should return `true`. Otherwise `Zar` will NOT be processed (as a result of `Func`).
 * Notice that `shouldProcessChildren` should return `true`. Otherwise `Bar` will NOT be processed (as a child of `Func`).
 * All the hooks are considered async functions. Which means that the hooks are helpful when you want to delay the execution.
 
-## Build-in helpers
+### Behavior options
+
+There are options that define the behavior of Dactory while processing your _word_. For example if you want to run your _word_'s children in parallel you have to use the `processChildrenInParallel` option.
+
+```js
+function A() {
+  return new Promise((done) => {
+    setTimeout(() => {
+      console.log('A');
+      done();
+    }, 30);
+  })
+}
+function B() {
+  console.log('B');
+}
+function C() {}
+
+speak(
+  <C>
+    <A />
+    <B />
+  </C>
+);
+```
+
+## Dictionary
+
+Dactory comes with some predefined _words_.
 
 ### Wrapper (`D`)
 

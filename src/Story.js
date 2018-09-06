@@ -1,6 +1,6 @@
 import Word from './Word';
 
-export default async function Story(words, context) {
+export default async function Story(words, context, parallelProcessing = false) {
   let pointer = 0;
 
   while(pointer < words.length) {
@@ -8,7 +8,11 @@ export default async function Story(words, context) {
 
     try {
       if (Word.isItAWord(word)) {
-        await word.say(context);
+        if (parallelProcessing) {
+          word.say(context);
+        } else {
+          await word.say(context);
+        }
       } else {
         await Story([ Word(word, null) ], context);
       }
