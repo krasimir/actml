@@ -1,6 +1,6 @@
 {
   "name": "dactory",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Like jsx but for your business logic",
   "main": "src/index.js",
   "scripts": {

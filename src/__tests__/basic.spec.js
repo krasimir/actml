@@ -266,4 +266,53 @@ describe('Given the Dactory library', () => {
       expect(B).toBeCalled();
     });
   });
+  describe('when working with the lifecyle methods', () => {
+    it(`should run
+        - before
+        - after
+        - shouldProcessResult
+        - shouldProcessChildren`, async () => {
+      const before = jest.fn();
+      const after = jest.fn();
+      const shouldProcessResult = jest.fn();
+      const shouldProcessChildren = jest.fn();
+      const Func = jest.fn().mockImplementation(() => 'result');
+
+      Func.before = before;
+      Func.after = after;
+      Func.shouldProcessResult = shouldProcessResult;
+      Func.shouldProcessChildren = shouldProcessChildren;
+
+      await speak(<Func foo='bar' />);
+
+      expect(before).toBeCalledWith({ foo: 'bar' });
+      expect(after).toBeCalledWith({ foo: 'bar' }, 'result');
+      expect(shouldProcessResult).toBeCalledWith({ foo: 'bar' }, 'result');
+      expect(shouldProcessChildren).toBeCalledWith({ foo: 'bar' }, 'result');
+    });
+    describe('and when `shouldProcessResult` returns `false`', () => {
+      it('should not process the result', async () => {
+        const A = jest.fn();
+        const Func = function() {
+          return <A />;
+        }
+        Func.shouldProcessResult = () => false;
+
+        await speak(Func);
+
+        expect(A).not.toBeCalled();
+      });
+    });
+    describe('and when `shouldProcessChildren` returns `false`', () => {
+      it('should not process the children', async () => {
+        const A = jest.fn();
+        const Func = jest.fn();
+        Func.shouldProcessChildren = () => false;
+
+        await speak(<D><Func><A /></Func></D>);
+
+        expect(A).not.toBeCalled();
+      });
+    });
+  });
 });

@@ -4,44 +4,65 @@
 
 ---
 
-- [How it works](#how-it-works)
+- [The concept](#the-concept)
+- [Installation and setup](#installation-and-setup)
+- [Fundamentals](#fundamentals)
   - [Core API](#core-api)
   - [Order of execution](#order-of-execution)
-  - [Handling asynchronous processes](#handling-asynchronous-processes)
+  - [Everything is considered asynchronous](#everything-is-considered-asynchronous)
   - [Passing data around](#passing-data-around)
   - [Error handling](#error-handling)
   - [Branching your logic](#branching-your-logic)
+  - [Livecycle hooks](#livecycle-hooks)
 - [Build-in helpers](#build-in-helpers)
   - [Wrapper (`D`)](#wrapper-d)
 
 ---
 
-*Dactory* is a library that allows you to use React's transpiler for different purpose. React is our view layer. It takes care for the rendering part. *Dactory* is opposite. It is dealing with the business logic of our applications. It allows us to write our own [dialect](https://en.wikipedia.org/wiki/Dialect) based on the [JSX syntax](https://facebook.github.io/jsx/).
+## The concept
+
+*Dactory* is a library that allows you to use React's transpiler for different purpose. React is a view layer. It takes care for the rendering part and the actual DOM. *Dactory* is opposite. It is dealing with the business logic of our applications. It allows us to write markup and basically create our own [dialect](https://en.wikipedia.org/wiki/Dialect) based on the [JSX syntax](https://facebook.github.io/jsx/).
 
 ```js
 /** @jsx D */
 import { D, speak } from 'dactory';
 
-const Foo = function ({ name }) {
-  console.log(`Hello dear ${ name }!`);
-}
+const Greeting = function({ name }) {
+  console.log(`Hello dear ${name}!`);
+};
+const Text = function({ what }) {
+  console.log(`Have in mind that, ${what}.`);
+};
 
-speak(<Foo name='programmer'/>); // Hello dear programmer!
+speak(
+  <D>
+    <Greeting name="Jon Snow" />
+    <Text what="winter is coming" />
+  </D>
+);
+/* Outputs:
+Hello dear Jon Snow! 
+Have in mind that, winter is coming.
+*/
 ```
 
 *You **must** add the `@jsx` comment at the top of your files. And you **must** import `D` function. Otherwise Dactory will not work.*
 
-## How it works
+## Installation and setup
 
-The code that we write follows the [JSX syntax](https://facebook.github.io/jsx/). You don't have to learn anything new. If you ever worked with React you already know how to write code that Dactory understands. Grab the library by running `npm install dactory` or `yarn install dactory` and run your usual React setup. As long as there's Babel involved everything will be transpiled correctly.
+Grab the library by running `npm install dactory` or `yarn install dactory`. Dactory uses JSX as a base so you have to have some sort of [Babel](https://babeljs.io/repl/) transpilation setup. Check out the [examples](https://github.com/krasimir/dactory/tree/master/examples) folder to get an idea how to do it.
+
+## Fundamentals
+
+The code that we write follows the [JSX syntax](https://facebook.github.io/jsx/). You don't have to learn anything new. If you ever worked with React you already know how to write code that Dactory understands.
 
 ### Core API
 
-The core API of Dactory is just two functions. `D` is the first one and you'll probably never use it directly. Every tag that we write gets transpiled to `D()` calls similarly to `React.createElement`. The more interesting one is `speak`. It accepts a markup-like code which we will define as **dialect**. The dialect describes in a declarative fashion what our program does.
+The core API of Dactory is just two functions. `D` is the first one. Every tag that we write gets transpiled to `D()` calls similarly to `React.createElement`. The more interesting one is `speak`. It accepts a markup-like code which we will define as **dialect** and every tag inside as a **Word**. The dialect describes in a declarative fashion what our program does.
 
 ### Order of execution
 
-The order of the execution is from top to bottom and from outer to inner element.
+The order of the execution is from top to bottom and from outer to inner words.
 
 ```js
 const Foo = () => console.log('Foo');
@@ -62,9 +83,9 @@ Mar
 */
 ```
 
-### Handling asynchronous processes
+### Everything is considered asynchronous
 
-The `speak` function is always asynchronous. It returns a promise. The dialect that we pass could be also made of asynchronous functions. Like for example:
+The `speak` function is asynchronous. Dactory makes an assumption that all the words in our dialect are also asynchronous. For example:
 
 ```js
 const Fetch = async function ({ url }) {
@@ -80,43 +101,47 @@ await speak(
 );
 ```
 
-If there are multiple asynchronous functions they are executed one after each other. If you need to run something in parallel keep reading. There's a built-in helper for that. 
+If there are multiple asynchronous functions they are executed one after each other. If you need to run something in parallel keep reading. There's a [built-in helper](#build-in-helpers) for that. 
 
 ### Passing data around
 
-Every dialect gets executed with a given context. The context in Dactory is just a plain JavaScript object. In fact the `speak` function accepts one as a second argument (by default set to `{}`). We also receive the context when the promise returned by `speak` is resolved. Which means that if we want to get something back we have to inject it into the context because that's the only one output of the `speak`'s call. This happens by using the special `exports` prop like so:
+Every dialect gets executed with a given context. The context is just a plain JavaScript object. In fact the `speak` function accepts one as a second argument (by default set to `{}`). We also receive the context when the promise returned by `speak` is resolved. Which means that if we want to get something back we have to inject it into the context because that's the only one output of the `speak`'s call. This happens by using the special `exports` prop like so:
 
 ```js
-const GetSettings = async function () {
-  return { answer: 42 };
+const GetAnswer = async function () {
+  // this gets assigned to `answer` prop in the context
+  return 42;
 };
 
-speak(<GetSettings exports="settings" />)
+speak(<GetAnswer exports="answer" />)
   .then(context => {
-    console.log(context.settings.answer); // 42
+    console.log(context.answer); // 42
   });
 ```
 
-Think about `exports` as something that defines a property in the dialect's context. The value of that new property is what our function returns.
+Think about `exports` as something that defines a property in context. The value of that newly defined property is what our word returns.
 
-Passing data between functions happens by adding a prop with no value and same name. For example:
+Passing data between words happens by adding a prop with no value and same name. For example:
 
 ```js
-const GetSettings = async function () {
-  return { answer: 42 };
+const GetAnswer = async function() {
+  return 42;
 };
-const Print = function ({ settings }) {
-  console.log(`The answer is ${settings.answer}.`);
-}
-const App = function () {}
+const Print = function({ answer }) {
+  console.log(`The answer is ${answer}.`);
+};
+const App = function() {};
 
 speak(
   <App>
-    <GetSettings exports="settings" />
-    <Print settings />
+    <GetAnswer exports="answer" />
+    <Print answer />
   </App>
 );
 ```
+
+`GetAnswer` defines a property `answer` in our context which becomes `{ answer: 42 }`. Later `Print` _says_ "I need `answer` prop from the context.
+
 
 That's not the only one way to pass data around. The [function as children pattern](https://github.com/krasimir/react-in-patterns/blob/master/book/chapter-4/README.md#function-as-a-children-render-prop) works here too:
 
@@ -138,7 +163,9 @@ speak(
 );
 ```
 
-It's just sometimes easier to write it as markup:
+`PrintUser` receives two props `title` and `name`. `title` comes from what `GetTitle` returns while `name` comes from the context.
+
+It's just easier to write it as markup:
 
 ```js
 speak(
@@ -236,7 +263,7 @@ We will see `B` followed by `C` but not `A` because there's an error at that lev
 
 ### Branching your logic
 
-Obviously we don't have a straight business logic. It has branches. Dactory has no API specific API for this. The recommended solution is the [function as children pattern](https://github.com/krasimir/react-in-patterns/blob/master/book/chapter-4/README.md#function-as-a-children-render-prop):
+Obviously we don't have a straight business logic. It has branches. Dactory has no API  for this. The first solution is the [function as children pattern](https://github.com/krasimir/react-in-patterns/blob/master/book/chapter-4/README.md#function-as-a-children-render-prop):
 
 ```js
 function MyLogic({ answer }) {
@@ -264,6 +291,10 @@ await speak(
 );
 
 ```
+
+The [livecycle hooks](livecycle-hooks) become also handy if we want to stop processing or prevent the running of nested words.
+
+### Livecycle hooks
 
 ## Build-in helpers
 
