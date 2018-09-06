@@ -350,7 +350,7 @@ speak(
 );
 ```
 
-Without ``C.processChildrenInParallel = true` we will get `A` followed by `B`. That's because Dactory will wait till A finishes to run `B`. However, `processChildrenInParallel` makes `A` and `B` run in parallel and we are getting `B` followed by `A`.
+Without `C.processChildrenInParallel = true` we will get `A` followed by `B`. That's because Dactory will wait till A finishes to run `B`. However, `processChildrenInParallel` makes `A` and `B` run in parallel and we are getting `B` followed by `A`.
 
 ## Dictionary
 
