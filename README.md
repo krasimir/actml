@@ -58,7 +58,7 @@ The code that we write follows the [JSX syntax](https://facebook.github.io/jsx/)
 
 ### Core API
 
-The core API of Dactory is just two functions. `D` is the first one. Every tag that we write gets transpiled to `D()` calls similarly to `React.createElement`. The more interesting one is `speak`. It accepts a markup-like code which we will define as **dialect** and every tag inside as a **Word**. The dialect describes in a declarative fashion what our program does.
+The core API of Dactory is just two functions. `D` is the first one. Every tag that we write gets transpiled to `D()` calls similarly to `React.createElement`. The more interesting one is `speak`. It accepts a markup-like code which we will define as **dialect** and every tag inside as a **word**. The dialect describes in a declarative fashion what our program does.
 
 ### Order of execution
 
@@ -295,6 +295,30 @@ await speak(
 The [livecycle hooks](#livecycle-hooks) become also handy if we want to stop processing or prevent the running of nested words.
 
 ### Livecycle hooks
+
+There are couple of hooks that you may define which are triggered while Dactory runs your words. For example:
+
+```js
+const before = () => {};
+const after = () => {};
+const shouldProcessResult = () => true;
+const shouldProcessChildren = () => true;
+const Foo = () => <Zar />;
+const Bar = () => {};
+const Zar = () => {};
+
+Foo.before = before;
+Foo.after = after;
+Foo.shouldProcessResult = shouldProcessResult;
+Foo.shouldProcessChildren = shouldProcessChildren;
+
+speak(<Foo><Bar /></Foo>);
+```
+
+* The order of execution is `before`, `Foo`, `after`, `shouldProcessResult`, `Zar`, `shouldProcessChildren` and `Bar`.
+* Notice that `shouldProcessResult` should return `true`. Otherwise `Zar` will NOT be processed (as a reslut of `Func`).
+* Notice that `shouldProcessChildren` should return `true`. Otherwise `Bar` will NOT be processed (as a child of `Func`).
+* All the hooks are considered async functions. Which means that the hooks are helpful when you want to delay the execution.
 
 ## Build-in helpers
 
