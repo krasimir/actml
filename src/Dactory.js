@@ -1,5 +1,4 @@
 import Word from './Word';
-import Story from './Story';
 
 export function create(func, props, ...children) {
   // using D as a dymmy component
@@ -10,9 +9,12 @@ export async function speak(word, context = {}) {
   if (Word.isItAWord(word)) {
     if (Word.isItAWord(word.func)) {
       word.func.mergeToProps(word.props);
-      return await Story([ word.func ], context);
+      await word.func.say(context);
+      return context;
     }
-    return await Story([ word ], context);
+    await word.say(context);
+    return context;
   }
-  return await Story([ create(word, null) ], context);
+  await create(word, null).say(context);
+  return context;
 }

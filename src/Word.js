@@ -1,5 +1,3 @@
-import Story from "./Story";
-
 const handleWordError = async function (error, props, context) {
   if (props && props.onError) {
     props.onError.mergeToProps({ error });
@@ -49,7 +47,7 @@ export async function processingResult({ func, result, props, context }) {
     let shouldProcessResultFlag = true;
     if (func.shouldProcessResult) shouldProcessResultFlag = await func.shouldProcessResult(props, result);
     if (shouldProcessResultFlag && Word.isItAWord(result)) {
-      await Story([ result ], context);
+      await result.say(context);
     }
   }
 }
@@ -62,11 +60,31 @@ export async function processChildren({ func, props, children, result, context }
   if (shouldProcessChildrenFlag) {
     // FACC pattern
     if (children && children.length === 1 && !Word.isItAWord(children[0])) {
-      await Story([ Word(children[0], result, undefined, Word.defaultPipeline) ], context);
+      await Word(children[0], result, undefined, Word.defaultPipeline).say(context);
     
     // nested tags
     } else if (children && children.length > 0) {
-      await Story(children, context, !!func.processChildrenInParallel);
+      let pointer = 0;
+      let parallelProcessing = !!func.processChildrenInParallel;
+
+      while(pointer < children.length) {
+        const w = children[pointer];
+
+        try {
+          if (parallelProcessing) {
+            w.say(context);
+          } else {
+            await w.say(context);
+          }
+        } catch (error) {
+          if (error.message === Word.errors.STOP_PROCESSING) {
+            break;
+          } else if(!(error.message === Word.errors.CONTINUE_PROCESSING)) {
+            throw error;
+          }
+        }
+        pointer++;
+      }
     }
   }
 }
