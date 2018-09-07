@@ -2,11 +2,9 @@ import Word from './Word';
 import Story from './Story';
 
 export function create(func, props, ...children) {
-
   // using D as a dymmy component
-  if (func === create) return Word(() => {}, props, children, Word.defaultPipeline);
-
-  return Word(func, props, children, Word.defaultPipeline);
+  if (func === create) return Word(() => {}, props, children);
+  return Word(func, props, children);
 }
 export async function speak(word, context = {}) {
   if (Word.isItAWord(word)) {

@@ -18,23 +18,21 @@ const handleWordError = async function (error, props, context) {
   }
 }
 
-// pipeline functions
-
-export function normalizeProps({ props }, context) {
+export function normalizeProps({ props, context }) {
   props && Object.keys(props).forEach(prop => {
     if (context[prop] && props[prop] === true) {
       props[prop] = context[prop];
     }
   });
 };
-export async function beforeHook({ func, props }, context) {
+export async function beforeHook({ func, props }) {
   if (func.before) await func.before(props);
 }
-export async function execute(word, context) {
-  const { func, props } = word;
+export async function execute(word) {
+  const { func, props, context } = word;
 
   try {
-    word.result = await func(props);
+    word.result = await func.call(word, props);
 
     if (props && props.exports) {
       context[props.exports] = word.result;
@@ -43,10 +41,10 @@ export async function execute(word, context) {
     await handleWordError(error, props, context);
   }
 }
-export async function afterHook({ func, props, result }, context) {
+export async function afterHook({ func, props, result }) {
   if (func.after) await func.after(props, result);
 }
-export async function processingResult({ func, result, props }, context) {
+export async function processingResult({ func, result, props, context }) {
   if (result) {
     let shouldProcessResultFlag = true;
     if (func.shouldProcessResult) shouldProcessResultFlag = await func.shouldProcessResult(props, result);
@@ -55,7 +53,7 @@ export async function processingResult({ func, result, props }, context) {
     }
   }
 }
-export async function processChildren({ func, props, children, result }, context) {
+export async function processChildren({ func, props, children, result, context }) {
   // shouldProcessChildren lifecycle
   let shouldProcessChildrenFlag = true;
   if (func.shouldProcessChildren) shouldProcessChildrenFlag = await func.shouldProcessChildren(props, result);
@@ -73,21 +71,23 @@ export async function processChildren({ func, props, children, result }, context
   }
 }
 
-export default function Word(func, props, children, pipeline) {
+export default function Word(func, props, children) {
   return {
 
     func,
     props,
     children,
-    pipeline,
+    pipeline: func.pipeline || Word.defaultPipeline,
     result: undefined,
+    context: undefined,
 
     mergeToProps(additionalProps) {
       this.props = Object.assign({}, this.props, additionalProps);
     },
     async say(context) {
-      let pointer = 0;
+      this.context = context;
 
+      let pointer = 0;
       while(pointer < this.pipeline.length) {
         await this.pipeline[pointer](this, context);
         pointer++;

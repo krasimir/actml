@@ -1,5 +1,6 @@
 /** @jsx D */
 import { D, speak } from '..';
+import { normalizeProps, beforeHook, execute, afterHook, processChildren } from '../Word';
 
 const fakeAsync = (resolveWith, delay) => new Promise(done => {
   setTimeout(() => done(resolveWith), delay);
@@ -375,6 +376,54 @@ describe('Given the Dactory library', () => {
 
         expect(A).not.toBeCalled();
       });
+    });
+  });
+  describe('when amending the pipeline', () => {
+    it(`- should be possible to process the children many times
+        - and pass data to them`, async () => {
+      const store = {
+        subscribe(callback) {
+          setTimeout(callback, 20);
+        }
+      }
+      const Func = async function () {
+        await processChildren({ ...this, result: 'foo' });
+        store.subscribe(async () => {
+          await processChildren({ ...this, result: 'bar' });
+          await processChildren(this);
+        });
+      }
+      const A = jest.fn();
+      const B = jest.fn();
+
+      Func.pipeline = [
+        normalizeProps,
+        beforeHook,
+        execute,
+        afterHook
+      ];
+      await speak(
+        <D>
+          <Func>
+            {
+              data => (
+                <D>
+                  <A data={ data }/>
+                  <B data={ data }/>
+                </D>
+              )
+            }
+          </Func>
+        </D>
+      );
+      await new Promise(done => setTimeout(done, 30));
+
+      expect(A).toHaveBeenCalledTimes(3);
+      expect(B).toHaveBeenCalledTimes(3);
+      expect(A).toBeCalledWith({ data: 'foo' });
+      expect(B).toBeCalledWith({ data: 'foo' });
+      expect(A).toBeCalledWith({ data: 'bar' });
+      expect(B).toBeCalledWith({ data: 'bar' });
     });
   });
 });
