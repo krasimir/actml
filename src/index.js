@@ -1,8 +1,8 @@
 import { create as D, speak } from './Dactory';
 import Parallel from './dictionary/Parallel';
-import { beforeHook, execute, afterHook, processingResult, processChildren } from './Word';
+import { normalizeProps, beforeHook, execute, afterHook, processingResult, processChildren } from './Word';
 
-const pipeline = { beforeHook, execute, afterHook, processingResult, processChildren };
+const pipeline = { normalizeProps, beforeHook, execute, afterHook, processingResult, processChildren };
 
 export {
   D,

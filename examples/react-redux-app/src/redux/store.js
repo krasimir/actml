@@ -1,5 +1,6 @@
 import { USERS_FETCHED } from './constants';
-import { createStore } from 'redux';
+import { createStore, applyMiddleware } from 'redux';
 import reducer from './reducer';
+import { Subscribe } from '../logic';
 
-export default () => createStore(reducer);
+export default () => createStore(reducer, applyMiddleware(Subscribe.middleware));
