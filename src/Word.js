@@ -9,59 +9,64 @@ const normalizeProps = function (props, context) {
   return props;
 };
 
-const sayIt = async function (func, props, context) {
-  let result;
+const handleWordError = async function (error, props, context) {
+  if (props && props.onError) {
+    const onErrorStrategy = await props.onError.say(context, { error });
 
-  try {
-    if (Word.isItAWord(func)) {
-      return await func.say(context, props);
-    }
-
-    result = props ? await func(props) : await func();
-
-    if (props && props.exports) {
-      context[props.exports] = result;
-    }
-  } catch (error) {
-    if (props && props.onError) {
-      if (await props.onError.say(context, { error }) !== true) {
-        throw error;
-      }
-    }
+    if (onErrorStrategy === false) {
+      throw new Error(Word.errors.STOP_PROCESSING);
+    } else if (onErrorStrategy === true) {
+      throw new Error(Word.errors.CONTINUE_PROCESSING);
+    } else {
+      throw error;
+    }      
+  } else {
+    throw error;
   }
-
-  return result;
 }
 
 export default function Word(func, originalProps, children) {
+  var props = originalProps;
+
   return {
-    say: async (context, additionalProps) => {
-      const props = normalizeProps(
-        additionalProps ? Object.assign({}, originalProps, additionalProps) : originalProps,
-        context
-      );
+    func,
+    props,
+    mergeToProps(additionalProps) {
+      props = Object.assign({}, props, additionalProps);
+    },
+    say: async (context) => {
+      const normalizedProps = normalizeProps(props, context);
 
       // before lifecycle
-      if (func.before) await func.before(props);
+      if (func.before) await func.before(normalizedProps);
 
       // running the function + error handling
-      const result = await sayIt(func, props, context);
+      let result;
+
+      try {
+        result = normalizedProps ? await func(normalizedProps) : await func();
+    
+        if (normalizedProps && normalizedProps.exports) {
+          context[normalizedProps.exports] = result;
+        }
+      } catch (error) {
+        await handleWordError(error, normalizedProps, context);
+      }
 
       // after lifecycle
-      if (func.after) await func.after(props, result);
+      if (func.after) await func.after(normalizedProps, result);
 
-      // shouldProcessResult lifecycle
+      // processing the result
       let shouldProcessResultFlag = true;
-      if (func.shouldProcessResult) shouldProcessResultFlag = await func.shouldProcessResult(props, result);
-
-      // when the result of a Word is another word
+      if (func.shouldProcessResult) shouldProcessResultFlag = await func.shouldProcessResult(normalizedProps, result);
       if (shouldProcessResultFlag && Word.isItAWord(result)) {
+        // when the result of a Word is another word
         await Story([ result ], context);
       }
 
       // shouldProcessChildren lifecycle
       let shouldProcessChildrenFlag = true;
-      if (func.shouldProcessChildren) shouldProcessChildrenFlag = await func.shouldProcessChildren(props, result);
+      if (func.shouldProcessChildren) shouldProcessChildrenFlag = await func.shouldProcessChildren(normalizedProps, result);
 
       // processing children
       if (shouldProcessChildrenFlag) {
@@ -80,4 +85,9 @@ export default function Word(func, originalProps, children) {
   }
 }
 
+// Static props
 Word.isItAWord = word => word && !!word.say;
+Word.errors = {
+  STOP_PROCESSING: 'STOP_PROCESSING',
+  CONTINUE_PROCESSING: 'CONTINUE_PROCESSING'
+};

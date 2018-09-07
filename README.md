@@ -215,26 +215,14 @@ speak(
 );
 ```
 
-Usually Dactory stops the execution of the current dialect. However, if our handler returns `true` it continues. For example:
+Dactory has several strategies for handling errors:
 
-```js
-const Problem = function() {
-  return iDontExist;
-};
-const App = function() {};
-const HandleError = () => true;
-const AfterError = () => console.log('I am still here :)');
+* If there's no handler provided the error bubbles up
+* If there's a handler and the handler returns `false` the error is swallowed. Dactory stops the execution of the current set of _words_.
+* If there's a handler and the handler returns `true` the error is swallowed. Dactory continues the execution of the current set of _words_.
+* If there's a handler and the handler returns nothing the error bubbles up.
 
-await speak(
-  <App exports='answer'>
-    <Problem onError={ <HandleError /> } />
-    <AfterError />
-  </App>
-);
-// outputs "I am still here :)" even tho there's an error
-```
-
-And by stopping the execution we mean only the current branch of the dialect. For example:
+By stopping the current set of _words_ we meant:
 
 ```js
 const Problem = function() {

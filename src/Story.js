@@ -17,7 +17,11 @@ export default async function Story(words, context, parallelProcessing = false) 
         await Story([ Word(word, null) ], context);
       }
     } catch (error) {
-      break;
+      if (error.message === Word.errors.STOP_PROCESSING) {
+        break;
+      } else if(!(error.message === Word.errors.CONTINUE_PROCESSING)) {
+        throw error;
+      }
     }
     pointer++;
   }

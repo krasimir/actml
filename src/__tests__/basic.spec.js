@@ -35,8 +35,8 @@ describe('Given the Dactory library', () => {
 
       expect(Func).toBeCalledWith({ foo: 10 });
     });
-    it(`should execute the function with the given merged params
-        return the result even if we use it as a tag`, async () => {
+    it.only(`- should execute the function with the given merged params
+        - return the result even if we use it as a tag`, async () => {
       const Func = jest.fn();
       const Word = <Func foo={ 10 }/>;
       await speak(<Word bar={ 20 }/>);
@@ -151,42 +151,25 @@ describe('Given the Dactory library', () => {
     });
   });
   describe('when there is an error', () => {
-    it('should fire the onError handler with the given error', async () => {
+    it('should bubble up the error if the handler returns `undefined`', async () => {
+      const Problem = function() {
+        return iDontExist; // throws an error "iDontExist is not defined"
+      };
+      const A = () => {};
+      const B = () => {};
+
+      try {
+        await speak(<D><A><B><Problem /></B></A></D>);
+      } catch (error) {
+        expect(error.toString()).toEqual('ReferenceError: iDontExist is not defined');
+      }
+    });
+    it('should stop processing if the error handler returns `false`', async () => {
       const Problem = function() {
         return iDontExist; // throws an error "iDontExist is not defined"
       };
       const App = function() {};
-      const spy = jest.fn();
-      const HandleError = ({ error }) => spy(error.message);
-      
-      await speak(
-        <App>
-          <Problem onError={ <HandleError /> } />
-        </App>
-      );
-      expect(spy).toBeCalledWith('iDontExist is not defined');
-    });
-    it('should fire the onError handler with the same context', async () => {
-      const Problem = function() {
-        return iDontExist; // throws an error "iDontExist is not defined"
-      };
-      const spy = jest.fn();
-      const App = function() { return 42 };
-      const HandleError = ({ answer }) => spy(answer);
-      
-      await speak(
-        <App exports='answer'>
-          <Problem onError={ <HandleError answer /> } />
-        </App>
-      );
-      expect(spy).toBeCalledWith(42);
-    });
-    it('should stop the current execution (by default)', async () => {
-      const Problem = function() {
-        return iDontExist; // throws an error "iDontExist is not defined"
-      };
-      const App = function() {};
-      const HandleError = jest.fn();
+      const HandleError = jest.fn().mockImplementation(() => false);
       const AfterError = jest.fn();
       
       await speak(
@@ -198,7 +181,7 @@ describe('Given the Dactory library', () => {
       expect(HandleError).toBeCalled();
       expect(AfterError).not.toBeCalled();
     });
-    it('should continue the current execution if the error handler returns `true`', async () => {
+    it('should continue processing if the error handler returns `true`', async () => {
       const Problem = function() {
         return iDontExist; // throws an error "iDontExist is not defined"
       };
@@ -215,6 +198,36 @@ describe('Given the Dactory library', () => {
       expect(HandleError).toBeCalled();
       expect(AfterError).toBeCalled();
     });
+    it('should fire the onError handler with the given error', async () => {
+      const Problem = function() {
+        return iDontExist; // throws an error "iDontExist is not defined"
+      };
+      const App = function() {};
+      const spy = jest.fn();
+      const HandleError = ({ error }) => (spy(error.message), false);
+      
+      await speak(
+        <App>
+          <Problem onError={ <HandleError /> } />
+        </App>
+      );
+      expect(spy).toBeCalledWith('iDontExist is not defined');
+    });
+    it('should fire the onError handler with the same context', async () => {
+      const Problem = function() {
+        return iDontExist; // throws an error "iDontExist is not defined"
+      };
+      const spy = jest.fn();
+      const App = function() { return 42 };
+      const HandleError = ({ answer }) => (spy(answer), false);
+      
+      await speak(
+        <App exports='answer'>
+          <Problem onError={ <HandleError answer /> } />
+        </App>
+      );
+      expect(spy).toBeCalledWith(42);
+    });
     it('should stop the current execution (by default) only in the current children branch', async () => {
       const Problem = function() {
         return iDontExist; // throws an error "iDontExist is not defined"
@@ -222,7 +235,7 @@ describe('Given the Dactory library', () => {
       const App = function() {};
       const Wrapper = function() {};
       const Dummy = () => 42;
-      const HandleErrorA = jest.fn();
+      const HandleErrorA = jest.fn().mockImplementation(() => false);
       const AfterErrorA = jest.fn();
       const B = jest.fn();
       const C = jest.fn();
