@@ -1,9 +1,11 @@
 /** @jsx D */
 import { D, pipeline } from 'dactory';
 
-const { normalizeProps, execute, processChildren } = pipeline;
+import { GET_POSTS } from '../redux/constants';
 
 // ****************************************************************
+const { normalizeProps, execute, processChildren } = pipeline;
+
 const ReduxIntegration = {
   _listeners: [],
   middleware: function dactoryReduxMiddleware({ getState, dispatch }) {
@@ -22,10 +24,16 @@ const ReduxIntegration = {
   }
 }
 
-export function Subscribe({ action }) {
-  ReduxIntegration.addListener(action => {
-    console.log(action);
-  });
+export function Subscribe(props) {
+  if (props && props.type) {
+    ReduxIntegration.addListener(action => {
+      if (action.type === props.type) {
+        processChildren({ ...this, result: action });
+      }
+    });
+  } else {
+    throw new Error('<Subscribe> requires `type` prop.');
+  }
 }
 Subscribe.pipeline = [
   normalizeProps,
@@ -37,6 +45,12 @@ Subscribe.middleware = ReduxIntegration.middleware;
 
 export default function StartUp() {
   return (
-    <Subscribe></Subscribe>
+    <Subscribe type={ 'GET_POSTS' }>
+      {
+        action => {
+          console.log(action);
+        }
+      }
+    </Subscribe>
   )
 }

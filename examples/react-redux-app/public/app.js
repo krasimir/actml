@@ -184,7 +184,6 @@ function Word(func, props, children) {
 
       var pointer = 0;
       while (pointer < this.pipeline.length) {
-        console.log(this.pipeline);
         await this.pipeline[pointer](this, context);
         pointer++;
       }
@@ -233,7 +232,7 @@ var _Word = require('./Word');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var pipeline = { beforeHook: _Word.beforeHook, execute: _Word.execute, afterHook: _Word.afterHook, processingResult: _Word.processingResult, processChildren: _Word.processChildren };
+var pipeline = { normalizeProps: _Word.normalizeProps, beforeHook: _Word.beforeHook, execute: _Word.execute, afterHook: _Word.afterHook, processingResult: _Word.processingResult, processChildren: _Word.processChildren };
 
 exports.D = _Dactory.create;
 exports.speak = _Dactory.speak;
@@ -23428,17 +23427,28 @@ exports.default = (0, _reactRedux.connect)(null, function (dispatch) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _extends = Object.assign || function (target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i];for (var key in source) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        target[key] = source[key];
+      }
+    }
+  }return target;
+}; /** @jsx D */
+
 exports.Subscribe = Subscribe;
 exports.default = StartUp;
 
 var _dactory = require('dactory');
 
+var _constants = require('../redux/constants');
+
+// ****************************************************************
 var normalizeProps = _dactory.pipeline.normalizeProps,
     execute = _dactory.pipeline.execute,
     processChildren = _dactory.pipeline.processChildren;
-
-// ****************************************************************
-/** @jsx D */
 
 var ReduxIntegration = {
   _listeners: [],
@@ -23465,12 +23475,18 @@ var ReduxIntegration = {
   }
 };
 
-function Subscribe(_ref2) {
-  var action = _ref2.action;
+function Subscribe(props) {
+  var _this = this;
 
-  ReduxIntegration.addListener(function (action) {
-    console.log(action);
-  });
+  if (props && props.type) {
+    ReduxIntegration.addListener(function (action) {
+      if (action.type === props.type) {
+        processChildren(_extends({}, _this, { result: action }));
+      }
+    });
+  } else {
+    throw new Error('<Subscribe> requires `type` prop.');
+  }
 }
 Subscribe.pipeline = [normalizeProps, execute];
 Subscribe.middleware = ReduxIntegration.middleware;
@@ -23478,10 +23494,12 @@ Subscribe.middleware = ReduxIntegration.middleware;
 // ****************************************************************
 
 function StartUp() {
-  return (0, _dactory.D)(Subscribe, null);
+  return (0, _dactory.D)(Subscribe, { type: 'GET_POSTS' }, function (action) {
+    console.log(action);
+  });
 }
 
-},{"dactory":4}],69:[function(require,module,exports){
+},{"../redux/constants":70,"dactory":4}],69:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
