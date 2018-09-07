@@ -5,7 +5,6 @@ import { normalizeProps, beforeHook, execute, afterHook, processChildren } from 
 function Subscribe({ action }) {
 
 }
-Subscribe
 
 export default function StartUp() {
   
