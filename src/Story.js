@@ -7,14 +7,10 @@ export default async function Story(words, context, parallelProcessing = false) 
     const word = words[pointer];
 
     try {
-      if (Word.isItAWord(word)) {
-        if (parallelProcessing) {
-          word.say(context);
-        } else {
-          await word.say(context);
-        }
+      if (parallelProcessing) {
+        word.say(context);
       } else {
-        await Story([ Word(word, null) ], context);
+        await word.say(context);
       }
     } catch (error) {
       if (error.message === Word.errors.STOP_PROCESSING) {

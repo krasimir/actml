@@ -31,11 +31,12 @@ describe('Given the Dactory library', () => {
     it('should execute the function with the given params', async () => {
       const Func = jest.fn();
       const Word = <Func foo={ 10 }/>;
+
       await speak(Word);
 
       expect(Func).toBeCalledWith({ foo: 10 });
     });
-    it.only(`- should execute the function with the given merged params
+    it(`- should execute the function with the given merged params
         - return the result even if we use it as a tag`, async () => {
       const Func = jest.fn();
       const Word = <Func foo={ 10 }/>;

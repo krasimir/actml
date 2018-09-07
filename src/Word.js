@@ -1,17 +1,10 @@
 import Story from "./Story";
 
-const normalizeProps = function (props, context) {
-  props && Object.keys(props).forEach(prop => {
-    if (context[prop] && props[prop] === true) {
-      props[prop] = context[prop];
-    }
-  });
-  return props;
-};
-
 const handleWordError = async function (error, props, context) {
   if (props && props.onError) {
-    const onErrorStrategy = await props.onError.say(context, { error });
+    props.onError.mergeToProps({ error });
+
+    const onErrorStrategy = await props.onError.say(context);
 
     if (onErrorStrategy === false) {
       throw new Error(Word.errors.STOP_PROCESSING);
@@ -25,62 +18,82 @@ const handleWordError = async function (error, props, context) {
   }
 }
 
-export default function Word(func, originalProps, children) {
-  var props = originalProps;
+// pipeline functions
 
+export function normalizeProps({ props }, context) {
+  props && Object.keys(props).forEach(prop => {
+    if (context[prop] && props[prop] === true) {
+      props[prop] = context[prop];
+    }
+  });
+};
+export async function beforeHook({ func, props }, context) {
+  if (func.before) await func.before(props);
+}
+export async function execute(word, context) {
+  const { func, props } = word;
+
+  try {
+    word.result = await func(props);
+
+    if (props && props.exports) {
+      context[props.exports] = word.result;
+    }
+  } catch (error) {
+    await handleWordError(error, props, context);
+  }
+}
+export async function afterHook({ func, props, result }, context) {
+  if (func.after) await func.after(props, result);
+}
+export async function processingResult({ func, result, props }, context) {
+  if (result) {
+    let shouldProcessResultFlag = true;
+    if (func.shouldProcessResult) shouldProcessResultFlag = await func.shouldProcessResult(props, result);
+    if (shouldProcessResultFlag && Word.isItAWord(result)) {
+      await Story([ result ], context);
+    }
+  }
+}
+export async function processChildren({ func, props, children, result }, context) {
+  // shouldProcessChildren lifecycle
+  let shouldProcessChildrenFlag = true;
+  if (func.shouldProcessChildren) shouldProcessChildrenFlag = await func.shouldProcessChildren(props, result);
+
+  // processing children
+  if (shouldProcessChildrenFlag) {
+    // FACC pattern
+    if (children && children.length === 1 && !Word.isItAWord(children[0])) {
+      await Story([ Word(children[0], result, undefined, Word.defaultPipeline) ], context);
+    
+    // nested tags
+    } else if (children && children.length > 0) {
+      await Story(children, context, !!func.processChildrenInParallel);
+    }
+  }
+}
+
+export default function Word(func, props, children, pipeline) {
   return {
+
     func,
     props,
+    children,
+    pipeline,
+    result: undefined,
+
     mergeToProps(additionalProps) {
-      props = Object.assign({}, props, additionalProps);
+      this.props = Object.assign({}, this.props, additionalProps);
     },
-    say: async (context) => {
-      const normalizedProps = normalizeProps(props, context);
+    async say(context) {
+      let pointer = 0;
 
-      // before lifecycle
-      if (func.before) await func.before(normalizedProps);
-
-      // running the function + error handling
-      let result;
-
-      try {
-        result = normalizedProps ? await func(normalizedProps) : await func();
-    
-        if (normalizedProps && normalizedProps.exports) {
-          context[normalizedProps.exports] = result;
-        }
-      } catch (error) {
-        await handleWordError(error, normalizedProps, context);
+      while(pointer < this.pipeline.length) {
+        await this.pipeline[pointer](this, context);
+        pointer++;
       }
 
-      // after lifecycle
-      if (func.after) await func.after(normalizedProps, result);
-
-      // processing the result
-      let shouldProcessResultFlag = true;
-      if (func.shouldProcessResult) shouldProcessResultFlag = await func.shouldProcessResult(normalizedProps, result);
-      if (shouldProcessResultFlag && Word.isItAWord(result)) {
-        // when the result of a Word is another word
-        await Story([ result ], context);
-      }
-
-      // shouldProcessChildren lifecycle
-      let shouldProcessChildrenFlag = true;
-      if (func.shouldProcessChildren) shouldProcessChildrenFlag = await func.shouldProcessChildren(normalizedProps, result);
-
-      // processing children
-      if (shouldProcessChildrenFlag) {
-        // FACC pattern
-        if (children && children.length === 1 && !Word.isItAWord(children[0])) {
-          await Story([ Word(children[0], result) ], context);
-        
-        // nested tags
-        } else if (children && children.length > 0) {
-          await Story(children, context, !!func.processChildrenInParallel);
-        }
-      }
-
-      return result;
+      return this.result;
     }
   }
 }
@@ -91,3 +104,11 @@ Word.errors = {
   STOP_PROCESSING: 'STOP_PROCESSING',
   CONTINUE_PROCESSING: 'CONTINUE_PROCESSING'
 };
+Word.defaultPipeline = [
+  normalizeProps,
+  beforeHook,
+  execute,
+  afterHook,
+  processingResult,
+  processChildren
+];
