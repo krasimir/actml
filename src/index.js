@@ -5,6 +5,5 @@ import Parallel from './dictionary/Parallel';
 export {
   D,
   speak,
-  Parallel,
-  Word
+  Parallel
 };

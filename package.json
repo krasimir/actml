@@ -1,8 +1,8 @@
 {
   "name": "dactory",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Like jsx but for your business logic",
-  "main": "src/index.js",
+  "main": "src",
   "scripts": {
     "test": "BABEL_ENV=development ./node_modules/.bin/jest \"(.*)\\.spec\\.js\""
   },

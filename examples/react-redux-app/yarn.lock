@@ -878,9 +878,9 @@ crypto-browserify@^3.0.0:
     public-encrypt "^4.0.0"
     randombytes "^2.0.0"
 
-dactory@0.1.9:
-  version "0.1.9"
-  resolved "https://registry.yarnpkg.com/dactory/-/dactory-0.1.9.tgz#5e594403005f8f3a3b827d89301230001e030dbc"
+dactory@0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/dactory/-/dactory-0.2.1.tgz#6534b4cd404110bfeece5e7db1daba80c4835e2b"
 
 date-now@^0.1.4:
   version "0.1.4"
