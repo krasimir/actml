@@ -1,4 +1,4 @@
-import Subscribe from './Subscribe';
+export { default as Subscribe } from './Subscribe';
 import Integration from './Integration';
 
 export const middleware = function({ getState, dispatch }) {
@@ -9,4 +9,3 @@ export const middleware = function({ getState, dispatch }) {
     return result;
   };
 }
-export const Subscribe = Subscribe;

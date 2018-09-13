@@ -1,4 +1,4 @@
-export const ReduxIntegration = {
+const Integration = {
   _listeners: [],
   addListener(callback) {
     this._listeners.push(callback);
@@ -7,3 +7,5 @@ export const ReduxIntegration = {
     this._listeners.forEach(l => l(action));
   }
 }
+
+export default Integration;
