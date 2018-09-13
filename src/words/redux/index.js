@@ -1,4 +1,7 @@
 export { default as Subscribe } from './Subscribe';
+export { default as SubscribeOnce } from './SubscribeOnce';
+export { default as Inspect } from './Inspect';
+
 import Integration from './Integration';
 
 export const middleware = function({ getState, dispatch }) {
@@ -9,3 +12,4 @@ export const middleware = function({ getState, dispatch }) {
     return result;
   };
 }
+export const reset = Integration.reset.bind(Integration);;
