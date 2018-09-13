@@ -29,13 +29,13 @@
     "browserify": "14.5.0",
     "fsevents": "1.2.4",
     "jest": "23.5.0",
-    "nan": "2.11.0",
-    "react": "16.0.0",
-    "react-dom": "16.0.0",
     "regenerator-runtime": "0.12.1",
-    "watchify": "3.9.0"
+    "watchify": "3.9.0",
+    "redux": "4.0.0"
   },
   "browserify": {
-    "transform": ["babelify"]
+    "transform": [
+      "babelify"
+    ]
   }
 }
