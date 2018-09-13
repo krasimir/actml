@@ -17,9 +17,14 @@ const handleWordError = async function (error, props, context) {
 }
 
 export function normalizeProps({ props, context }) {
-  props && Object.keys(props).forEach(prop => {
-    if (typeof context[prop] !== 'undefined' && props[prop] === true) {
-      props[prop] = context[prop];
+  props && Object.keys(props).forEach(propName => {
+    if (propName.charAt(0) === '$') {
+      const prop = propName.substr(1, propName.length);
+
+      if (typeof context[prop] !== 'undefined' && typeof props[propName] !== 'undefined') {
+        props[typeof props[propName] === 'string' ? props[propName] : prop] = context[prop];
+        delete props[propName];
+      }
     }
   });
 };

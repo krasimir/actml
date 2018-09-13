@@ -15,7 +15,7 @@
   - [Branching your logic](#branching-your-logic)
   - [Livecycle hooks](#livecycle-hooks)
   - [Behavior options](#behavior-options)
-- [Dictionary](#dictionary)
+- [Predefined words](#predefined-words)
   - [Wrapper (`D`)](#wrapper-d)
   - [Run words in parallel (`Parallel`)](#run-words-in-parallel-parallel)
 
@@ -33,7 +33,7 @@ const Greeting = function({ name }) {
   console.log(`Hello dear ${name}!`);
 };
 const Text = function({ what }) {
-  console.log(`Have in mind that, ${what}.`);
+  console.log(`You know what ... ${what}!`);
 };
 
 speak(
@@ -44,7 +44,7 @@ speak(
 );
 /* Outputs:
 Hello dear Jon Snow! 
-Have in mind that, winter is coming.
+You know what ... winter is coming.
 */
 ```
 
@@ -56,11 +56,11 @@ Grab the library by running `npm install dactory` or `yarn install dactory`. Dac
 
 ## Fundamentals
 
-The code that we write follows the [JSX syntax](https://facebook.github.io/jsx/). You don't have to learn anything new. If you ever worked with React you already know how to write code that Dactory understands.
+The code that we write follows the [JSX syntax](https://facebook.github.io/jsx/). You don't have to learn anything new. If you ever worked with JSX you already know how to write code that Dactory understands.
 
 ### Core API
 
-The core API of Dactory is just two functions. `D` is the first one. Every tag that we write gets transpiled to `D()` calls similarly to `React.createElement`. The more interesting one is `speak`. It accepts a markup-like code which we will define as **dialect** and every tag inside as a **word**. The dialect describes in a declarative fashion what our program does.
+The core API of Dactory is just two functions - `D` and `speak`. Every tag that we write gets transpiled to `D()` calls similarly to `React.createElement`. The more interesting one is `speak`. It accepts a markup-like code which we will define as **dialect** and every tag inside as a **word**. The dialect describes in a declarative fashion what our program does.
 
 ### Order of execution
 
@@ -87,7 +87,7 @@ Mar
 
 ### Everything is considered asynchronous
 
-The `speak` function is asynchronous. Dactory makes an assumption that all the _words_ in our dialect are also asynchronous. For example:
+The `speak` function is asynchronous. Dactory makes an assumption that all the _words_ in our _dialect_ are also asynchronous. For example:
 
 ```js
 const Fetch = async function ({ url }) {
@@ -103,11 +103,11 @@ await speak(
 );
 ```
 
-If there are multiple asynchronous functions they are executed one after each other. If you need to run something in parallel keep reading. There's a _word_ in the [built-in dictionary](#dictionary) for that. 
+If there are multiple asynchronous functions they are executed one after each other. If you need to run something in parallel keep reading. There's a _word_ in the [predefined words](#predefined-words) section for that. 
 
 ### Passing data around
 
-Every dialect gets executed with a given context. The context is just a plain JavaScript object. In fact the `speak` function accepts one as a second argument (by default set to `{}`). We also receive the context when the promise returned by `speak` is resolved. Which means that if we want to get something back we have to inject it into the context because that's the only one output of the `speak`'s call. This happens by using the special `exports` prop like so:
+Every _dialect_ gets executed with a given context. The context is just a plain JavaScript object and all the _words_ in the _dialect_ has access to it. In fact the `speak` function accepts one as a second argument (by default set to `{}`). We also receive the context when the promise returned by `speak` is resolved. Which means that if we want to get something back we have to inject it into the context because that's the only one output of the `speak`'s call. This happens by using the special `exports` prop like so:
 
 ```js
 const GetAnswer = async function () {
@@ -123,7 +123,7 @@ speak(<GetAnswer exports="answer" />)
 
 Think about `exports` as something that defines a property in context. The value of that newly defined property is what our _word_ returns.
 
-Passing data between _words_ happens by adding a prop with no value and same name. For example:
+Passing data between _words_ happens by adding a prop with no value and same name prefixed with `$`. For example:
 
 ```js
 const GetAnswer = async function() {
@@ -137,13 +137,12 @@ const App = function() {};
 speak(
   <App>
     <GetAnswer exports="answer" />
-    <Print answer />
+    <Print $answer />
   </App>
 );
 ```
 
 `GetAnswer` defines a property `answer` in our context which becomes `{ answer: 42 }`. Later `Print` _says_ "I need `answer` prop from the context.
-
 
 That's not the only one way to pass data around. The [function as children pattern](https://github.com/krasimir/react-in-patterns/blob/master/book/chapter-4/README.md#function-as-a-children-render-prop) works here too:
 
@@ -160,7 +159,7 @@ function App() {
 
 speak(
   <App exports="name">
-    <GetTitle>{ title => <PrintUser title={title} name /> }</GetTitle>
+    <GetTitle>{ title => <PrintUser title={title} $name /> }</GetTitle>
   </App>
 );
 ```
@@ -173,11 +172,26 @@ It's just easier to write it as markup:
 speak(
   <App exports="name">
     <GetTitle exports="title">
-      <PrintUser title name />
+      <PrintUser $title $name />
     </GetTitle>
   </App>
 );
 ```
+
+If we for some reason don't like the naming in our context we may change it by adding a value to the prefixed prop. For example:
+
+```js
+speak(
+  <App exports="name">
+    <GetTitle exports="title">
+      <PrintUser $title $name='applicationName' />
+    </GetTitle>
+  </App>
+);
+
+```
+
+`PrintUser` will receive `{ title: '...', applicationName: '...' }` instead of `{ title: '...', name: '...' }`.
 
 ### Error handling
 
@@ -253,7 +267,7 @@ We will see `B` followed by `C` but not `A` because there's an error at that lev
 
 ### Branching your logic
 
-Obviously we don't have a straight business logic. It has branches. Dactory has no API  for this. The first solution is the [function as children pattern](https://github.com/krasimir/react-in-patterns/blob/master/book/chapter-4/README.md#function-as-a-children-render-prop):
+Obviously we don't have a straight business logic. It has branches. Dactory has no API for this. The cheapest solution for that is the [function as children pattern](https://github.com/krasimir/react-in-patterns/blob/master/book/chapter-4/README.md#function-as-a-children-render-prop):
 
 ```js
 function MyLogic({ answer }) {
@@ -282,7 +296,7 @@ await speak(
 
 ```
 
-The [livecycle hooks](#livecycle-hooks) become also handy if we want to stop processing or prevent the running of nested _words_.
+Another option is the [livecycle hooks](#livecycle-hooks).
 
 ### Livecycle hooks
 
@@ -291,8 +305,8 @@ There are couple of hooks that you may define which are triggered while Dactory 
 ```js
 const before = () => {};
 const after = () => {};
-const shouldProcessResult = () => true;
-const shouldProcessChildren = () => true;
+const shouldProcessResult = (props, result) => true;
+const shouldProcessChildren = (props, result) => true;
 const Foo = () => <Zar />;
 const Bar = () => {};
 const Zar = () => {};
@@ -312,7 +326,7 @@ speak(<Foo><Bar /></Foo>);
 
 ### Behavior options
 
-There are options that define the behavior of Dactory while processing your _word_. For example if you want to run your _word_'s children in parallel you have to use the `processChildrenInParallel` option.
+There are options that define the behavior of Dactory while processing your _word_. For example if you want to run your _word_'s children in parallel you can to use the `processChildrenInParallel` option.
 
 ```js
 function A() {
@@ -340,7 +354,7 @@ speak(
 
 Without `C.processChildrenInParallel = true` we will get `A` followed by `B`. That's because Dactory will wait till A finishes to run `B`. However, `processChildrenInParallel` makes `A` and `B` run in parallel and we are getting `B` followed by `A`.
 
-## Dictionary
+## Predefined words
 
 Dactory comes with some predefined _words_.
 

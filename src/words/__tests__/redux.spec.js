@@ -90,16 +90,16 @@ describe('Given the Redux integration', () => {
     it('should dispatch an action', async () => {
       const store = setup(
         { counter: 0 },
-        (state, action) => (action.type === 'INCREASE' ? { counter: state.counter + action.amount } : state)
+        (state, action) => (action.type === 'INCREASE' ? { counter: state.counter + action.n } : state)
       );
       const A = () => 2;
       
       await speak(
         <D>
           <A exports='amount' />
-          <Action type='INCREASE' amount/>
-          <Action type='INCREASE' amount/>
-          <Action type='INCREASE' amount={10}/>
+          <Action type='INCREASE' $amount='n'/>
+          <Action type='INCREASE' $amount='n'/>
+          <Action type='INCREASE' n={10}/>
         </D>
       );
 
@@ -119,7 +119,7 @@ describe('Given the Redux integration', () => {
       await speak(
         <D>
           <Select selector={ selector } exports='age' />
-          <A age />
+          <A $age />
         </D>
       );
 
@@ -139,8 +139,8 @@ describe('Given the Redux integration', () => {
         const context = await speak(
           <D>
             <A exports='over'/>
-            <Select selector={ <IsItOver over /> } exports='answer' />
-            <B answer />
+            <Select selector={ <IsItOver $over /> } exports='answer' />
+            <B $answer />
           </D>
         );
   

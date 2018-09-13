@@ -48,7 +48,7 @@ describe('Given the Dactory library', () => {
     it(`work continue processing dialects if we return such as a result`, async () => {
       const Bar = jest.fn();
       const Foo = jest.fn().mockImplementation(() => {
-        return <Bar answer />;
+        return <Bar $answer />;
       });
       const App = () => 42;
 
@@ -133,7 +133,21 @@ describe('Given the Dactory library', () => {
       await speak(
         <App>
           <GetToken exports='token' />
-          <UseToken token />
+          <UseToken $token />
+        </App>
+      );
+      expect(print).toBeCalledWith('XXX');
+    });
+    it('should allow renaming of a prop', async () => {
+      const print = jest.fn();
+      const GetToken = async () => fakeAsync('XXX', 50);
+      const UseToken = ({ token }) => print(token);
+      const App = () => {};
+
+      await speak(
+        <App>
+          <GetToken exports='blah' />
+          <UseToken $blah='token' />
         </App>
       );
       expect(print).toBeCalledWith('XXX');
@@ -145,7 +159,7 @@ describe('Given the Dactory library', () => {
       const { result } = await speak(
         <App>
           <GetAnswer exports='answer' />
-          <Calc answer exports='result' />
+          <Calc $answer exports='result' />
         </App>
       );
 
@@ -225,7 +239,7 @@ describe('Given the Dactory library', () => {
       
       await speak(
         <App exports='answer'>
-          <Problem onError={ <HandleError answer /> } />
+          <Problem onError={ <HandleError $answer /> } />
         </App>
       );
       expect(spy).toBeCalledWith(42);
@@ -250,7 +264,7 @@ describe('Given the Dactory library', () => {
           </Wrapper>
           <Wrapper>
             <B />
-            <C answer/>
+            <C $answer/>
           </Wrapper>
         </App>
       );
