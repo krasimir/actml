@@ -18,7 +18,7 @@ const handleWordError = async function (error, props, context) {
 
 export function normalizeProps({ props, context }) {
   props && Object.keys(props).forEach(prop => {
-    if (context[prop] && props[prop] === true) {
+    if (typeof context[prop] !== 'undefined' && props[prop] === true) {
       props[prop] = context[prop];
     }
   });

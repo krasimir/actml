@@ -7,11 +7,13 @@ const {
   Subscribe,
   SubscribeOnce,
   Inspect,
+  Action,
+  Select,
   reset
 } = redux;
 
 const nextTick = () => new Promise(done => setTimeout(done, 1));
-const setup = (initialState, reducer) => {
+const setup = (initialState = {}, reducer = s => s) => {
   return createStore(reducer, initialState, applyMiddleware(middleware));
 }
 
@@ -82,6 +84,69 @@ describe('Given the Redux integration', () => {
       expect(A).toHaveBeenCalledTimes(1);
       expect(A).toBeCalledWith({ value: 100 });
       expect(B).toBeCalledWith({ numOfSubscribes: 3 });
+    });
+  });
+  describe('when using the Action word', () => {
+    it('should dispatch an action', async () => {
+      const store = setup(
+        { counter: 0 },
+        (state, action) => (action.type === 'INCREASE' ? { counter: state.counter + action.amount } : state)
+      );
+      const A = () => 2;
+      
+      await speak(
+        <D>
+          <A exports='amount' />
+          <Action type='INCREASE' amount/>
+          <Action type='INCREASE' amount/>
+          <Action type='INCREASE' amount={10}/>
+        </D>
+      );
+
+      expect(store.getState().counter).toBe(14);
+    });
+  });
+  describe('when using the Select word', () => {
+    it('should get the data from the store', async () => {
+      const store = setup(
+        { user: { age: 40 } }
+      );
+      const A = jest.fn();
+      const selector = function (state) {
+        return state.user.age;
+      }
+      
+      await speak(
+        <D>
+          <Select selector={ selector } exports='age' />
+          <A age />
+        </D>
+      );
+
+      expect(A).toBeCalledWith({ age: 40 });
+    });
+    describe('and we have parameterized selector', () => {
+      it('should get the data from the store', async () => {
+        const store = setup(
+          { user: { age: 40 } }
+        );
+        const A = () => 50;
+        const B = jest.fn();
+        const IsItOver = ({ over }) => ({ user }) => {
+          return user.age > over;
+        }
+        
+        const context = await speak(
+          <D>
+            <A exports='over'/>
+            <Select selector={ <IsItOver over /> } exports='answer' />
+            <B answer />
+          </D>
+        );
+  
+        expect(context).toMatchObject({ over: 50, answer: false });
+        expect(B).toBeCalledWith({ answer: false });
+      });
     });
   });
 });

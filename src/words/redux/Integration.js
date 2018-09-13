@@ -1,5 +1,15 @@
+const MIDDLEWARE_NOT_RUN = `There are two possible options for this error:
+a) You are running your Dactory logic too soon. The Redux middleware is still not registered.
+b) You forgot to register Dactory's Redux middleware.`;
+
 const Integration = {
   _listeners: [],
+  getState() {
+    throw new Error(MIDDLEWARE_NOT_RUN);
+  },
+  dispatch() {
+    throw new Error(MIDDLEWARE_NOT_RUN);
+  },
   addListener(callback) {
     this._listeners.push(callback);
 
