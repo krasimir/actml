@@ -1,12 +1,13 @@
 /** @jsx D */
 import { D, speak } from '..';
-import { normalizeProps, beforeHook, execute, afterHook, processChildren } from '../Word';
+import { init, beforeHook, execute, afterHook, processChildren } from '../Word';
+import Word from '../Word';
 
 const fakeAsync = (resolveWith, delay) => new Promise(done => {
   setTimeout(() => done(resolveWith), delay);
 });
 
-describe('Given the Dactory library', () => {
+describe.only('Given the Dactory library', () => {
   describe('when running a simple function', () => {
     it('should run the function as it is a jsx syntax', async () => {
       const Func = jest.fn();
@@ -295,104 +296,7 @@ describe('Given the Dactory library', () => {
       expect(B).toBeCalled();
     });
   });
-  describe('when working with the lifecyle methods', () => {
-    it(`should run
-        - before
-        - after
-        - shouldProcessResult
-        - shouldProcessChildren`, async () => {
-      const before = jest.fn();
-      const after = jest.fn();
-      const shouldProcessResult = jest.fn();
-      const shouldProcessChildren = jest.fn();
-      const Func = jest.fn().mockImplementation(() => 'result');
-
-      Func.before = before;
-      Func.after = after;
-      Func.shouldProcessResult = shouldProcessResult;
-      Func.shouldProcessChildren = shouldProcessChildren;
-
-      await speak(<Func foo='bar' />);
-
-      expect(before).toBeCalledWith({ foo: 'bar' });
-      expect(after).toBeCalledWith({ foo: 'bar' }, 'result');
-      expect(shouldProcessResult).toBeCalledWith({ foo: 'bar' }, 'result');
-      expect(shouldProcessChildren).toBeCalledWith({ foo: 'bar' }, 'result');
-    });
-    it('should consider all the lifecycle hooks async functions', async () => {
-      const temp = [];
-      const before = () => new Promise((done) => {
-        setTimeout(() => {
-          temp.push('before');
-          done();
-        }, 20);
-      });
-      const after = () => new Promise((done) => {
-        setTimeout(() => {
-          temp.push('after');
-          done();
-        }, 20);
-      });
-      const shouldProcessResult = () => new Promise((done) => {
-        setTimeout(() => {
-          temp.push('shouldProcessResult');
-          done(true);
-        }, 20);
-      });
-      const shouldProcessChildren = () => new Promise((done) => {
-        setTimeout(() => {
-          temp.push('shouldProcessChildren');
-          done(true);
-        }, 20);
-      });
-      const Func = jest.fn().mockImplementation(() => <Foo />);
-      const Foo = jest.fn().mockImplementation(() => temp.push('Foo'));
-      const Bar = jest.fn().mockImplementation(() => temp.push('Bar'));
-
-      Func.before = before;
-      Func.after = after;
-      Func.shouldProcessResult = shouldProcessResult;
-      Func.shouldProcessChildren = shouldProcessChildren;
-
-      await speak(<Func><Bar /></Func>);
-
-      expect(Foo).toBeCalled();
-      expect(Bar).toBeCalled();
-      expect(temp).toEqual([
-        'before',
-        'after',
-        'shouldProcessResult',
-        'Foo',
-        'shouldProcessChildren',
-        'Bar'
-      ]);
-    });
-    describe('and when `shouldProcessResult` returns `false`', () => {
-      it('should not process the result', async () => {
-        const A = jest.fn();
-        const Func = function() {
-          return <A />;
-        }
-        Func.shouldProcessResult = () => false;
-
-        await speak(Func);
-
-        expect(A).not.toBeCalled();
-      });
-    });
-    describe('and when `shouldProcessChildren` returns `false`', () => {
-      it('should not process the children', async () => {
-        const A = jest.fn();
-        const Func = jest.fn();
-        Func.shouldProcessChildren = () => false;
-
-        await speak(<D><Func><A /></Func></D>);
-
-        expect(A).not.toBeCalled();
-      });
-    });
-  });
-  describe('when amending the pipeline', () => {
+  describe('when working with the pipeline', () => {
     it(`- should be possible to process the children many times
         - and pass data to them`, async () => {
       const store = {
@@ -401,21 +305,15 @@ describe('Given the Dactory library', () => {
         }
       }
       const Func = async function () {
-        await processChildren({ ...this, result: 'foo' });
+        await this.pipeline.run('children', { ...this, result: 'foo' });
         store.subscribe(async () => {
-          await processChildren({ ...this, result: 'bar' });
-          await processChildren(this);
+          await this.pipeline.run('children', { ...this, result: 'bar' });
+          await this.pipeline.run('children', this);
         });
       }
       const A = jest.fn();
       const B = jest.fn();
 
-      Func.pipeline = [
-        normalizeProps,
-        beforeHook,
-        execute,
-        afterHook
-      ];
       await speak(
         <D>
           <Func>
@@ -438,6 +336,60 @@ describe('Given the Dactory library', () => {
       expect(B).toBeCalledWith({ data: 'foo' });
       expect(A).toBeCalledWith({ data: 'bar' });
       expect(B).toBeCalledWith({ data: 'bar' });
+    });
+  });
+  describe('when we want control the logic flow', () => {
+    describe('and we want to stop the current branch', () => {
+      it('should stop the current branch if there is a Word.errors.STOP_PROCESSING thrown', async () => {
+        const App = () => {}
+        const A = jest.fn();
+        const B = jest.fn().mockImplementation(() => {
+          throw new Error(Word.errors.STOP_PROCESSING);
+        });
+        const C = jest.fn();
+
+        await speak(
+          <App>
+            <A />
+            <B />
+            <C />
+          </App>
+        );
+
+        expect(A).toBeCalled();
+        expect(B).toBeCalled();
+        expect(C).not.toBeCalled();
+      });
+    });
+    describe.skip('and we want to prevent the children processing', () => {
+      it('should stop the children processing if', async () => {
+        const App = () => {}
+        const A = jest.fn().mockImplementation(() => console.log('A'));
+        const B = jest.fn().mockImplementation(function () {
+          this.pipeline.step('children').disable();
+        });
+        const C = jest.fn();
+        const E = jest.fn();
+
+        await speak(
+          <App>
+            <A />
+            <B>
+              <C />
+            </B>
+            <B>
+              {
+                () => E()
+              }
+            </B>
+          </App>
+        );
+
+        expect(A).toBeCalled();
+        expect(B).toHaveBeenCalledTimes(2);
+        expect(C).not.toBeCalled();
+        expect(E).not.toBeCalled();
+      });
     });
   });
 });

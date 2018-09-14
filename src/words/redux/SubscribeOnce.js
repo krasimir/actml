@@ -1,11 +1,11 @@
-import { normalizeProps, execute, processChildren } from '../../Word';
 import Integration from './Integration';
 
-export default function Subscribe(props) {
+export default function SubscribeOnce(props) {
+  this.pipeline.disable('children');
   if (props && props.type) {
     const removeListener = Integration.addListener(action => {
       if (action.type === props.type) {
-        processChildren({ ...this, result: action });
+        this.pipeline.run('children', { ...this, result: action });
         removeListener();
       }
     });
@@ -13,7 +13,3 @@ export default function Subscribe(props) {
     throw new Error('<Subscribe> requires `type` prop.');
   }
 }
-Subscribe.pipeline = [
-  normalizeProps,
-  execute
-];

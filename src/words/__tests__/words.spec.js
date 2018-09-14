@@ -1,5 +1,5 @@
 /** @jsx D */
-import { D, speak, Parallel } from '..';
+import { D, speak, Parallel } from '../..';
 
 const delay = (what, delay) => new Promise(done => {
   setTimeout(() => (what(), done()), delay);

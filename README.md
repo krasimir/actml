@@ -13,7 +13,6 @@
   - [Passing data around](#passing-data-around)
   - [Error handling](#error-handling)
   - [Branching your logic](#branching-your-logic)
-  - [Livecycle hooks](#livecycle-hooks)
   - [Behavior options](#behavior-options)
 - [Predefined words](#predefined-words)
   - [Wrapper (`D`)](#wrapper-d)
@@ -295,34 +294,6 @@ await speak(
 );
 
 ```
-
-Another option is the [livecycle hooks](#livecycle-hooks).
-
-### Livecycle hooks
-
-There are couple of hooks that you may define which are triggered while Dactory runs your _words_. For example:
-
-```js
-const before = () => {};
-const after = () => {};
-const shouldProcessResult = (props, result) => true;
-const shouldProcessChildren = (props, result) => true;
-const Foo = () => <Zar />;
-const Bar = () => {};
-const Zar = () => {};
-
-Foo.before = before;
-Foo.after = after;
-Foo.shouldProcessResult = shouldProcessResult;
-Foo.shouldProcessChildren = shouldProcessChildren;
-
-speak(<Foo><Bar /></Foo>);
-```
-
-* The order of execution is `before`, `Foo`, `after`, `shouldProcessResult`, `Zar`, `shouldProcessChildren` and `Bar`.
-* Notice that `shouldProcessResult` should return `true`. Otherwise `Zar` will NOT be processed (as a result of `Func`).
-* Notice that `shouldProcessChildren` should return `true`. Otherwise `Bar` will NOT be processed (as a child of `Func`).
-* All the hooks are considered async functions. Which means that the hooks are helpful when you want to delay the execution.
 
 ### Behavior options
 
