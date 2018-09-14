@@ -15,14 +15,8 @@ export default function Word(func, props, children) {
     },
     async say(context) {
       this.context = context;
-      let pipelineEntry;
-
-      while(pipelineEntry = this.pipeline.next()) {
-        if (pipelineEntry.enabled) {
-          await pipelineEntry.func(this);
-        }
-      }
-
+      this.pipeline.setScope(this);
+      await this.pipeline.run();
       return this.result;
     }
   }

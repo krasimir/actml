@@ -83,44 +83,47 @@ async function processChildren({ func, children, result, context }) {
 
 export default function Pipeline() {
   const entries = [];
-  let pointer = 0;
+  const API = function(entryName, result) {
+    const entry = API.find(entryName);
 
-  return {
-    add(func, name) {
-      entries.push({ name, func, enabled: true });
-    },
-    find(n) {
-      const entry = entries.find(({ name }) => name === n);
-
-      if (entry) {
-        return entry;
-      } else {
-        throw new Error(`Sorry, there is no pipeline entry with name "${ n }"`);
-      }
-    },
-    enable(name) {
-      this.find(name).enabled = true;
-    },
-    disable(name) {
-      this.find(name).enabled = false;
-    },
-    next() {
-      const entry = entries[pointer];
-
-      if (entry) {
-        pointer += 1;
-        return entry;
-      }
-      pointer = 0;
-      return false;
-    },
-    run(name, word) {
-      const entry = this.find(name);
-
-      entry.enabled = false;
-      return entry.func(word);
-    }
+    entry.enabled = false;
+    return entry.func({ ...API.scopeWord, result });
   }
+
+  API.add = function add(func, name) {
+    entries.push({ name, func, enabled: true });
+  }
+  API.find = function (n) {
+    const entry = entries.find(({ name }) => name === n);
+
+    if (entry) {
+      return entry;
+    } else {
+      throw new Error(`Sorry, there is no pipeline entry with name "${ n }"`);
+    }
+  };
+  API.disable = function (name) {
+    this.find(name).enabled = false;
+  };
+  API.enable = function (name) {
+    this.find(name).enabled = true;
+  };
+  API.run = async function () {
+    let entry;
+    let pointer = 0;
+
+    while(entry = entries[pointer]) {
+      if (entry.enabled) {
+        await entry.func(API.scopeWord);
+      }
+      pointer += 1;
+    }
+  };
+  API.setScope = function (scopeWord) {
+    API.scopeWord = scopeWord;
+  }
+
+  return API;
 }
 
 Pipeline.init = init;

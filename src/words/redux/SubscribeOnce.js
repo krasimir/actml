@@ -5,7 +5,7 @@ export default function SubscribeOnce(props) {
   if (props && props.type) {
     const removeListener = Integration.addListener(action => {
       if (action.type === props.type) {
-        this.pipeline.run('children', { ...this, result: action });
+        this.pipeline('children', action);
         removeListener();
       }
     });

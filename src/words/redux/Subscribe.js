@@ -5,7 +5,7 @@ export default function Subscribe(props) {
   if (props && props.type) {
     Integration.addListener(action => {
       if (action.type === props.type) {
-        this.pipeline.run('children', { ...this, result: action });
+        this.pipeline('children', action);
       }
     });
   } else {

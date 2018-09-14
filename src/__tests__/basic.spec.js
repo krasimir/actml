@@ -305,10 +305,10 @@ describe.only('Given the Dactory library', () => {
         }
       }
       const Func = async function () {
-        await this.pipeline.run('children', { ...this, result: 'foo' });
+        await this.pipeline('children', 'foo');
         store.subscribe(async () => {
-          await this.pipeline.run('children', { ...this, result: 'bar' });
-          await this.pipeline.run('children', this);
+          await this.pipeline('children', 'bar');
+          await this.pipeline('children');
         });
       }
       const A = jest.fn();
@@ -336,6 +336,8 @@ describe.only('Given the Dactory library', () => {
       expect(B).toBeCalledWith({ data: 'foo' });
       expect(A).toBeCalledWith({ data: 'bar' });
       expect(B).toBeCalledWith({ data: 'bar' });
+      expect(A).toBeCalledWith({ data: undefined });
+      expect(B).toBeCalledWith({ data: undefined });
     });
   });
   describe('when we want control the logic flow', () => {
@@ -361,15 +363,18 @@ describe.only('Given the Dactory library', () => {
         expect(C).not.toBeCalled();
       });
     });
-    describe.skip('and we want to prevent the children processing', () => {
-      it('should stop the children processing if', async () => {
+    describe('and we want to prevent the children processing', () => {
+      it('should stop the children processing using the pipeline', async () => {
         const App = () => {}
-        const A = jest.fn().mockImplementation(() => console.log('A'));
-        const B = jest.fn().mockImplementation(function () {
-          this.pipeline.step('children').disable();
+        const A = jest.fn();
+        const B = jest.fn().mockImplementation(function (props) {
+          if (!props || props.flag !== true) {
+            this.pipeline.disable('children');
+          }
         });
         const C = jest.fn();
         const E = jest.fn();
+        const F = jest.fn();
 
         await speak(
           <App>
@@ -382,13 +387,17 @@ describe.only('Given the Dactory library', () => {
                 () => E()
               }
             </B>
+            <B flag>
+              <F />
+            </B>
           </App>
         );
 
         expect(A).toBeCalled();
-        expect(B).toHaveBeenCalledTimes(2);
+        expect(B).toHaveBeenCalledTimes(3);
         expect(C).not.toBeCalled();
         expect(E).not.toBeCalled();
+        expect(F).toBeCalled();
       });
     });
   });
