@@ -9,12 +9,9 @@ export async function speak(word, context = {}) {
   if (Word.isItAWord(word)) {
     if (Word.isItAWord(word.func)) {
       word.func.mergeToProps(word.props);
-      await word.func.say(context);
-      return context;
+      return await word.func.say(context);
     }
-    await word.say(context);
-    return context;
+    return await word.say(context);
   }
-  await create(word, null).say(context);
-  return context;
+  return await create(word, null).say(context);
 }

@@ -7,7 +7,7 @@ const fakeAsync = (resolveWith, delay) => new Promise(done => {
   setTimeout(() => done(resolveWith), delay);
 });
 
-describe.only('Given the Dactory library', () => {
+describe('Given the Dactory library', () => {
   describe('when running a simple function', () => {
     it('should run the function as it is a jsx syntax', async () => {
       const Func = jest.fn();
@@ -15,6 +15,20 @@ describe.only('Given the Dactory library', () => {
       await speak(Func);
 
       expect(Func).toBeCalled();
+    });
+    it('should return the result of the function', async () => {
+      const Func = jest.fn().mockImplementation(() => 'foo');
+
+      const result = await speak(Func);
+
+      expect(result).toBe('foo');
+    });
+    it('should return the result of the function even if it is async', async () => {
+      const Func = jest.fn().mockImplementation(() => fakeAsync('foo', 30));
+
+      const result = await speak(Func);
+
+      expect(result).toBe('foo');
     });
     it('should run the function and its children as it is a jsx syntax', async () => {
       const A = jest.fn();
@@ -153,10 +167,10 @@ describe.only('Given the Dactory library', () => {
       );
       expect(print).toBeCalledWith('XXX');
     });
-    it('should return the context as a result of the async `speak` command', async () => {
+    it('should be able to return the context as a result of a function', async () => {
       const GetAnswer = async () => fakeAsync(21, 20);
       const Calc = ({ answer }) => fakeAsync(answer * 2, 30);
-      const App = () => {};
+      const App = function () { return this.context; };
       const { result } = await speak(
         <App>
           <GetAnswer exports='answer' />
@@ -399,6 +413,24 @@ describe.only('Given the Dactory library', () => {
         expect(E).not.toBeCalled();
         expect(F).toBeCalled();
       });
+    });
+  });
+  describe('when the word is a generator', () => {
+    it('should process the `yield`ed statements as words', async () => {
+      const A = jest.fn();
+      const B = jest.fn().mockImplementation(() => fakeAsync(42, 10));
+      const C = jest.fn().mockImplementation(answer => `the answer is ${ answer }`);
+      const E = jest.fn().mockImplementation(({ message, answer }) => ({ message, answer }));
+      const Func = function *() {
+        yield <A foo='bar' />;
+        const answer = yield <B bar='foo' exports='answer' />;
+        const message = yield C(answer);
+        return <E $answer message={ message } />;
+      }
+
+      const result = await speak(Func);
+
+      expect(A).toBeCalled();
     });
   });
 });

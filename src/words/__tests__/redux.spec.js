@@ -1,6 +1,6 @@
 /** @jsx D */
 import { createStore, applyMiddleware } from 'redux';
-import { D, speak, redux } from '../../';
+import { D, speak, Redux } from '../../';
 
 const {
   middleware,
@@ -10,7 +10,7 @@ const {
   Action,
   Select,
   reset
-} = redux;
+} = Redux;
 
 const nextTick = () => new Promise(done => setTimeout(done, 1));
 const setup = (initialState = {}, reducer = s => s) => {

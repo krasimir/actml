@@ -1,15 +1,14 @@
 import { create as D, speak } from './Dactory';
 import Parallel from './words/Parallel';
-import { init, beforeHook, execute, afterHook, processResult, processChildren } from './Word';
 import * as ReduxMethods from './words/redux';
+import Pipeline from './Pipeline';
 
-const pipeline = { init, beforeHook, execute, afterHook, processResult, processChildren };
-const redux = { ...ReduxMethods };
+const Redux = { ...ReduxMethods };
 
 export {
   D,
   speak,
   Parallel,
-  pipeline,
-  redux
+  Pipeline,
+  Redux
 };
