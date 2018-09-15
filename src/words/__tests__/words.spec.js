@@ -8,11 +8,12 @@ const delay = (what, delay) => new Promise(done => {
 describe('Given the Dactory dictionary', () => {
   describe('when using the wrapper <D />', () => {
     it('should work just fine :)', async () => {
-      const F = jest.fn();
+      const F = jest.fn().mockImplementation(() => 42);
 
-      await speak(<D><F /></D>);
+      const result = await speak(<D><F exports='answer' /></D>);
 
       expect(F).toBeCalled();
+      expect(result).toMatchObject({ answer: 42 });
     });
   });
   describe('when using Parallel', () => {

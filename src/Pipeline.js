@@ -1,5 +1,6 @@
 import Word from './Word';
 
+// helpers
 const handleWordError = async function (error, props, context) {
   if (props && props.onError) {
     props.onError.mergeToProps({ error });
@@ -17,6 +18,8 @@ const handleWordError = async function (error, props, context) {
     throw error;
   }
 }
+
+// middlewares
 function init({ props, context }) {
   // normalizing the props
   props && Object.keys(props).forEach(propName => {
@@ -43,10 +46,25 @@ async function execute(word) {
     await handleWordError(error, props, context);
   }
 }
-async function processResult({ result, context }) {
+async function processResult(word) {
+  const { result, context } = word;
+
   if (result) {
     if (Word.isItAWord(result)) {
       await result.say(context);
+    }
+    // Generator
+    if (typeof result.next === 'function') {
+      const gen = result;
+      let genRes = { value: undefined, done: false };
+
+      while(!genRes.done) {
+        genRes = gen.next(genRes.value);
+        if (Word.isItAWord(genRes.value)) {
+          genRes.value = await genRes.value.say(context);
+        }
+      }
+      word.result = genRes.value;
     }
   }
 }

@@ -130,6 +130,7 @@ describe('Given the Redux integration', () => {
         const store = setup(
           { user: { age: 40 } }
         );
+        const App = function () { return this.context; }
         const A = () => 50;
         const B = jest.fn();
         const IsItOver = ({ over }) => ({ user }) => {
@@ -137,11 +138,11 @@ describe('Given the Redux integration', () => {
         }
         
         const context = await speak(
-          <D>
+          <App>
             <A exports='over'/>
             <Select selector={ <IsItOver $over /> } exports='answer' />
             <B $answer />
-          </D>
+          </App>
         );
   
         expect(context).toMatchObject({ over: 50, answer: false });

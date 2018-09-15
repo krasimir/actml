@@ -420,7 +420,9 @@ describe('Given the Dactory library', () => {
       const A = jest.fn();
       const B = jest.fn().mockImplementation(() => fakeAsync(42, 10));
       const C = jest.fn().mockImplementation(answer => `the answer is ${ answer }`);
-      const E = jest.fn().mockImplementation(({ message, answer }) => ({ message, answer }));
+      const E = jest.fn().mockImplementation(function({ message, answer }) {
+        return { message, answer, context: this.context };
+      });
       const Func = function *() {
         yield <A foo='bar' />;
         const answer = yield <B bar='foo' exports='answer' />;
@@ -430,7 +432,15 @@ describe('Given the Dactory library', () => {
 
       const result = await speak(Func);
 
-      expect(A).toBeCalled();
+      expect(A).toBeCalledWith({ foo: 'bar' });
+      expect(B).toBeCalledWith({ bar: 'foo', exports: 'answer' });
+      expect(C).toBeCalledWith(42);
+      expect(E).toBeCalledWith({ answer: 42, message: 'the answer is 42' });
+      expect(result).toMatchObject({
+        message: 'the answer is 42',
+        answer: 42,
+        context: { answer: 42 }
+      });
     });
   });
 });
