@@ -5,8 +5,8 @@
   "main": "lib",
   "scripts": {
     "test": "BABEL_ENV=development ./node_modules/.bin/jest \"(.*)\\.spec\\.js\"",
-    "build": "./node_modules/.bin/babel ./src --out-dir ./lib",
-    "release": "yarn test && yarn build && npm publish"
+    "build": "./node_modules/.bin/babel ./src --out-dir ./lib --ignore spec.js",
+    "release": "yarn test && yarn build"
   },
   "repository": {
     "type": "git",
