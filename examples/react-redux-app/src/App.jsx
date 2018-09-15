@@ -5,6 +5,7 @@ import createStore from './redux/store';
 import Header from './components/Header';
 import { speak } from 'dactory';
 import Logic from './logic';
+import getPosts from './services/getPosts';
 
 class App extends React.Component {
   render() {
@@ -19,4 +20,8 @@ ReactDOM.render(
   document.querySelector('#content')
 );
 
-speak(Logic);
+const context = {
+  getPosts
+}
+
+speak(Logic, context);

@@ -1,6 +1,6 @@
 /** @jsx D */
 import { createStore, applyMiddleware } from 'redux';
-import { D, speak, Redux } from '../../';
+import { D, speak, Redux } from '../../../';
 
 const {
   middleware,
@@ -47,6 +47,26 @@ describe('Given the Redux integration', () => {
       expect(A).toBeCalledWith({ value: 200 });
       expect(A).toBeCalledWith({ value: 100 });
     });
+    it('should 222', async () => {
+      const ANSWER = 'ANSWER';
+      const store = setup(
+        { answer: null },
+        (state, action) => (action.type === 'ANSWER' ? { answer: action.value } : state)
+      );
+      const A = jest.fn();
+      
+      await speak(
+        <Subscribe type={ ANSWER } exports='action'>
+          <A $action />
+        </Subscribe>
+      );
+
+      store.dispatch({ type: ANSWER, value: 100 });
+
+      await nextTick();
+
+      expect(A).toBeCalledWith({ action: { type: ANSWER, value: 100 } });
+    });
   });
   describe('when using the SubscribeOnce word', () => {
     it('should subscribe to a Redux action only once', async () => { 
@@ -56,11 +76,14 @@ describe('Given the Redux integration', () => {
       );
       const A = jest.fn();
       const B = jest.fn();
+      const C = jest.fn();
       
       await speak(
         <D>
           <SubscribeOnce type='FOO' />
-          <SubscribeOnce type='ZAR' />
+          <SubscribeOnce type='ZAR' exports='action'>
+            <C $action />
+          </SubscribeOnce>
           <SubscribeOnce type='ANSWER'>
             {
               ({ value }) => (
@@ -78,12 +101,14 @@ describe('Given the Redux integration', () => {
       store.dispatch({ type: 'ANSWER', value: 100 });
       store.dispatch({ type: 'ANOTHER_ANSWER' });
       store.dispatch({ type: 'ANSWER', value: 200 });
+      store.dispatch({ type: 'ZAR', foo: 'bar' });
 
       await nextTick();
 
       expect(A).toHaveBeenCalledTimes(1);
       expect(A).toBeCalledWith({ value: 100 });
-      expect(B).toBeCalledWith({ numOfSubscribes: 3 });
+      expect(B).toBeCalledWith({ numOfSubscribes: 2 });
+      expect(C).toBeCalledWith({ action: { type: 'ZAR', foo: 'bar' } });
     });
   });
   describe('when using the Action word', () => {
@@ -130,22 +155,20 @@ describe('Given the Redux integration', () => {
         const store = setup(
           { user: { age: 40 } }
         );
-        const App = function () { return this.context; }
         const A = () => 50;
         const B = jest.fn();
         const IsItOver = ({ over }) => ({ user }) => {
           return user.age > over;
         }
         
-        const context = await speak(
-          <App>
+        await speak(
+          <D>
             <A exports='over'/>
             <Select selector={ <IsItOver $over /> } exports='answer' />
             <B $answer />
-          </App>
+          </D>
         );
   
-        expect(context).toMatchObject({ over: 50, answer: false });
         expect(B).toBeCalledWith({ answer: false });
       });
     });

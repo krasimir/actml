@@ -38,20 +38,20 @@ async function execute(word) {
 
   try {
     word.result = await func.call(word, props);
-
-    if (props && props.exports) {
-      context[props.exports] = word.result;
-    }
   } catch (error) {
     await handleWordError(error, props, context);
   }
 }
 async function processResult(word) {
-  const { result, context } = word;
+  const { result, context, props } = word;
+
+  if (props && props.exports) {
+    context[props.exports] = result;
+  }
 
   if (result) {
     if (Word.isItAWord(result)) {
-      await result.say(context);
+      await result.say({ ...context });
     }
     // Generator
     if (typeof result.next === 'function') {
@@ -71,21 +71,22 @@ async function processResult(word) {
 async function processChildren({ func, children, result, context }) {
   // FACC pattern
   if (children && children.length === 1 && !Word.isItAWord(children[0])) {
-    await Word(children[0], result).say(context);
+    await Word(children[0], result).say({ ...context });
   
   // nested tags
   } else if (children && children.length > 0) {
     let pointer = 0;
     let parallelProcessing = !!func.processChildrenInParallel;
+    let childrenContext = { ...context };
 
     while(pointer < children.length) {
       const w = children[pointer];
 
       try {
         if (parallelProcessing) {
-          w.say(context);
+          w.say(childrenContext);
         } else {
-          await w.say(context);
+          await w.say(childrenContext);
         }
       } catch (error) {
         if (error.message === Word.errors.STOP_PROCESSING) {
@@ -154,7 +155,7 @@ export function createDefaultPipeline() {
 
   pipeline.add(init);
   pipeline.add(execute);
-  pipeline.add(processResult);
+  pipeline.add(processResult, 'result');
   pipeline.add(processChildren, 'children');
 
   return pipeline;
