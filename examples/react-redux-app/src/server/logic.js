@@ -28,3 +28,6 @@ export function Add({ title, text }) {
 export function Delete({ id }) {
   posts = posts.filter(({ id: postId }) => id !== postId);
 }
+export function HandleError({ error }) {
+  return error.message;
+}

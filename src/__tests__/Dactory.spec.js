@@ -148,18 +148,15 @@ describe('Given the Dactory library', () => {
     });
   });
   describe('when there is an error', () => {
-    it('should bubble up the error if the handler returns `undefined`', async () => {
+    it('should swallow the error if the handler returns nothing (`undefined`)', async () => {
       const Problem = function() {
         return iDontExist; // throws an error "iDontExist is not defined"
       };
       const A = () => {};
       const B = () => {};
+      const Handler = () => {};
 
-      try {
-        await speak(<D><A><B><Problem /></B></A></D>);
-      } catch (error) {
-        expect(error.toString()).toEqual('ReferenceError: iDontExist is not defined');
-      }
+      await speak(<D><A><B><Problem onError={ <Handler /> }/></B></A></D>);
     });
     it('should stop processing if the error handler returns `false`', async () => {
       const Problem = function() {

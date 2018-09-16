@@ -12,7 +12,7 @@ const handleWordError = async function (error, props, context) {
     } else if (onErrorStrategy === true) {
       throw new Error(Word.errors.CONTINUE_PROCESSING);
     } else {
-      throw error;
+      // swallowing the error
     }      
   } else {
     throw error;

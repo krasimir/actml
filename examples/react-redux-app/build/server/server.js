@@ -19,7 +19,15 @@ app.get('/api/posts', async function (req, res) {
   res.json((await (0, _dactory.speak)((0, _dactory.D)(_logic.GetPosts, null))));
 });
 app.get('/api/post/:id', async function (req, res) {
-  res.json((await (0, _dactory.speak)((0, _dactory.D)(_logic.GetPost, { id: req.params.id }))));
+  var _ref = await (0, _dactory.speak)((0, _dactory.D)(_logic.GetPost, { id: req.params.id, onError: (0, _dactory.D)(_logic.HandleError, { exports: 'error' }) })),
+      post = _ref.post,
+      error = _ref.error;
+
+  if (post) {
+    res.json(post);
+  } else {
+    res.status(500).json(error);
+  }
 });
 
 app.listen(4500, function () {

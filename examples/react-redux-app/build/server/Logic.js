@@ -7,6 +7,7 @@ exports.GetPosts = GetPosts;
 exports.GetPost = GetPost;
 exports.Add = Add;
 exports.Delete = Delete;
+exports.HandleError = HandleError;
 var posts = [];
 
 var ID = function ID() {
@@ -49,4 +50,9 @@ function Delete(_ref4) {
     var postId = _ref5.id;
     return id !== postId;
   });
+}
+function HandleError(_ref6) {
+  var error = _ref6.error;
+
+  return error.message;
 }
