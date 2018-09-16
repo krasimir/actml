@@ -28,17 +28,18 @@ export function AddPost({ title, text }) {
 export function DeletePost({ id }) {
   var deleted = false;
 
-  posts = posts.filter(({ id: postId }) => {
-    if (id !== postId) {
+  posts = posts.filter(post => {
+    if (id !== post.id) {
       return true;
     }
-    deleted = true;
+    deleted = post;
     return false;
   });
 
   if (!deleted) {
     throw new Error('Not found');
   }
+  return deleted;
 }
 export function HandleError({ error }) {
   return error.message;

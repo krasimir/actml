@@ -22,3 +22,15 @@ export function getPost(url) {
     return result.json();
   };
 }
+export function deletePost(url) {
+  return async ({ id }) => {
+    const result = await fetch(url + id, {
+      method: 'DELETE',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+    return result.json();
+  };
+}

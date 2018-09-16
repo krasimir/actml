@@ -4,7 +4,8 @@ import {
   POSTS_LOADED,
   GET_DETAILS,
   NEW_POST,
-  UPDATE_POST 
+  UPDATE_POST,
+  DELETE_POST
 } from '../redux/constants';
 
 const { Subscribe, Action } = Redux;
@@ -26,6 +27,10 @@ export default function StartUp() {
       <Subscribe type={ GET_DETAILS } exports={ ({ id }) => ({ id })}>
         <getPost $id exports='postWithDetails'/>
         <Action type={ UPDATE_POST } $postWithDetails='data' />
+      </Subscribe>
+      <Subscribe type={ DELETE_POST } exports={ ({ id }) => ({ id })}>
+        <deletePost $id />
+        <FetchPosts />
       </Subscribe>
     </D>
   )

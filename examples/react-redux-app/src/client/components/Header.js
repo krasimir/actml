@@ -1,9 +1,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { getPosts } from '../redux/selectors';
-import { getDetails } from '../redux/actions';
+import { getDetails, deletePost } from '../redux/actions';
 
-function Header({ posts, getDetails }) {
+function Header({ posts, getDetails, deletePost }) {
   let message = '...';
   let List;
 
@@ -19,7 +19,9 @@ function Header({ posts, getDetails }) {
               <button onClick={ () => getDetails(id) }>
                 view details
               </button>
-              <button>delete</button>
+              <button onClick={ () => deletePost(id) }>
+                delete
+              </button>
             </li>
           ))
         }
@@ -40,6 +42,7 @@ export default connect(
     posts: getPosts(state)
   }),
   dispatch => ({
-    getDetails: id => dispatch(getDetails(id))
+    getDetails: id => dispatch(getDetails(id)),
+    deletePost: id => dispatch(deletePost(id))
   })
 )(Header);

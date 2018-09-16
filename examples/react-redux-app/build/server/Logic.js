@@ -59,22 +59,21 @@ function DeletePost(_ref5) {
 
   var deleted = false;
 
-  posts = posts.filter(function (_ref6) {
-    var postId = _ref6.id;
-
-    if (id !== postId) {
+  posts = posts.filter(function (post) {
+    if (id !== post.id) {
       return true;
     }
-    deleted = true;
+    deleted = post;
     return false;
   });
 
   if (!deleted) {
     throw new Error('Not found');
   }
+  return deleted;
 }
-function HandleError(_ref7) {
-  var error = _ref7.error;
+function HandleError(_ref6) {
+  var error = _ref6.error;
 
   return error.message;
 }

@@ -1,5 +1,4 @@
 import { POSTS_LOADED, UPDATE_POST } from './constants';
-import uniqBy from 'lodash.uniqby';
 
 const initialState = {
   error: null,
@@ -10,7 +9,14 @@ const reducer = function (state = initialState, action) {
   switch (action.type) {
     case POSTS_LOADED:
       return {
-        posts: uniqBy([ ...state.posts, ...action.posts ], 'id')
+        posts: action.posts.map(post => {
+          const existingPost = state.posts.find(({ id }) => id === post.id);
+
+          if (existingPost) {
+            return existingPost;
+          }
+          return post;
+        })
       }
     case UPDATE_POST:
       const posts = state.posts.map(post => {

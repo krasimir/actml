@@ -24,7 +24,6 @@
     "dactory": "0.6.7",
     "express": "4.16.3",
     "fsevents": "1.2.4",
-    "lodash.uniqby": "4.7.0",
     "nan": "2.11.0",
     "nodemon": "1.17.5",
     "react": "16.0.0",
