@@ -4,14 +4,20 @@ import { GET_POSTS } from '../redux/constants';
 
 const { Subscribe } = Redux;
 
-function Test(props) {
-  console.log(props);
+const GetPosts = async function({ getPosts }) {
+  return await getPosts();
+}
+const Print = function({ data }) {
+  console.log(data);
 }
 
 export default function StartUp() {
   return (
-    <Subscribe type={ GET_POSTS } exports='action'>
-      <Test $action />
-    </Subscribe>
+    <D>
+      <Subscribe type={ GET_POSTS }>
+        <GetPosts $getPosts exports='posts' />
+        <Print $posts='data' />
+      </Subscribe>
+    </D>
   )
 }

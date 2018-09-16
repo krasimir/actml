@@ -241,6 +241,23 @@ describe('Given the Dactory library', () => {
       expect(B1).toBeCalledWith({ top: 'level', app: '1', A: 'A', B: 'B' });
       expect(B2).toBeCalledWith({ top: 'level', app: '1', A: 'A', B: 'B', B1: 'B1' });
     });
+    it('should be able the use the context as DI container', async () => {
+      const context = {
+        getPosts: jest.fn().mockImplementation(() => 'bar')
+      };
+      const A = jest.fn();
+
+      await speak(
+        <D>
+          <getPosts url='foo' exports='posts'/>
+          <A $posts />
+        </D>,
+        context
+      );
+
+      expect(context.getPosts).toBeCalledWith({ url: 'foo', exports: 'posts' });
+      expect(A).toBeCalledWith({ posts: 'bar' });
+    });
   });
   describe('when there is an error', () => {
     it('should bubble up the error if the handler returns `undefined`', async () => {

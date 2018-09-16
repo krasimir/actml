@@ -21,7 +21,7 @@ ReactDOM.render(
 );
 
 const context = {
-  getPosts
+  getPosts: getPosts('https://jsonplaceholder.typicode.com/posts')
 }
 
 speak(Logic, context);

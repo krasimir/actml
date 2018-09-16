@@ -110,21 +110,22 @@ async function execute(word) {
 
   try {
     word.result = await func.call(word, props);
-
-    if (props && props.exports) {
-      context[props.exports] = word.result;
-    }
   } catch (error) {
     await handleWordError(error, props, context);
   }
 }
 async function processResult(word) {
   var result = word.result,
-      context = word.context;
+      context = word.context,
+      props = word.props;
+
+  if (props && props.exports) {
+    context[props.exports] = result;
+  }
 
   if (result) {
     if (_Word2.default.isItAWord(result)) {
-      await result.say(context);
+      await result.say(_extends({}, context));
     }
     // Generator
     if (typeof result.next === 'function') {
@@ -149,21 +150,22 @@ async function processChildren(_ref2) {
 
   // FACC pattern
   if (children && children.length === 1 && !_Word2.default.isItAWord(children[0])) {
-    await (0, _Word2.default)(children[0], result).say(context);
+    await (0, _Word2.default)(children[0], result).say(_extends({}, context));
 
     // nested tags
   } else if (children && children.length > 0) {
     var pointer = 0;
     var parallelProcessing = !!func.processChildrenInParallel;
+    var childrenContext = _extends({}, context);
 
     while (pointer < children.length) {
       var w = children[pointer];
 
       try {
         if (parallelProcessing) {
-          w.say(context);
+          w.say(childrenContext);
         } else {
-          await w.say(context);
+          await w.say(childrenContext);
         }
       } catch (error) {
         if (error.message === _Word2.default.errors.STOP_PROCESSING) {
@@ -235,7 +237,7 @@ function createDefaultPipeline() {
 
   pipeline.add(init);
   pipeline.add(execute);
-  pipeline.add(processResult);
+  pipeline.add(processResult, 'result');
   pipeline.add(processChildren, 'children');
 
   return pipeline;
@@ -477,10 +479,12 @@ function _interopRequireDefault(obj) {
 function Subscribe(props) {
   var _this = this;
 
+  this.pipeline.disable('result');
   this.pipeline.disable('children');
   if (props && props.type) {
     _Integration2.default.addListener(function (action) {
       if (action.type === props.type) {
+        _this.pipeline('result', action);
         _this.pipeline('children', action);
       }
     });
@@ -508,10 +512,12 @@ function _interopRequireDefault(obj) {
 function SubscribeOnce(props) {
   var _this = this;
 
+  this.pipeline.disable('result');
   this.pipeline.disable('children');
   if (props && props.type) {
     var removeListener = _Integration2.default.addListener(function (action) {
       if (action.type === props.type) {
+        _this.pipeline('result', action);
         _this.pipeline('children', action);
         removeListener();
       }
@@ -23729,6 +23735,10 @@ var _logic = require('./logic');
 
 var _logic2 = _interopRequireDefault(_logic);
 
+var _getPosts = require('./services/getPosts');
+
+var _getPosts2 = _interopRequireDefault(_getPosts);
+
 function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj };
 }
@@ -23772,9 +23782,13 @@ var App = function (_React$Component) {
 
 _reactDom2.default.render(_react2.default.createElement(_reactRedux.Provider, { store: (0, _store2.default)() }, _react2.default.createElement(App, null)), document.querySelector('#content'));
 
-(0, _dactory.speak)(_logic2.default);
+var context = {
+  getPosts: (0, _getPosts2.default)('https://jsonplaceholder.typicode.com/posts')
+};
 
-},{"./components/Header":76,"./logic":77,"./redux/store":81,"dactory":4,"react":71,"react-dom":43,"react-redux":53}],76:[function(require,module,exports){
+(0, _dactory.speak)(_logic2.default, context);
+
+},{"./components/Header":76,"./logic":77,"./redux/store":81,"./services/getPosts":82,"dactory":4,"react":71,"react-dom":43,"react-redux":53}],76:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -23822,12 +23836,19 @@ var _constants = require('../redux/constants');
 /** @jsx D */
 var Subscribe = _dactory.Redux.Subscribe;
 
-function Test(props) {
-  console.log(props);
-}
+var GetPosts = async function GetPosts(_ref) {
+  var getPosts = _ref.getPosts;
+
+  return await getPosts();
+};
+var Print = function Print(_ref2) {
+  var data = _ref2.data;
+
+  console.log(data);
+};
 
 function StartUp() {
-  return (0, _dactory.D)(Subscribe, { type: _constants.GET_POSTS, exports: 'action' }, (0, _dactory.D)(Test, { $action: true }));
+  return (0, _dactory.D)(_dactory.D, null, (0, _dactory.D)(Subscribe, { type: _constants.GET_POSTS }, (0, _dactory.D)(GetPosts, { $getPosts: true, exports: 'posts' }), (0, _dactory.D)(Print, { $posts: 'data' })));
 }
 
 },{"../redux/constants":79,"dactory":4}],78:[function(require,module,exports){
@@ -23902,4 +23923,18 @@ exports.default = function () {
   return (0, _redux.createStore)(_reducer2.default, (0, _redux.applyMiddleware)(_dactory.Redux.middleware));
 };
 
-},{"./constants":79,"./reducer":80,"dactory":4,"redux":72}]},{},[75]);
+},{"./constants":79,"./reducer":80,"dactory":4,"redux":72}],82:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+exports.default = function (url) {
+  return async function () {
+    var result = await fetch(url);
+    return result.json();
+  };
+};
+
+},{}]},{},[75]);

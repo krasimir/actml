@@ -15,6 +15,15 @@ export default function Word(func, props, children) {
     },
     async say(context) {
       this.context = context;
+
+      if (typeof func === 'string') {
+        if (this.context[func]) {
+          this.func = this.context[func];
+        } else {
+          throw new Error(`"${ func }" is not defined in the current context.`);
+        }
+      }
+
       this.pipeline.setScope(this);
       await this.pipeline.run();
       return this.result;
