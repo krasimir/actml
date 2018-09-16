@@ -1,5 +1,6 @@
 /** @jsx D */
 import { D, speak } from '..';
+import { createContext } from '../Context';
 
 const fakeAsync = (resolveWith, delay) => new Promise(done => {
   setTimeout(() => done(resolveWith), delay);
@@ -7,6 +8,14 @@ const fakeAsync = (resolveWith, delay) => new Promise(done => {
 
 describe('Given the Context', () => {
   describe('when using the context', () => {
+    it('should provide methods for setting, getting and dumping data', async () => {
+      const context = createContext({ foo: 'bar' });
+
+      context.set('a', 'b');
+
+      expect(context.get('a')).toBe('b');
+      expect(context.dump()).toStrictEqual({ foo: 'bar', a: 'b' });
+    });
     it('should pass variables between siblings', async () => {
       const print = jest.fn();
       const GetToken = async () => fakeAsync('XXX', 50);
@@ -77,17 +86,6 @@ describe('Given the Context', () => {
       const warn = jest.fn();
 
       await speak(<D><A exports='foo'></A><B exports='foo'></B></D>);
-    });
-    it('should provide a method for getting all the data', async () => {
-      const A = () => 'bar';
-      
-      const context = await speak(
-        <D>
-          <A exports='foo' />
-        </D>
-      );
-
-      expect(context.dump()).toStrictEqual({ foo: 'bar' });
     });
   });
 });

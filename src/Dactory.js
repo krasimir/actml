@@ -3,7 +3,7 @@ import { createContext } from './Context';
 
 export function create(func, props, ...children) {
   // using D as a dymmy component
-  if (func === create) return Word(function() { return this.context; }, props, children);
+  if (func === create) return Word(function() { return this.context.dump(); }, props, children);
   return Word(func, props, children);
 }
 export async function speak(word, contextData) {

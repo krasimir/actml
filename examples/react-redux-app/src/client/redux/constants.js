@@ -1,0 +1,2 @@
+export const GET_POSTS = 'GET_POSTS';
+export const GETTING_POSTS_FAILED = 'GETTING_POSTS_FAILED';

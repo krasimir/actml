@@ -268,15 +268,6 @@ function Word(func, props, children) {
     },
     say: async function say(context) {
       this.context = context;
-
-      if (typeof func === 'string') {
-        if (this.context[func]) {
-          this.func = this.context[func];
-        } else {
-          throw new Error('"' + func + '" is not defined in the current context.');
-        }
-      }
-
       this.pipeline.setScope(this);
       await this.pipeline.run();
       return this.result;
@@ -23843,22 +23834,15 @@ var _dactory = require('dactory');
 var _constants = require('../redux/constants');
 
 /** @jsx D */
-var Subscribe = _dactory.Redux.Subscribe;
+var Subscribe = _dactory.Redux.Subscribe,
+    Action = _dactory.Redux.Action;
 
-var Print = function Print(_ref) {
-  var data = _ref.data;
-
-  console.log(data);
-};
 var ErrorHandler = function ErrorHandler() {
   return true;
 };
-var UseFakeData = function UseFakeData() {
-  return [{ foo: 'bar' }];
-};
 
 function StartUp() {
-  return (0, _dactory.D)(_dactory.D, null, (0, _dactory.D)(Subscribe, { type: _constants.GET_POSTS }, (0, _dactory.D)('getPosts', { exports: 'posts', onError: (0, _dactory.D)(ErrorHandler, null, (0, _dactory.D)(UseFakeData, { exports: 'posts' })) }), (0, _dactory.D)(Print, { $posts: 'data' })));
+  return (0, _dactory.D)(_dactory.D, null, (0, _dactory.D)(Subscribe, { type: _constants.GET_POSTS }, (0, _dactory.D)('getPosts', { exports: 'posts', onError: (0, _dactory.D)(ErrorHandler, null, (0, _dactory.D)(Action, { type: _constants.GETTING_POSTS_FAILED })) })), (0, _dactory.D)(Subscribe, { type: _constants.GETTING_POSTS_FAILED }));
 }
 
 },{"../redux/constants":79,"dactory":4}],78:[function(require,module,exports){
@@ -23882,6 +23866,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 var GET_POSTS = exports.GET_POSTS = 'GET_POSTS';
+var GETTING_POSTS_FAILED = exports.GETTING_POSTS_FAILED = 'GETTING_POSTS_FAILED';
 
 },{}],80:[function(require,module,exports){
 'use strict';
@@ -23893,6 +23878,7 @@ Object.defineProperty(exports, "__esModule", {
 var _constants = require('./constants');
 
 var initialState = {
+  pending: false,
   posts: null
 };
 
@@ -23900,8 +23886,11 @@ var reducer = function reducer() {
   var oldState = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState;
   var action = arguments[1];
 
-  if (action.type === _constants.GET_POSTS) {
-    return { posts: null };
+  switch (action.type) {
+    case _constants.GET_POSTS:
+      return { pending: true, posts: null };
+    case _constants.GETTING_POSTS_FAILED:
+      return { pending: false, error: action.error, posts: action.posts };
   }
   return oldState;
 };

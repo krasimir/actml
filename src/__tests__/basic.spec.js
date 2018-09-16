@@ -83,7 +83,7 @@ describe('Given the Dactory library', () => {
       const result = await speak(<D><F exports='answer'/></D>);
 
       expect(F).toBeCalled();
-      expect(result.get('answer')).toStrictEqual(42);
+      expect(result.answer).toStrictEqual(42);
     });
   });
   describe('when having nested functions', () => {
