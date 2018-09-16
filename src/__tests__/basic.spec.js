@@ -80,10 +80,10 @@ describe('Given the Dactory library', () => {
     it('should work just fine :)', async () => {
       const F = jest.fn().mockImplementation(() => 42);
 
-      const result = await speak(<D><F /></D>);
+      const result = await speak(<D><F exports='answer'/></D>);
 
       expect(F).toBeCalled();
-      expect(result).toStrictEqual({});
+      expect(result.get('answer')).toStrictEqual(42);
     });
   });
   describe('when having nested functions', () => {
@@ -145,118 +145,6 @@ describe('Given the Dactory library', () => {
 
         expect(flow).toEqual(['a', 'b', 'c']);
       });
-    });
-  });
-  describe('when using the context', () => {
-    it('should pass variables between siblings', async () => {
-      const print = jest.fn();
-      const GetToken = async () => fakeAsync('XXX', 50);
-      const UseToken = ({ token }) => print(token);
-      const App = () => {};
-
-      await speak(
-        <App>
-          <GetToken exports='token' />
-          <UseToken $token />
-        </App>
-      );
-      expect(print).toBeCalledWith('XXX');
-    });
-    it('should allow renaming of a prop', async () => {
-      const print = jest.fn();
-      const GetToken = async () => fakeAsync('XXX', 50);
-      const UseToken = ({ token }) => print(token);
-      const App = () => {};
-
-      await speak(
-        <App>
-          <GetToken exports='blah' />
-          <UseToken $blah='token' />
-        </App>
-      );
-      expect(print).toBeCalledWith('XXX');
-    });
-    it('should keep the same context for parent and direct children', async () => {
-      const ASpy = jest.fn();
-      const A = function () {
-        ASpy({ ...this.context });
-      }
-      const BSpy = jest.fn();
-      const B = function () {
-        BSpy({ ...this.context });
-      }
-      const CSpy = jest.fn();
-      const C = function () {
-        CSpy({ ...this.context });
-      }
-      const c = { foo: 'bar' };
-      await speak(
-        <A>
-          <B />
-          <C />
-        </A>,
-        c
-      );
-
-      expect(ASpy).toBeCalledWith(c);
-      expect(BSpy).toBeCalledWith(c);
-      expect(CSpy).toBeCalledWith(c);
-    });
-    it('should create a new shallow copy of the context for every nested children', async () => {
-      const Z = function ({ mock, returns }) {
-        mock({ ...this.context });
-        return returns;
-      }
-      const App = jest.fn().mockImplementation(function () {
-        return '1';
-      })
-      const A = jest.fn();
-      const A1 = jest.fn();
-      const A2 = jest.fn();
-      const B = jest.fn();
-      const B1 = jest.fn();
-      const B2 = jest.fn();
-      const context = { top: 'level' };
-
-      const r = await speak(
-        <App exports='app'>
-          <Z mock={ A } returns='A' exports='A'>
-            <Z mock={ A1 } returns='A1' exports='A1'>
-              <Z mock={ A2 } exports='A2'/>
-            </Z>
-          </Z>
-          <Z mock={ B } returns='B' exports='B'>
-            <Z mock={ B1 } returns='B1' exports='B1'>
-              <Z mock={ B2 } exports='B2'/>
-            </Z>
-          </Z>
-        </App>,
-        context
-      );
-
-      expect(A).toBeCalledWith({ top: 'level', app: '1' });
-      expect(A1).toBeCalledWith({ top: 'level', app: '1', A: 'A' });
-      expect(A2).toBeCalledWith({ top: 'level', app: '1', A: 'A', A1: 'A1' });
-      expect(B).toBeCalledWith({ top: 'level', app: '1', A: 'A' });
-      expect(B1).toBeCalledWith({ top: 'level', app: '1', A: 'A', B: 'B' });
-      expect(B2).toBeCalledWith({ top: 'level', app: '1', A: 'A', B: 'B', B1: 'B1' });
-    });
-    it('should be able the use the context as DI container', async () => {
-      const context = {
-        getPosts: jest.fn().mockImplementation(() => 'bar')
-      };
-      const A = jest.fn();
-
-      await speak(
-        <D>
-          <getPosts url='foo' exports='posts'/>
-          <A $posts />
-        </D>,
-        context
-      );
-
-      expect(context.getPosts).toBeCalledWith({ url: 'foo', exports: 'posts' });
-      expect(A).toBeCalledWith({ posts: 'bar' });
     });
   });
   describe('when there is an error', () => {
@@ -499,7 +387,7 @@ describe('Given the Dactory library', () => {
       const B = jest.fn().mockImplementation(() => fakeAsync(42, 10));
       const C = jest.fn().mockImplementation(answer => `the answer is ${ answer }`);
       const E = jest.fn().mockImplementation(function({ message, answer }) {
-        return { message, answer, context: this.context };
+        return { message, answer, contextData: this.context.dump() };
       });
       const Func = function *() {
         yield <A foo='bar' />;
@@ -517,7 +405,7 @@ describe('Given the Dactory library', () => {
       expect(result).toMatchObject({
         message: 'the answer is 42',
         answer: 42,
-        context: { answer: 42 }
+        contextData: { answer: 42 }
       });
     });
   });

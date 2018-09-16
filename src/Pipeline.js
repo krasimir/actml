@@ -25,9 +25,10 @@ function init({ props, context }) {
   props && Object.keys(props).forEach(propName => {
     if (propName.charAt(0) === '$') {
       const prop = propName.substr(1, propName.length);
+      const value = context.get(prop);
 
-      if (typeof context[prop] !== 'undefined') {
-        props[typeof props[propName] === 'string' ? props[propName] : prop] = context[prop];
+      if (typeof value !== 'undefined') {
+        props[typeof props[propName] === 'string' ? props[propName] : prop] = value;
         delete props[propName];
       }
     }
@@ -46,12 +47,12 @@ async function processResult(word) {
   const { result, context, props } = word;
 
   if (props && props.exports) {
-    context[props.exports] = result;
+    context.set(props.exports, result);
   }
 
   if (result) {
     if (Word.isItAWord(result)) {
-      await result.say({ ...context });
+      await result.say(context);
     }
     // Generator
     if (typeof result.next === 'function') {
@@ -71,22 +72,21 @@ async function processResult(word) {
 async function processChildren({ func, children, result, context }) {
   // FACC pattern
   if (children && children.length === 1 && !Word.isItAWord(children[0])) {
-    await Word(children[0], result).say({ ...context });
+    await Word(children[0], result).say(context);
   
   // nested tags
   } else if (children && children.length > 0) {
     let pointer = 0;
     let parallelProcessing = !!func.processChildrenInParallel;
-    let childrenContext = { ...context };
 
     while(pointer < children.length) {
       const w = children[pointer];
 
       try {
         if (parallelProcessing) {
-          w.say(childrenContext);
+          w.say(context);
         } else {
-          await w.say(childrenContext);
+          await w.say(context);
         }
       } catch (error) {
         if (error.message === Word.errors.STOP_PROCESSING) {

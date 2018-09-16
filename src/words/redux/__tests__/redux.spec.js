@@ -47,7 +47,7 @@ describe('Given the Redux integration', () => {
       expect(A).toBeCalledWith({ value: 200 });
       expect(A).toBeCalledWith({ value: 100 });
     });
-    it('should 222', async () => {
+    it('should be able to register the action in the context', async () => {
       const ANSWER = 'ANSWER';
       const store = setup(
         { answer: null },

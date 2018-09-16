@@ -268,6 +268,15 @@ function Word(func, props, children) {
     },
     say: async function say(context) {
       this.context = context;
+
+      if (typeof func === 'string') {
+        if (this.context[func]) {
+          this.func = this.context[func];
+        } else {
+          throw new Error('"' + func + '" is not defined in the current context.');
+        }
+      }
+
       this.pipeline.setScope(this);
       await this.pipeline.run();
       return this.result;
@@ -23836,19 +23845,20 @@ var _constants = require('../redux/constants');
 /** @jsx D */
 var Subscribe = _dactory.Redux.Subscribe;
 
-var GetPosts = async function GetPosts(_ref) {
-  var getPosts = _ref.getPosts;
-
-  return await getPosts();
-};
-var Print = function Print(_ref2) {
-  var data = _ref2.data;
+var Print = function Print(_ref) {
+  var data = _ref.data;
 
   console.log(data);
 };
+var ErrorHandler = function ErrorHandler() {
+  return true;
+};
+var UseFakeData = function UseFakeData() {
+  return [{ foo: 'bar' }];
+};
 
 function StartUp() {
-  return (0, _dactory.D)(_dactory.D, null, (0, _dactory.D)(Subscribe, { type: _constants.GET_POSTS }, (0, _dactory.D)(GetPosts, { $getPosts: true, exports: 'posts' }), (0, _dactory.D)(Print, { $posts: 'data' })));
+  return (0, _dactory.D)(_dactory.D, null, (0, _dactory.D)(Subscribe, { type: _constants.GET_POSTS }, (0, _dactory.D)('getPosts', { exports: 'posts', onError: (0, _dactory.D)(ErrorHandler, null, (0, _dactory.D)(UseFakeData, { exports: 'posts' })) }), (0, _dactory.D)(Print, { $posts: 'data' })));
 }
 
 },{"../redux/constants":79,"dactory":4}],78:[function(require,module,exports){

@@ -4,18 +4,19 @@ import { GET_POSTS } from '../redux/constants';
 
 const { Subscribe } = Redux;
 
-const GetPosts = async function({ getPosts }) {
-  return await getPosts();
-}
 const Print = function({ data }) {
   console.log(data);
+}
+const ErrorHandler = () => true;
+const UseFakeData = function() {
+  return [{foo:'bar'}];
 }
 
 export default function StartUp() {
   return (
     <D>
       <Subscribe type={ GET_POSTS }>
-        <GetPosts $getPosts exports='posts' />
+        <getPosts exports='posts' onError={ <ErrorHandler><UseFakeData exports='posts'/></ErrorHandler> }/>
         <Print $posts='data' />
       </Subscribe>
     </D>
