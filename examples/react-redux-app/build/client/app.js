@@ -107,7 +107,7 @@ var handleWordError = async function handleWordError(error, props, context) {
     } else if (onErrorStrategy === true) {
       throw new Error(_Word2.default.errors.CONTINUE_PROCESSING);
     } else {
-      throw error;
+      // swallowing the error
     }
   } else {
     throw error;

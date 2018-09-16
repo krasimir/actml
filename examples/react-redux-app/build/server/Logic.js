@@ -5,8 +5,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.GetPosts = GetPosts;
 exports.GetPost = GetPost;
-exports.Add = Add;
-exports.Delete = Delete;
+exports.AddPost = AddPost;
+exports.DeletePost = DeletePost;
 exports.HandleError = HandleError;
 var posts = [];
 
@@ -30,7 +30,7 @@ function GetPost(_ref) {
   }
   throw new Error('Not found');
 }
-function Add(_ref3) {
+function AddPost(_ref3) {
   var title = _ref3.title,
       text = _ref3.text;
 
@@ -43,13 +43,24 @@ function Add(_ref3) {
   posts.push(post);
   return post;
 }
-function Delete(_ref4) {
+function DeletePost(_ref4) {
   var id = _ref4.id;
+
+  var deleted = false;
 
   posts = posts.filter(function (_ref5) {
     var postId = _ref5.id;
-    return id !== postId;
+
+    if (id !== postId) {
+      return true;
+    }
+    deleted = true;
+    return false;
   });
+
+  if (!deleted) {
+    throw new Error('Not found');
+  }
 }
 function HandleError(_ref6) {
   var error = _ref6.error;

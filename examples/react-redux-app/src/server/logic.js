@@ -15,7 +15,7 @@ export function GetPost({ id }) {
   }
   throw new Error('Not found');
 }
-export function Add({ title, text }) {
+export function AddPost({ title, text }) {
   const post = {
     id: ID(),
     title,
@@ -25,8 +25,20 @@ export function Add({ title, text }) {
   posts.push(post);
   return post;
 }
-export function Delete({ id }) {
-  posts = posts.filter(({ id: postId }) => id !== postId);
+export function DeletePost({ id }) {
+  var deleted = false;
+
+  posts = posts.filter(({ id: postId }) => {
+    if (id !== postId) {
+      return true;
+    }
+    deleted = true;
+    return false;
+  });
+
+  if (!deleted) {
+    throw new Error('Not found');
+  }
 }
 export function HandleError({ error }) {
   return error.message;
