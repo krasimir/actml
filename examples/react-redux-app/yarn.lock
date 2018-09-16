@@ -1207,9 +1207,9 @@ crypto-random-string@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/crypto-random-string/-/crypto-random-string-1.0.0.tgz#a230f64f568310e1498009940790ec99545bca7e"
 
-dactory@0.6.6:
-  version "0.6.6"
-  resolved "https://registry.yarnpkg.com/dactory/-/dactory-0.6.6.tgz#3fec198f11d4b4f4e2ee25929f30c163cbdcf10f"
+dactory@0.6.7:
+  version "0.6.7"
+  resolved "https://registry.yarnpkg.com/dactory/-/dactory-0.6.7.tgz#2d18471a6ce2b7c907abeba6f88fc0e8a639b7b1"
 
 date-fns@^1.23.0:
   version "1.29.0"
@@ -2249,6 +2249,10 @@ lodash.debounce@^4.0.8:
 lodash.memoize@~3.0.3:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/lodash.memoize/-/lodash.memoize-3.0.4.tgz#2dcbd2c287cbc0a55cc42328bd0c736150d53e3f"
+
+lodash.uniqby@4.7.0:
+  version "4.7.0"
+  resolved "https://registry.yarnpkg.com/lodash.uniqby/-/lodash.uniqby-4.7.0.tgz#d99c07a669e9e6d24e1362dfe266c67616af1302"
 
 lodash@^4.17.4:
   version "4.17.4"

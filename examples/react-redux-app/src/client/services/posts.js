@@ -17,7 +17,7 @@ export function addPost(url) {
   };
 }
 export function getPost(url) {
-  return async (id) => {
+  return async ({ id }) => {
     const result = await fetch(url + id);
     return result.json();
   };

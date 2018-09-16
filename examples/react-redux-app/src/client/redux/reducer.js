@@ -1,16 +1,27 @@
-import { POSTS_LOADED } from './constants';
+import { POSTS_LOADED, UPDATE_POST } from './constants';
+import uniqBy from 'lodash.uniqby';
 
 const initialState = {
   error: null,
-  posts: null
+  posts: []
 }
 
-const reducer = function (oldState = initialState, action) {
+const reducer = function (state = initialState, action) {
   switch (action.type) {
     case POSTS_LOADED:
-      return { posts: action.posts };
+      return {
+        posts: uniqBy([ ...state.posts, ...action.posts ], 'id')
+      }
+    case UPDATE_POST:
+      const posts = state.posts.map(post => {
+        if (post.id === action.data.id) {
+          return action.data;
+        }
+        return post;
+      });
+      return { posts };
   }
-  return oldState;
+  return state;
 };
 
 export default reducer;

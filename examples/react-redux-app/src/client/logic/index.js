@@ -2,13 +2,13 @@
 import { D, Redux } from 'dactory';
 import {
   POSTS_LOADED,
-  VIEW_DETAILS,
-  NEW_POST
+  GET_DETAILS,
+  NEW_POST,
+  UPDATE_POST 
 } from '../redux/constants';
 
 const { Subscribe, Action } = Redux;
 
-const ErrorHandler = () => true;
 const FetchPosts = () => (
   <getPosts exports='posts'>
     <Action type={ POSTS_LOADED } $posts />
@@ -23,8 +23,9 @@ export default function StartUp() {
         <addPost $post />
         <FetchPosts />
       </Subscribe>
-      <Subscribe type={ VIEW_DETAILS } exports={ ({ id }) => ({ id })}>
-        <getPost $id />
+      <Subscribe type={ GET_DETAILS } exports={ ({ id }) => ({ id })}>
+        <getPost $id exports='postWithDetails'/>
+        <Action type={ UPDATE_POST } $postWithDetails='data' />
       </Subscribe>
     </D>
   )

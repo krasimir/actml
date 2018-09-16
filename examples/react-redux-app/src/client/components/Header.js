@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { getPosts } from '../redux/selectors';
 import { getDetails } from '../redux/actions';
 
-function Header({ posts }) {
+function Header({ posts, getDetails }) {
   let message = '...';
   let List;
 
@@ -16,7 +16,7 @@ function Header({ posts }) {
             <li key={ id }>
               { title }
               { text && text }
-              <button onClick={ () => this.props.getDetails(id) }>
+              <button onClick={ () => getDetails(id) }>
                 view details
               </button>
               <button>delete</button>
