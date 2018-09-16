@@ -20,27 +20,31 @@ const handleWordError = async function (error, props, context) {
 }
 
 // middlewares
-function init({ props, context }) {
-  // normalizing the props
-  props && Object.keys(props).forEach(propName => {
-    if (propName.charAt(0) === '$') {
-      const prop = propName.substr(1, propName.length);
-      const value = context.get(prop);
-
-      if (typeof value !== 'undefined') {
-        props[typeof props[propName] === 'string' ? props[propName] : prop] = value;
-        delete props[propName];
-      }
-    }
-  });
-};
 async function execute(word) {
   const { func, props, context } = word;
+  var normalizedProps = props;
+
+  if (props) {
+    normalizedProps = { ...props };
+    Object.keys(props).forEach(propName => {
+      if (propName.charAt(0) === '$') {
+        const prop = propName.substr(1, propName.length);
+        const value = context.get(prop);
+
+        if (typeof value !== 'undefined') {
+          normalizedProps[
+            typeof props[propName] === 'string' ? props[propName] : prop
+          ] = value;
+          delete normalizedProps[propName];
+        }
+      }
+    });
+  }
 
   try {
-    word.result = await func.call(word, props);
+    word.result = await func.call(word, normalizedProps);
   } catch (error) {
-    await handleWordError(error, props, context);
+    await handleWordError(error, normalizedProps, context);
   }
 }
 async function processResult(word) {
@@ -69,10 +73,15 @@ async function processResult(word) {
     }
   }
 }
-async function processChildren({ func, children, result, context }) {
+async function processChildren(word) {
+  const { func, children, result, context } = word;
+
   // FACC pattern
   if (children && children.length === 1 && !Word.isItAWord(children[0])) {
-    await Word(children[0], result).say(context);
+    const resultOfFACC = await children[0].call(word, result);
+    if (Word.isItAWord(resultOfFACC)) {
+      await resultOfFACC.say(context);
+    }
   
   // nested tags
   } else if (children && children.length > 0) {
@@ -145,7 +154,6 @@ export default function Pipeline() {
   return API;
 }
 
-Pipeline.init = init;
 Pipeline.execute = execute;
 Pipeline.processResult = processResult;
 Pipeline.processChildren = processChildren;
@@ -153,7 +161,6 @@ Pipeline.processChildren = processChildren;
 export function createDefaultPipeline() {
   const pipeline = Pipeline();
 
-  pipeline.add(init);
   pipeline.add(execute);
   pipeline.add(processResult, 'result');
   pipeline.add(processChildren, 'children');

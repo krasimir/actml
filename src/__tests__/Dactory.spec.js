@@ -257,20 +257,25 @@ describe('Given the Dactory library', () => {
         - should continue processing the dialect returned by the FACC`, async () => {
       const A = jest.fn();
       const B = jest.fn();
-      const Logic = async () => fakeAsync(false, 20);
+      const C = () => 'bar';
+      const Logic = async () => fakeAsync({ status: false, answer: 42 }, 20);
       const App = () => {};
+
       await speak(
         <App>
+          <C exports='foo' />
           <Logic>
             {
-              status => status ? <A /> : <B />
+              ({ status, answer }) => {
+                return status ? <A /> : <B answer={ answer } $foo/>
+              }
             }
           </Logic>
         </App>
       );
 
       expect(A).not.toBeCalled();
-      expect(B).toBeCalled();
+      expect(B).toBeCalledWith({ answer: 42, foo: 'bar' });
     });
   });
   describe('when working with the pipeline', () => {

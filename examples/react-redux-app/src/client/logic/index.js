@@ -1,23 +1,32 @@
 /** @jsx D */
 import { D, Redux } from 'dactory';
-import { GET_POSTS, GETTING_POSTS_FAILED } from '../redux/constants';
+import {
+  POSTS_LOADED,
+  GETTING_POSTS_FAILED,
+  NEW_POST
+} from '../redux/constants';
 
 const { Subscribe, Action } = Redux;
 
 const ErrorHandler = () => true;
+const FetchPosts = () => (
+  <getPosts exports='posts' onError={
+    <ErrorHandler>
+      <Action type={ GETTING_POSTS_FAILED }/>
+    </ErrorHandler>
+  }>
+    <Action type={ POSTS_LOADED } $posts />
+  </getPosts>
+);
 
 export default function StartUp() {
   return (
     <D>
-      <Subscribe type={ GET_POSTS }>
-        <getPosts exports='posts' onError={
-          <ErrorHandler>
-            <Action type={ GETTING_POSTS_FAILED }/>
-          </ErrorHandler>
-        }/>
-      </Subscribe>
-      <Subscribe type={ GETTING_POSTS_FAILED }>
-        
+      <FetchPosts />    
+      <Subscribe type={ NEW_POST } exports='newPostAction'>
+        <Log $newPostAction />
+        <addPost $newPostAction='data' />
+        <FetchPosts />
       </Subscribe>
     </D>
   )

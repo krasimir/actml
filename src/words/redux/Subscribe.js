@@ -1,6 +1,6 @@
 import Integration from './Integration';
 
-export default function Subscribe(props) {
+export default async function Subscribe(props) {
   this.pipeline.disable('result');
   this.pipeline.disable('children');
   if (props && props.type) {

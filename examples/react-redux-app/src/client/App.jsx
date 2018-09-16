@@ -3,14 +3,18 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import createStore from './redux/store';
 import Header from './components/Header';
+import NewPost from './components/NewPost';
 import { speak } from 'dactory';
 import Logic from './logic';
-import getPosts from './services/getPosts';
+import { getPosts, addPost } from './services/posts';
 
 class App extends React.Component {
   render() {
     return (
-      <Header />
+      <div>
+        <Header />
+        <NewPost />
+      </div>
     );
   }
 }
@@ -20,8 +24,10 @@ ReactDOM.render(
   document.querySelector('#content')
 );
 
-const context = {
-  getPosts: getPosts('https://jsonplaceholder.typicode.com/posts')
-}
-
-speak(Logic, context);
+speak(
+  Logic,
+  {
+    getPosts: getPosts('/api/posts'),
+    addPost: addPost('/api/post')
+  }
+);

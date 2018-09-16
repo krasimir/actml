@@ -1,6 +1,9 @@
-import { USERS_FETCHED } from './constants';
-import { createStore, applyMiddleware } from 'redux';
+import { createStore, applyMiddleware, compose } from 'redux';
 import reducer from './reducer';
 import { Redux } from 'dactory';
 
-export default () => createStore(reducer, applyMiddleware(Redux.middleware));
+const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+
+export default () => createStore(reducer, composeEnhancers(
+  applyMiddleware(Redux.middleware)
+));

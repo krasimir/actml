@@ -12,7 +12,7 @@ const {
   reset
 } = Redux;
 
-const nextTick = () => new Promise(done => setTimeout(done, 1));
+const nextTick = (delay = 1) => new Promise(done => setTimeout(done, delay));
 const setup = (initialState = {}, reducer = s => s) => {
   return createStore(reducer, initialState, applyMiddleware(middleware));
 }
@@ -62,10 +62,13 @@ describe('Given the Redux integration', () => {
       );
 
       store.dispatch({ type: ANSWER, value: 100 });
-
+      await nextTick();
+      store.dispatch({ type: ANSWER, value: 200 });
       await nextTick();
 
-      expect(A).toBeCalledWith({ action: { type: ANSWER, value: 100 } });
+      expect(A).toHaveBeenCalledTimes(2);
+      expect(A).toHaveBeenNthCalledWith(1, { action: { type: ANSWER, value: 100 } });
+      expect(A).toHaveBeenNthCalledWith(2, { action: { type: ANSWER, value: 200 } });
     });
   });
   describe('when using the SubscribeOnce word', () => {

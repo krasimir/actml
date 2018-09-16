@@ -37,7 +37,7 @@ app.post('/api/post', async function (req, res) {
 app.delete('/api/post/:id', async function (req, res) {
   const { post, error } = await speak(
     <D>
-      <DeletePost id={ req.params.id } onError={
+      <DeletePost id={ req.params.id } exports='post' onError={
         <HandleError exports='error' />
       }/>
     </D>

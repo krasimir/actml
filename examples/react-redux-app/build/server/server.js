@@ -48,7 +48,7 @@ app.delete('/api/post/:id', async function (req, res) {
   var _ref2 = await (0, _dactory.speak)((0, _dactory.D)(
     _dactory.D,
     null,
-    (0, _dactory.D)(_logic.DeletePost, { id: req.params.id, onError: (0, _dactory.D)(_logic.HandleError, { exports: 'error' }) })
+    (0, _dactory.D)(_logic.DeletePost, { id: req.params.id, exports: 'post', onError: (0, _dactory.D)(_logic.HandleError, { exports: 'error' }) })
   )),
       post = _ref2.post,
       error = _ref2.error;

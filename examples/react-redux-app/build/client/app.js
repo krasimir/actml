@@ -23762,15 +23762,17 @@ var _Header = require('./components/Header');
 
 var _Header2 = _interopRequireDefault(_Header);
 
+var _NewPost = require('./components/NewPost');
+
+var _NewPost2 = _interopRequireDefault(_NewPost);
+
 var _dactory = require('dactory');
 
 var _logic = require('./logic');
 
 var _logic2 = _interopRequireDefault(_logic);
 
-var _getPosts = require('./services/getPosts');
-
-var _getPosts2 = _interopRequireDefault(_getPosts);
+var _posts = require('./services/posts');
 
 function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj };
@@ -23806,7 +23808,7 @@ var App = function (_React$Component) {
   _createClass(App, [{
     key: 'render',
     value: function render() {
-      return _react2.default.createElement(_Header2.default, null);
+      return _react2.default.createElement('div', null, _react2.default.createElement(_Header2.default, null), _react2.default.createElement(_NewPost2.default, null));
     }
   }]);
 
@@ -23815,18 +23817,71 @@ var App = function (_React$Component) {
 
 _reactDom2.default.render(_react2.default.createElement(_reactRedux.Provider, { store: (0, _store2.default)() }, _react2.default.createElement(App, null)), document.querySelector('#content'));
 
-var context = {
-  getPosts: (0, _getPosts2.default)('https://jsonplaceholder.typicode.com/posts')
-};
+(0, _dactory.speak)(_logic2.default, {
+  getPosts: (0, _posts.getPosts)('/api/posts'),
+  addPost: (0, _posts.addPost)('/api/post')
+});
 
-(0, _dactory.speak)(_logic2.default, context);
-
-},{"./components/Header":77,"./logic":78,"./redux/store":82,"./services/getPosts":83,"dactory":5,"react":72,"react-dom":44,"react-redux":54}],77:[function(require,module,exports){
+},{"./components/Header":77,"./components/NewPost":78,"./logic":79,"./redux/store":84,"./services/posts":85,"dactory":5,"react":72,"react-dom":44,"react-redux":54}],77:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactRedux = require('react-redux');
+
+var _selectors = require('../redux/selectors');
+
+function _interopRequireDefault(obj) {
+  return obj && obj.__esModule ? obj : { default: obj };
+}
+
+function Header(_ref) {
+  var posts = _ref.posts;
+
+  var message = '...';
+  var List = void 0;
+
+  if (posts) {
+    message = 'Total posts: ' + posts.length;
+    List = _react2.default.createElement('ul', null, posts.map(function (_ref2) {
+      var id = _ref2.id,
+          title = _ref2.title;
+      return _react2.default.createElement('li', { key: id }, title);
+    }));
+  }
+  return _react2.default.createElement('header', null, message, List, _react2.default.createElement('hr', null));
+}
+
+exports.default = (0, _reactRedux.connect)(function (state) {
+  return {
+    posts: (0, _selectors.getPosts)(state)
+  };
+})(Header);
+
+},{"../redux/selectors":83,"react":72,"react-redux":54}],78:[function(require,module,exports){
+'use strict';
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () {
+  function defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);
+    }
+  }return function (Constructor, protoProps, staticProps) {
+    if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;
+  };
+}();
 
 var _react = require('react');
 
@@ -23840,21 +23895,85 @@ function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj };
 }
 
-function Header(_ref) {
-  var getPosts = _ref.getPosts;
-
-  return _react2.default.createElement('button', { onClick: getPosts }, 'Get posts');
+function _classCallCheck(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
 }
+
+function _possibleConstructorReturn(self, call) {
+  if (!self) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  }return call && ((typeof call === "undefined" ? "undefined" : _typeof(call)) === "object" || typeof call === "function") ? call : self;
+}
+
+function _inherits(subClass, superClass) {
+  if (typeof superClass !== "function" && superClass !== null) {
+    throw new TypeError("Super expression must either be null or a function, not " + (typeof superClass === "undefined" ? "undefined" : _typeof(superClass)));
+  }subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } });if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+}
+
+var NewPost = function (_React$Component) {
+  _inherits(NewPost, _React$Component);
+
+  function NewPost(props) {
+    _classCallCheck(this, NewPost);
+
+    var _this = _possibleConstructorReturn(this, (NewPost.__proto__ || Object.getPrototypeOf(NewPost)).call(this, props));
+
+    _this.state = {
+      title: '',
+      text: ''
+    };
+    _this.onChangeTitle = _this.onChangeTitle.bind(_this);
+    _this.onChangeText = _this.onChangeText.bind(_this);
+    _this.onSubmit = _this.onSubmit.bind(_this);
+    return _this;
+  }
+
+  _createClass(NewPost, [{
+    key: 'onChangeTitle',
+    value: function onChangeTitle(e) {
+      this.setState({ title: e.target.value });
+    }
+  }, {
+    key: 'onChangeText',
+    value: function onChangeText(e) {
+      this.setState({ text: e.target.value });
+    }
+  }, {
+    key: 'onSubmit',
+    value: function onSubmit() {
+      this.props.submit(this.state.title, this.state.text);
+      this.setState({ title: '', text: '' });
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      return _react2.default.createElement('div', null, _react2.default.createElement('input', {
+        type: 'text',
+        value: this.state.title,
+        placeholder: 'title',
+        onChange: this.onChangeTitle }), _react2.default.createElement('input', {
+        type: 'text',
+        value: this.state.text,
+        placeholder: 'text',
+        onChange: this.onChangeText }), _react2.default.createElement('button', { onClick: this.onSubmit }, 'save'));
+    }
+  }]);
+
+  return NewPost;
+}(_react2.default.Component);
 
 exports.default = (0, _reactRedux.connect)(null, function (dispatch) {
   return {
-    getPosts: function getPosts() {
-      return dispatch((0, _actions.getPosts)());
+    submit: function submit(title, text) {
+      return dispatch((0, _actions.addPost)(title, text));
     }
   };
-})(Header);
+})(NewPost);
 
-},{"../redux/actions":79,"react":72,"react-redux":54}],78:[function(require,module,exports){
+},{"../redux/actions":80,"react":72,"react-redux":54}],79:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -23873,35 +23992,45 @@ var Subscribe = _dactory.Redux.Subscribe,
 var ErrorHandler = function ErrorHandler() {
   return true;
 };
+var FetchPosts = function FetchPosts() {
+  return (0, _dactory.D)('getPosts', { exports: 'posts', onError: (0, _dactory.D)(ErrorHandler, null, (0, _dactory.D)(Action, { type: _constants.GETTING_POSTS_FAILED })) }, (0, _dactory.D)(Action, { type: _constants.POSTS_LOADED, $posts: true }));
+};
+var Log = function Log(props) {
+  return console.log(JSON.stringify(props, null, 2));
+};
 
 function StartUp() {
-  return (0, _dactory.D)(_dactory.D, null, (0, _dactory.D)(Subscribe, { type: _constants.GET_POSTS }, (0, _dactory.D)('getPosts', { exports: 'posts', onError: (0, _dactory.D)(ErrorHandler, null, (0, _dactory.D)(Action, { type: _constants.GETTING_POSTS_FAILED })) })), (0, _dactory.D)(Subscribe, { type: _constants.GETTING_POSTS_FAILED }));
+  return (0, _dactory.D)(_dactory.D, null, (0, _dactory.D)(FetchPosts, null), (0, _dactory.D)(Subscribe, { type: _constants.NEW_POST, exports: 'newPostAction' }, (0, _dactory.D)(Log, { $newPostAction: true }), (0, _dactory.D)('addPost', { $newPostAction: 'data' }), (0, _dactory.D)(FetchPosts, null)));
 }
 
-},{"../redux/constants":80,"dactory":5}],79:[function(require,module,exports){
+},{"../redux/constants":81,"dactory":5}],80:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getPosts = undefined;
+exports.addPost = exports.getPosts = undefined;
 
 var _constants = require('./constants');
 
 var getPosts = exports.getPosts = function getPosts() {
   return { type: _constants.GET_POSTS };
 };
+var addPost = exports.addPost = function addPost(title, text) {
+  return { type: _constants.NEW_POST, title: title, text: text };
+};
 
-},{"./constants":80}],80:[function(require,module,exports){
+},{"./constants":81}],81:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-var GET_POSTS = exports.GET_POSTS = 'GET_POSTS';
+var POSTS_LOADED = exports.POSTS_LOADED = 'POSTS_LOADED';
 var GETTING_POSTS_FAILED = exports.GETTING_POSTS_FAILED = 'GETTING_POSTS_FAILED';
+var NEW_POST = exports.NEW_POST = 'NEW_POST';
 
-},{}],81:[function(require,module,exports){
+},{}],82:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -23911,7 +24040,7 @@ Object.defineProperty(exports, "__esModule", {
 var _constants = require('./constants');
 
 var initialState = {
-  pending: false,
+  error: null,
   posts: null
 };
 
@@ -23920,24 +24049,33 @@ var reducer = function reducer() {
   var action = arguments[1];
 
   switch (action.type) {
-    case _constants.GET_POSTS:
-      return { pending: true, posts: null };
+    case _constants.POSTS_LOADED:
+      return { posts: action.posts };
     case _constants.GETTING_POSTS_FAILED:
-      return { pending: false, error: action.error, posts: action.posts };
+      return { error: action.error, posts: null };
   }
   return oldState;
 };
 
 exports.default = reducer;
 
-},{"./constants":80}],82:[function(require,module,exports){
+},{"./constants":81}],83:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var getPosts = exports.getPosts = function getPosts(_ref) {
+  var posts = _ref.posts;
+  return posts;
+};
+
+},{}],84:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _constants = require('./constants');
 
 var _redux = require('redux');
 
@@ -23951,22 +24089,39 @@ function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj };
 }
 
+var composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || _redux.compose;
+
 exports.default = function () {
-  return (0, _redux.createStore)(_reducer2.default, (0, _redux.applyMiddleware)(_dactory.Redux.middleware));
+  return (0, _redux.createStore)(_reducer2.default, composeEnhancers((0, _redux.applyMiddleware)(_dactory.Redux.middleware)));
 };
 
-},{"./constants":80,"./reducer":81,"dactory":5,"redux":73}],83:[function(require,module,exports){
-"use strict";
+},{"./reducer":82,"dactory":5,"redux":73}],85:[function(require,module,exports){
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-exports.default = function (url) {
+exports.getPosts = getPosts;
+exports.addPost = addPost;
+function getPosts(url) {
   return async function () {
     var result = await fetch(url);
     return result.json();
   };
-};
+}
+function addPost(url) {
+  return async function (_ref) {
+    var data = _ref.data;
+
+    await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+  };
+}
 
 },{}]},{},[76]);

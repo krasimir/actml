@@ -1,16 +1,16 @@
-import { GET_POSTS, GETTING_POSTS_FAILED } from './constants';
+import { POSTS_LOADED, GETTING_POSTS_FAILED } from './constants';
 
 const initialState = {
-  pending: false,
+  error: null,
   posts: null
 }
 
 const reducer = function (oldState = initialState, action) {
   switch (action.type) {
-    case GET_POSTS:
-      return { pending: true, posts: null };
+    case POSTS_LOADED:
+      return { posts: action.posts };
     case GETTING_POSTS_FAILED:
-      return { pending: false, error: action.error, posts: action.posts };
+      return { error: action.error, posts: null };
   }
   return oldState;
 };

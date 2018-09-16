@@ -1,14 +1,34 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { getPosts } from '../redux/actions';
+import { getPosts } from '../redux/selectors';
 
-function Header({ getPosts }) {
-  return <button onClick={ getPosts }>Get posts</button>;
+function Header({ posts }) {
+  let message = '...';
+  let List;
+
+  if (posts) {
+    message = `Total posts: ${ posts.length }`
+    List = (
+      <ul>
+        {
+          posts.map(({ id, title }) => (
+            <li key={ id }>{ title }</li>
+          ))
+        }
+      </ul>
+    )
+  }
+  return (
+    <header>
+      { message }
+      { List }
+      <hr />
+    </header>
+  );
 }
 
 export default connect(
-  null,
-  dispatch => ({
-    getPosts: () => dispatch(getPosts())
+  state => ({
+    posts: getPosts(state)
   })
 )(Header);
