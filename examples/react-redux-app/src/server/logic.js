@@ -5,7 +5,7 @@ var ID = function () {
 };
 
 export function GetPosts() {
-  return posts;
+  return posts.map(({ text, ...other }) => ({ ...other }));
 }
 export function GetPost({ id }) {
   const post = posts.find(({ id: postId }) => postId === id);

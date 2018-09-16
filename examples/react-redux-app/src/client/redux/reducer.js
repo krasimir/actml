@@ -1,4 +1,4 @@
-import { POSTS_LOADED, GETTING_POSTS_FAILED } from './constants';
+import { POSTS_LOADED } from './constants';
 
 const initialState = {
   error: null,
@@ -9,8 +9,6 @@ const reducer = function (oldState = initialState, action) {
   switch (action.type) {
     case POSTS_LOADED:
       return { posts: action.posts };
-    case GETTING_POSTS_FAILED:
-      return { error: action.error, posts: null };
   }
   return oldState;
 };

@@ -1,3 +1,3 @@
 export const POSTS_LOADED = 'POSTS_LOADED';
-export const GETTING_POSTS_FAILED = 'GETTING_POSTS_FAILED';
 export const NEW_POST = 'NEW_POST';
+export const GET_DETAILS = 'GET_DETAILS';

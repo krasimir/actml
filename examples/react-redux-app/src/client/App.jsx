@@ -6,7 +6,7 @@ import Header from './components/Header';
 import NewPost from './components/NewPost';
 import { speak } from 'dactory';
 import Logic from './logic';
-import { getPosts, addPost } from './services/posts';
+import { getPosts, addPost, getPost } from './services/posts';
 
 class App extends React.Component {
   render() {
@@ -28,6 +28,7 @@ speak(
   Logic,
   {
     getPosts: getPosts('/api/posts'),
-    addPost: addPost('/api/post')
+    addPost: addPost('/api/post'),
+    getPost: getPost('/api/post/')
   }
 );

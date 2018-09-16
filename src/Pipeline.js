@@ -51,7 +51,15 @@ async function processResult(word) {
   const { result, context, props } = word;
 
   if (props && props.exports) {
-    context.set(props.exports, result);
+    if (typeof props.exports === 'function') {
+      const exportedProps = props.exports(result);
+
+      Object
+        .keys(exportedProps)
+        .forEach(key => context.set(key, exportedProps[key]));
+    } else {
+      context.set(props.exports, result);
+    }
   }
 
   if (result) {

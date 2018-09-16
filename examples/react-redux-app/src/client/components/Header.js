@@ -1,6 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { getPosts } from '../redux/selectors';
+import { getDetails } from '../redux/actions';
 
 function Header({ posts }) {
   let message = '...';
@@ -11,8 +12,15 @@ function Header({ posts }) {
     List = (
       <ul>
         {
-          posts.map(({ id, title }) => (
-            <li key={ id }>{ title }</li>
+          posts.map(({ id, title, text }) => (
+            <li key={ id }>
+              { title }
+              { text && text }
+              <button onClick={ () => this.props.getDetails(id) }>
+                view details
+              </button>
+              <button>delete</button>
+            </li>
           ))
         }
       </ul>
@@ -30,5 +38,8 @@ function Header({ posts }) {
 export default connect(
   state => ({
     posts: getPosts(state)
+  }),
+  dispatch => ({
+    getDetails: id => dispatch(getDetails(id))
   })
 )(Header);

@@ -3,11 +3,17 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 exports.GetPosts = GetPosts;
 exports.GetPost = GetPost;
 exports.AddPost = AddPost;
 exports.DeletePost = DeletePost;
 exports.HandleError = HandleError;
+
+function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+
 var posts = [];
 
 var ID = function ID() {
@@ -15,13 +21,18 @@ var ID = function ID() {
 };
 
 function GetPosts() {
-  return posts;
-}
-function GetPost(_ref) {
-  var id = _ref.id;
+  return posts.map(function (_ref) {
+    var text = _ref.text,
+        other = _objectWithoutProperties(_ref, ['text']);
 
-  var post = posts.find(function (_ref2) {
-    var postId = _ref2.id;
+    return _extends({}, other);
+  });
+}
+function GetPost(_ref2) {
+  var id = _ref2.id;
+
+  var post = posts.find(function (_ref3) {
+    var postId = _ref3.id;
     return postId === id;
   });
 
@@ -30,9 +41,9 @@ function GetPost(_ref) {
   }
   throw new Error('Not found');
 }
-function AddPost(_ref3) {
-  var title = _ref3.title,
-      text = _ref3.text;
+function AddPost(_ref4) {
+  var title = _ref4.title,
+      text = _ref4.text;
 
   var post = {
     id: ID(),
@@ -43,13 +54,13 @@ function AddPost(_ref3) {
   posts.push(post);
   return post;
 }
-function DeletePost(_ref4) {
-  var id = _ref4.id;
+function DeletePost(_ref5) {
+  var id = _ref5.id;
 
   var deleted = false;
 
-  posts = posts.filter(function (_ref5) {
-    var postId = _ref5.id;
+  posts = posts.filter(function (_ref6) {
+    var postId = _ref6.id;
 
     if (id !== postId) {
       return true;
@@ -62,8 +73,8 @@ function DeletePost(_ref4) {
     throw new Error('Not found');
   }
 }
-function HandleError(_ref6) {
-  var error = _ref6.error;
+function HandleError(_ref7) {
+  var error = _ref7.error;
 
   return error.message;
 }

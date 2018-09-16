@@ -13,9 +13,6 @@ function createContext(initialData) {
       return data[key];
     },
     set: function set(key, value) {
-      if (data[key]) {
-        console.warn("\"" + key + "\" is already defined in the current context. This may be completely fine if you know what you are doing.");
-      }
       data[key] = value;
     },
     dump: function dump() {
@@ -115,32 +112,32 @@ var handleWordError = async function handleWordError(error, props, context) {
 };
 
 // middlewares
-function init(_ref) {
-  var props = _ref.props,
-      context = _ref.context;
-
-  // normalizing the props
-  props && Object.keys(props).forEach(function (propName) {
-    if (propName.charAt(0) === '$') {
-      var prop = propName.substr(1, propName.length);
-      var value = context.get(prop);
-
-      if (typeof value !== 'undefined') {
-        props[typeof props[propName] === 'string' ? props[propName] : prop] = value;
-        delete props[propName];
-      }
-    }
-  });
-};
 async function execute(word) {
   var func = word.func,
       props = word.props,
       context = word.context;
 
+  var normalizedProps = props;
+
+  if (props) {
+    normalizedProps = _extends({}, props);
+    Object.keys(props).forEach(function (propName) {
+      if (propName.charAt(0) === '$') {
+        var prop = propName.substr(1, propName.length);
+        var value = context.get(prop);
+
+        if (typeof value !== 'undefined') {
+          normalizedProps[typeof props[propName] === 'string' ? props[propName] : prop] = value;
+          delete normalizedProps[propName];
+        }
+      }
+    });
+  }
+
   try {
-    word.result = await func.call(word, props);
+    word.result = await func.call(word, normalizedProps);
   } catch (error) {
-    await handleWordError(error, props, context);
+    await handleWordError(error, normalizedProps, context);
   }
 }
 async function processResult(word) {
@@ -171,15 +168,19 @@ async function processResult(word) {
     }
   }
 }
-async function processChildren(_ref2) {
-  var func = _ref2.func,
-      children = _ref2.children,
-      result = _ref2.result,
-      context = _ref2.context;
+async function processChildren(word) {
+  var func = word.func,
+      children = word.children,
+      result = word.result,
+      context = word.context;
 
   // FACC pattern
+
   if (children && children.length === 1 && !_Word2.default.isItAWord(children[0])) {
-    await (0, _Word2.default)(children[0], result).say(context);
+    var resultOfFACC = await children[0].call(word, result);
+    if (_Word2.default.isItAWord(resultOfFACC)) {
+      await resultOfFACC.say(context);
+    }
 
     // nested tags
   } else if (children && children.length > 0) {
@@ -220,8 +221,8 @@ function Pipeline() {
     entries.push({ name: name, func: func, enabled: true });
   };
   API.find = function (n) {
-    var entry = entries.find(function (_ref3) {
-      var name = _ref3.name;
+    var entry = entries.find(function (_ref) {
+      var name = _ref.name;
       return name === n;
     });
 
@@ -255,7 +256,6 @@ function Pipeline() {
   return API;
 }
 
-Pipeline.init = init;
 Pipeline.execute = execute;
 Pipeline.processResult = processResult;
 Pipeline.processChildren = processChildren;
@@ -263,7 +263,6 @@ Pipeline.processChildren = processChildren;
 function createDefaultPipeline() {
   var pipeline = Pipeline();
 
-  pipeline.add(init);
   pipeline.add(execute);
   pipeline.add(processResult, 'result');
   pipeline.add(processChildren, 'children');
@@ -499,7 +498,6 @@ exports.default = async function Select(props) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = Subscribe;
 
 var _Integration = require('./Integration');
 
@@ -509,7 +507,7 @@ function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj };
 }
 
-function Subscribe(props) {
+exports.default = async function Subscribe(props) {
   var _this = this;
 
   this.pipeline.disable('result');
@@ -524,7 +522,7 @@ function Subscribe(props) {
   } else {
     throw new Error('<Subscribe> requires `type` prop.');
   }
-}
+};
 
 },{"./Integration":9}],12:[function(require,module,exports){
 'use strict';
@@ -23819,7 +23817,8 @@ _reactDom2.default.render(_react2.default.createElement(_reactRedux.Provider, { 
 
 (0, _dactory.speak)(_logic2.default, {
   getPosts: (0, _posts.getPosts)('/api/posts'),
-  addPost: (0, _posts.addPost)('/api/post')
+  addPost: (0, _posts.addPost)('/api/post'),
+  getPost: (0, _posts.getPost)('/api/post/')
 });
 
 },{"./components/Header":77,"./components/NewPost":78,"./logic":79,"./redux/store":84,"./services/posts":85,"dactory":5,"react":72,"react-dom":44,"react-redux":54}],77:[function(require,module,exports){
@@ -23837,11 +23836,15 @@ var _reactRedux = require('react-redux');
 
 var _selectors = require('../redux/selectors');
 
+var _actions = require('../redux/actions');
+
 function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj };
 }
 
 function Header(_ref) {
+  var _this = this;
+
   var posts = _ref.posts;
 
   var message = '...';
@@ -23851,8 +23854,11 @@ function Header(_ref) {
     message = 'Total posts: ' + posts.length;
     List = _react2.default.createElement('ul', null, posts.map(function (_ref2) {
       var id = _ref2.id,
-          title = _ref2.title;
-      return _react2.default.createElement('li', { key: id }, title);
+          title = _ref2.title,
+          text = _ref2.text;
+      return _react2.default.createElement('li', { key: id }, title, text && text, _react2.default.createElement('button', { onClick: function onClick() {
+          return _this.props.getDetails(id);
+        } }, 'view details'), _react2.default.createElement('button', null, 'delete'));
     }));
   }
   return _react2.default.createElement('header', null, message, List, _react2.default.createElement('hr', null));
@@ -23862,9 +23868,15 @@ exports.default = (0, _reactRedux.connect)(function (state) {
   return {
     posts: (0, _selectors.getPosts)(state)
   };
+}, function (dispatch) {
+  return {
+    getDetails: function getDetails(id) {
+      return dispatch((0, _actions.getDetails)(id));
+    }
+  };
 })(Header);
 
-},{"../redux/selectors":83,"react":72,"react-redux":54}],78:[function(require,module,exports){
+},{"../redux/actions":80,"../redux/selectors":83,"react":72,"react-redux":54}],78:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -23993,14 +24005,11 @@ var ErrorHandler = function ErrorHandler() {
   return true;
 };
 var FetchPosts = function FetchPosts() {
-  return (0, _dactory.D)('getPosts', { exports: 'posts', onError: (0, _dactory.D)(ErrorHandler, null, (0, _dactory.D)(Action, { type: _constants.GETTING_POSTS_FAILED })) }, (0, _dactory.D)(Action, { type: _constants.POSTS_LOADED, $posts: true }));
-};
-var Log = function Log(props) {
-  return console.log(JSON.stringify(props, null, 2));
+  return (0, _dactory.D)('getPosts', { exports: 'posts' }, (0, _dactory.D)(Action, { type: _constants.POSTS_LOADED, $posts: true }));
 };
 
 function StartUp() {
-  return (0, _dactory.D)(_dactory.D, null, (0, _dactory.D)(FetchPosts, null), (0, _dactory.D)(Subscribe, { type: _constants.NEW_POST, exports: 'newPostAction' }, (0, _dactory.D)(Log, { $newPostAction: true }), (0, _dactory.D)('addPost', { $newPostAction: 'data' }), (0, _dactory.D)(FetchPosts, null)));
+  return (0, _dactory.D)(_dactory.D, null, (0, _dactory.D)(FetchPosts, null), (0, _dactory.D)(Subscribe, { type: _constants.NEW_POST, exports: 'post' }, (0, _dactory.D)('addPost', { $post: true }), (0, _dactory.D)(FetchPosts, null)), (0, _dactory.D)(Subscribe, { type: _constants.VIEW_DETAILS, exports: 'post' }, (0, _dactory.D)('addPost', { $post: true }), (0, _dactory.D)(FetchPosts, null)));
 }
 
 },{"../redux/constants":81,"dactory":5}],80:[function(require,module,exports){
@@ -24009,7 +24018,7 @@ function StartUp() {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.addPost = exports.getPosts = undefined;
+exports.getDetails = exports.addPost = exports.getPosts = undefined;
 
 var _constants = require('./constants');
 
@@ -24019,6 +24028,9 @@ var getPosts = exports.getPosts = function getPosts() {
 var addPost = exports.addPost = function addPost(title, text) {
   return { type: _constants.NEW_POST, title: title, text: text };
 };
+var getDetails = exports.getDetails = function getDetails(id) {
+  return { type: _constants.GET_DETAILS, id: id };
+};
 
 },{"./constants":81}],81:[function(require,module,exports){
 'use strict';
@@ -24027,8 +24039,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 var POSTS_LOADED = exports.POSTS_LOADED = 'POSTS_LOADED';
-var GETTING_POSTS_FAILED = exports.GETTING_POSTS_FAILED = 'GETTING_POSTS_FAILED';
 var NEW_POST = exports.NEW_POST = 'NEW_POST';
+var GET_DETAILS = exports.GET_DETAILS = 'GET_DETAILS';
 
 },{}],82:[function(require,module,exports){
 'use strict';
@@ -24051,8 +24063,6 @@ var reducer = function reducer() {
   switch (action.type) {
     case _constants.POSTS_LOADED:
       return { posts: action.posts };
-    case _constants.GETTING_POSTS_FAILED:
-      return { error: action.error, posts: null };
   }
   return oldState;
 };
@@ -24103,6 +24113,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.getPosts = getPosts;
 exports.addPost = addPost;
+exports.getPost = getPost;
 function getPosts(url) {
   return async function () {
     var result = await fetch(url);
@@ -24111,7 +24122,7 @@ function getPosts(url) {
 }
 function addPost(url) {
   return async function (_ref) {
-    var data = _ref.data;
+    var post = _ref.post;
 
     await fetch(url, {
       method: 'POST',
@@ -24119,8 +24130,14 @@ function addPost(url) {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(post)
     });
+  };
+}
+function getPost(url) {
+  return async function (id) {
+    var result = await fetch(url + id);
+    return result.json();
   };
 }
 

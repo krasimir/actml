@@ -87,5 +87,18 @@ describe('Given the Context', () => {
 
       await speak(<D><A exports='foo'></A><B exports='foo'></B></D>);
     });
+    it('should accept a function for "exports" prop', async () => {
+      const A = () => ({ type: 'foo', total: 47 });
+      const B = jest.fn();
+
+      await speak(
+        <D>
+          <A exports={ ({ total }) => ({ num: total }) } />
+          <B $num />
+        </D>
+      );
+
+      expect(B).toBeCalledWith({ num: 47 });
+    });
   });
 });

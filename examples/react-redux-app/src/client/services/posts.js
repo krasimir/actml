@@ -5,14 +5,20 @@ export function getPosts(url) {
   };
 }
 export function addPost(url) {
-  return async ({ data }) => {
+  return async ({ post }) => {
     await fetch(url, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(post)
     });
+  };
+}
+export function getPost(url) {
+  return async (id) => {
+    const result = await fetch(url + id);
+    return result.json();
   };
 }
