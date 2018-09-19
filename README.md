@@ -44,6 +44,22 @@ function AmIGoingToTheBeach({ schedule }) {
 
 run(
   <A>
+    <GetSeason exports="season" endpoint="https://www.mocky.io/v2/5ba2a2b52f00006a008d2e0d">
+      { season => (
+        <GetMySchedule season={ season }>
+          { schedule => <AmIGoingToTheBeach schedule={ schedule } /> }
+        </GetMySchedule>
+      )}
+    </GetSeason>
+  </A>
+);
+```
+
+Or if we use ActML's context API:
+
+```js
+run(
+  <A>
     <GetSeason exports="season" endpoint="https://www.mocky.io/v2/5ba2a2b52f00006a008d2e0d" />
     <GetMySchedule $season exports="schedule" />
     <AmIGoingToTheBeach $schedule />
