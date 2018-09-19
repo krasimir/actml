@@ -12,7 +12,7 @@ async function getMySchedule(endpoint) {
   const { season } = await result.json();
 
   if (season === 'summer') {
-    return '🌴🍨🏄';
+    return '🌴🍨🏊';
   } else {
     return '⏰☕️💻';
   }
@@ -20,7 +20,7 @@ async function getMySchedule(endpoint) {
 
 getMySchedule('https://www.mocky.io/v2/5ba29a732f000057008d2dee').then(
   schedule => {
-    console.log(schedule.indexOf('🏄') >= 0 ? '😎' : '😭');
+    console.log(schedule.indexOf('🏊') >= 0 ? '😎' : '😭');
   }
 );
 ```
