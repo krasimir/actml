@@ -1,1 +1,1 @@
-# Simple React-Redux app that uses Dactory
+# Simple React-Redux app that uses ActML
