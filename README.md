@@ -19,6 +19,9 @@ async function getMySchedule(endpoint) {
 }
 
 getMySchedule('https://www.mocky.io/v2/5ba29a732f000057008d2dee').then(
-  schedule => console.log(schedule)
+  schedule => {
+    console.log(schedule.indexOf('🏄') >= 0 ? '😎' : '😭');
+  }
 );
 ```
+
