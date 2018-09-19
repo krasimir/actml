@@ -16,11 +16,37 @@ async function getMySchedule(endpoint) {
   return (await getSeason(endpoint)) === 'summer' ? '🌴🍨🏄' : '⏰☕️💻';
 }
 async function amIGoingToTheBeach() {
-  const schedule = await getMySchedule('https://www.mocky.io/v2/5ba29a732f000057008d2dee');
+  const schedule = await getMySchedule('https://www.mocky.io/v2/5ba2a2b52f00006a008d2e0d');
   console.log(schedule.indexOf('🏄') >= 0 ? '👍😎' : '👉😭');
 }
 
 amIGoingToTheBeach();
 ```
 
-So, there are couple of things happening. We have this `getMySchedule` function which is using the asynchronous `getSeason` to get the current season. Based on the season `getMySchedule` decides what will be the user's activities. Then we have some logic in `App` that uses the schedule to decide what emoji to print in the console.
+So, there are couple of things happening. We have this `getMySchedule` function which is using the asynchronous `getSeason` to get the current season. Based on the season `getMySchedule` decides what will be the user's activities. Then we have some logic in `App` that uses the schedule to decide what emojis to print in the console. 
+
+There are couple of problems with this code. Of course the biggest one is that the user will never go to the beach because the fake endpoint always returns `{"season": "not summer"}`. Besides that we have a dependency problem. `getMySchedule` not only needs the current season but also it knows how to get it because it directly uses `getSeason`. Sure, we can use some more composition by getting the season in `amIGoingToTheBeach` and passing it as parameter to `getSeason` but wouldn't be cool if we can use a code like this:
+
+```js
+import { A, run } from 'actml';
+
+async function GetSeason({ endpoint }) {
+  const result = await fetch(endpoint);
+  const { season } = await result.json();
+  return season;
+}
+async function GetMySchedule({ season }) {
+  return season === 'summer' ? '🌴🍨🏄' : '⏰☕️💻';
+}
+function AmIGoingToTheBeach({ schedule }) {
+  console.log(schedule.indexOf('🏄') >= 0 ? '👍😎' : '👉😭');
+}
+
+run(
+  <A>
+    <GetSeason exports="season" endpoint="https://www.mocky.io/v2/5ba2a2b52f00006a008d2e0d" />
+    <GetMySchedule $season exports="schedule" />
+    <AmIGoingToTheBeach $schedule />
+  </A>
+);
+```
