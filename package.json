@@ -1,5 +1,5 @@
 {
-  "name": "dactory",
+  "name": "actml",
   "version": "0.6.7",
   "description": "Like jsx but for your business logic",
   "main": "lib",
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/krasimir/dactory.git"
+    "url": "git+https://github.com/krasimir/actml.git"
   },
   "keywords": [
     "dialect",
@@ -19,9 +19,9 @@
   "author": "Krasimir Tsonev",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/krasimir/dactory/issues"
+    "url": "https://github.com/krasimir/actml/issues"
   },
-  "homepage": "https://github.com/krasimir/dactory#readme",
+  "homepage": "https://github.com/krasimir/actml#readme",
   "devDependencies": {
     "babel-core": "6.26.3",
     "babel-cli": "6.26.0",
