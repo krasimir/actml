@@ -1,16 +1,16 @@
-import Word from './Word';
+import Actor from './Actor';
 
 // helpers
-const handleWordError = async function (error, props, context) {
+const handleActorError = async function (error, props, context) {
   if (props && props.onError) {
     props.onError.mergeToProps({ error });
 
-    const onErrorStrategy = await props.onError.say(context);
+    const onErrorStrategy = await props.onError.run(context);
 
     if (onErrorStrategy === false) {
-      throw new Error(Word.errors.STOP_PROCESSING);
+      throw new Error(Actor.errors.STOP_PROCESSING);
     } else if (onErrorStrategy === true) {
-      throw new Error(Word.errors.CONTINUE_PROCESSING);
+      throw new Error(Actor.errors.CONTINUE_PROCESSING);
     } else {
       // swallowing the error
     }      
@@ -20,8 +20,8 @@ const handleWordError = async function (error, props, context) {
 }
 
 // middlewares
-async function execute(word) {
-  const { func, props, context } = word;
+async function execute(actor) {
+  const { func, props, context } = actor;
   var normalizedProps = props;
 
   if (props) {
@@ -42,13 +42,13 @@ async function execute(word) {
   }
 
   try {
-    word.result = await func.call(word, normalizedProps);
+    actor.result = await func.call(actor, normalizedProps);
   } catch (error) {
-    await handleWordError(error, normalizedProps, context);
+    await handleActorError(error, normalizedProps, context);
   }
 }
-async function processResult(word) {
-  const { result, context, props } = word;
+async function processResult(actor) {
+  const { result, context, props } = actor;
 
   if (props && props.exports) {
     if (typeof props.exports === 'function') {
@@ -63,8 +63,8 @@ async function processResult(word) {
   }
 
   if (result) {
-    if (Word.isItAWord(result)) {
-      await result.say(context);
+    if (Actor.isItAnActor(result)) {
+      await result.run(context);
     }
     // Generator
     if (typeof result.next === 'function') {
@@ -73,22 +73,22 @@ async function processResult(word) {
 
       while(!genRes.done) {
         genRes = gen.next(genRes.value);
-        if (Word.isItAWord(genRes.value)) {
-          genRes.value = await genRes.value.say(context);
+        if (Actor.isItAnActor(genRes.value)) {
+          genRes.value = await genRes.value.run(context);
         }
       }
-      word.result = genRes.value;
+      actor.result = genRes.value;
     }
   }
 }
-async function processChildren(word) {
-  const { func, children, result, context } = word;
+async function processChildren(actor) {
+  const { func, children, result, context } = actor;
 
   // FACC pattern
-  if (children && children.length === 1 && !Word.isItAWord(children[0])) {
-    const resultOfFACC = await children[0].call(word, result);
-    if (Word.isItAWord(resultOfFACC)) {
-      await resultOfFACC.say(context);
+  if (children && children.length === 1 && !Actor.isItAnActor(children[0])) {
+    const resultOfFACC = await children[0].call(actor, result);
+    if (Actor.isItAnActor(resultOfFACC)) {
+      await resultOfFACC.run(context);
     }
   
   // nested tags
@@ -101,14 +101,14 @@ async function processChildren(word) {
 
       try {
         if (parallelProcessing) {
-          w.say(context);
+          w.run(context);
         } else {
-          await w.say(context);
+          await w.run(context);
         }
       } catch (error) {
-        if (error.message === Word.errors.STOP_PROCESSING) {
+        if (error.message === Actor.errors.STOP_PROCESSING) {
           break;
-        } else if(!(error.message === Word.errors.CONTINUE_PROCESSING)) {
+        } else if(!(error.message === Actor.errors.CONTINUE_PROCESSING)) {
           throw error;
         }
       }
@@ -123,7 +123,7 @@ export default function Pipeline() {
     const entry = API.find(entryName);
 
     entry.enabled = false;
-    return entry.func({ ...API.scopeWord, result });
+    return entry.func({ ...API.scopeActor, result });
   }
 
   API.add = function add(func, name) {
@@ -150,13 +150,13 @@ export default function Pipeline() {
 
     while(entry = entries[pointer]) {
       if (entry.enabled) {
-        await entry.func(API.scopeWord);
+        await entry.func(API.scopeActor);
       }
       pointer += 1;
     }
   };
-  API.setScope = function (scopeWord) {
-    API.scopeWord = scopeWord;
+  API.setScope = function (scopeActor) {
+    API.scopeActor = scopeActor;
   }
 
   return API;

@@ -1,9 +1,9 @@
 import Integration from './Integration';
-import Word from '../../Word';
+import Actor from '../../Actor';
 
 export default async function Select(props) {
-  if (props && Word.isItAWord(props.selector)) {
-    const s = await props.selector.say(this.context);
+  if (props && Actor.isItAnActor(props.selector)) {
+    const s = await props.selector.run(this.context);
     return s(Integration.getState());
   }
   return props.selector(Integration.getState());

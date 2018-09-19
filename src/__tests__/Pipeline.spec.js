@@ -9,15 +9,15 @@ describe('Given the Pipeline utility', () => {
     it('should run every middleware', async () => {
       const temp = [];
       const scope = { foo: 'bar' };
-      const A = jest.fn();
+      const Z = jest.fn();
       const B = jest.fn();
-      const M1 = async function (word) {
-        A(word);
+      const M1 = async function (actor) {
+        Z(actor);
         await fakeAsync(40);
         temp.push('M1');
       }
-      const M2 = async function (word) {
-        B(word);
+      const M2 = async function (actor) {
+        B(actor);
         await fakeAsync(10);
         temp.push('M2');
       }
@@ -29,7 +29,7 @@ describe('Given the Pipeline utility', () => {
 
       await pipeline.run();
 
-      expect(A).toBeCalledWith(scope);
+      expect(Z).toBeCalledWith(scope);
       expect(B).toBeCalledWith(scope);
       expect(temp).toMatchObject(['M1', 'M2']);
     });

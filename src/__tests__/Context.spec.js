@@ -1,5 +1,5 @@
-/** @jsx D */
-import { D, speak } from '..';
+/** @jsx A */
+import { A, run } from '..';
 import { createContext } from '../Context';
 
 const fakeAsync = (resolveWith, delay) => new Promise(done => {
@@ -22,7 +22,7 @@ describe('Given the Context', () => {
       const UseToken = ({ token }) => print(token);
       const App = () => {};
 
-      await speak(
+      await run(
         <App>
           <GetToken exports='token' />
           <UseToken $token />
@@ -36,7 +36,7 @@ describe('Given the Context', () => {
       const UseToken = ({ token }) => print(token);
       const App = () => {};
 
-      await speak(
+      await run(
         <App>
           <GetToken exports='blah' />
           <UseToken $blah='token' />
@@ -45,21 +45,21 @@ describe('Given the Context', () => {
       expect(print).toBeCalledWith('XXX');
     });
     it('should keep the same context', async () => {
-      const A = jest.fn();
+      const Z = jest.fn();
       const B = jest.fn();
       const C = jest.fn();
       const c = { foo: 'bar' };
 
-      await speak(
-        <A $foo>
+      await run(
+        <Z $foo>
           <B $foo>
             <C $foo/>
           </B>
-        </A>,
+        </Z>,
         c
       );
 
-      expect(A).toBeCalledWith({ foo: 'bar' });
+      expect(Z).toBeCalledWith({ foo: 'bar' });
       expect(B).toBeCalledWith({ foo: 'bar' });
       expect(C).toBeCalledWith({ foo: 'bar' });
     });
@@ -67,35 +67,35 @@ describe('Given the Context', () => {
       const context = {
         getPosts: jest.fn().mockImplementation(() => 'bar')
       };
-      const A = jest.fn();
+      const Z = jest.fn();
 
-      await speak(
-        <D>
+      await run(
+        <A>
           <getPosts url='foo' exports='posts'/>
-          <A $posts />
-        </D>,
+          <Z $posts />
+        </A>,
         context
       );
 
       expect(context.getPosts).toBeCalledWith({ url: 'foo', exports: 'posts' });
-      expect(A).toBeCalledWith({ posts: 'bar' });
+      expect(Z).toBeCalledWith({ posts: 'bar' });
     });
     it('should warn if we try to override an already defined key', async () => {
-      const A = () => 'a';
+      const Z = () => 'a';
       const B = () => 'b';
       const warn = jest.fn();
 
-      await speak(<D><A exports='foo'></A><B exports='foo'></B></D>);
+      await run(<A><Z exports='foo'></Z><B exports='foo'></B></A>);
     });
     it('should accept a function for "exports" prop', async () => {
-      const A = () => ({ type: 'foo', total: 47 });
+      const Z = () => ({ type: 'foo', total: 47 });
       const B = jest.fn();
 
-      await speak(
-        <D>
-          <A exports={ ({ total }) => ({ num: total }) } />
+      await run(
+        <A>
+          <Z exports={ ({ total }) => ({ num: total }) } />
           <B $num />
-        </D>
+        </A>
       );
 
       expect(B).toBeCalledWith({ num: 47 });

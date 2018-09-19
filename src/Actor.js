@@ -1,6 +1,6 @@
 import { createDefaultPipeline } from './Pipeline';
 
-export default function Word(func, props, children) {
+export default function Actor(func, props, children) {
   return {
 
     func,
@@ -13,7 +13,7 @@ export default function Word(func, props, children) {
     mergeToProps(additionalProps) {
       this.props = Object.assign({}, this.props, additionalProps);
     },
-    async say(context) {
+    async run(context) {
       this.context = context;
 
       if (typeof func === 'string') {
@@ -28,8 +28,8 @@ export default function Word(func, props, children) {
 }
 
 // Static props
-Word.isItAWord = word => word && !!word.say;
-Word.errors = {
+Actor.isItAnActor = actor => actor && !!actor.run;
+Actor.errors = {
   STOP_PROCESSING: 'STOP_PROCESSING',
   CONTINUE_PROCESSING: 'CONTINUE_PROCESSING'
 };

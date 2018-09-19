@@ -1,6 +1,6 @@
 const MIDDLEWARE_NOT_RUN = `There are two possible options for this error:
-a) You are running your Dactory logic too soon. The Redux middleware is still not registered.
-b) You forgot to register Dactory's Redux middleware.`;
+a) You are running your ActML logic too soon. The Redux middleware is still not registered.
+b) You forgot to register ActML's Redux middleware.`;
 
 const Integration = {
   _listeners: [],
