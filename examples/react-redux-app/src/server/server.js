@@ -1,5 +1,5 @@
-/** @jsx D */
-import { D, speak } from 'dactory';
+/** @jsx A */
+import { A, run } from 'actml';
 import express from 'express';
 import bodyParser from 'body-parser';
 
@@ -14,15 +14,15 @@ app.use(bodyParser.urlencoded({
 app.use(express.static(__dirname + '/../client'));
 
 app.get('/api/posts', async function (req, res) {
-  res.json(await speak(<GetPosts />));
+  res.json(await run(<GetPosts />));
 });
 app.get('/api/post/:id', async function (req, res) {
-  const { post, error } = await speak(
-    <D>
+  const { post, error } = await run(
+    <A>
       <GetPost id={ req.params.id } exports='post' onError={
         <HandleError exports='error' />
       }/>
-    </D>
+    </A>
   );
 
   if (post) {
@@ -32,15 +32,15 @@ app.get('/api/post/:id', async function (req, res) {
   }
 });
 app.post('/api/post', async function (req, res) {
-  res.json(await speak(<AddPost { ...req.body } />));
+  res.json(await run(<AddPost { ...req.body } />));
 });
 app.delete('/api/post/:id', async function (req, res) {
-  const { post, error } = await speak(
-    <D>
+  const { post, error } = await run(
+    <A>
       <DeletePost id={ req.params.id } exports='post' onError={
         <HandleError exports='error' />
       }/>
-    </D>
+    </A>
   );
 
   if (post) {

@@ -1,5 +1,5 @@
-/** @jsx D */
-import { D, Redux } from 'dactory';
+/** @jsx A */
+import { A, Redux } from 'actml';
 import {
   POSTS_LOADED,
   GET_DETAILS,
@@ -18,7 +18,7 @@ const FetchPosts = () => (
 
 export default function StartUp() {
   return (
-    <D>
+    <A>
       <FetchPosts />    
       <Subscribe type={ NEW_POST } exports='post'>
         <addPost $post />
@@ -32,6 +32,6 @@ export default function StartUp() {
         <deletePost $id />
         <FetchPosts />
       </Subscribe>
-    </D>
+    </A>
   )
 }

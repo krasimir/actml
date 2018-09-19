@@ -24,6 +24,10 @@ acorn@^4.0.3:
   version "4.0.13"
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-4.0.13.tgz#105495ae5361d697bd195c825192e1ad7f253787"
 
+actml@0.6.8:
+  version "0.6.8"
+  resolved "https://registry.yarnpkg.com/actml/-/actml-0.6.8.tgz#badb1a91e9dd68760ecf32a6cd2dd582ccbc3fdd"
+
 ansi-align@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/ansi-align/-/ansi-align-2.0.0.tgz#c36aeccba563b89ceb556f3690f0b1d9e3547f7f"
@@ -1206,10 +1210,6 @@ crypto-browserify@^3.0.0:
 crypto-random-string@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/crypto-random-string/-/crypto-random-string-1.0.0.tgz#a230f64f568310e1498009940790ec99545bca7e"
-
-dactory@0.6.7:
-  version "0.6.7"
-  resolved "https://registry.yarnpkg.com/dactory/-/dactory-0.6.7.tgz#2d18471a6ce2b7c907abeba6f88fc0e8a639b7b1"
 
 date-fns@^1.23.0:
   version "1.29.0"

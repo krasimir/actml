@@ -4,7 +4,7 @@ import { Provider } from 'react-redux';
 import createStore from './redux/store';
 import Header from './components/Header';
 import NewPost from './components/NewPost';
-import { speak } from 'dactory';
+import { run } from 'actml';
 import Logic from './logic';
 import { getPosts, addPost, getPost, deletePost } from './services/posts';
 
@@ -24,7 +24,7 @@ ReactDOM.render(
   document.querySelector('#content')
 );
 
-speak(
+run(
   Logic,
   {
     getPosts: getPosts('/api/posts'),
