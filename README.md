@@ -1,4 +1,4 @@
-# &lt;ACTML /> :rocket: <!-- omit in toc -->
+# &lt;ActML /> :rocket: <!-- omit in toc -->
 
 > Like JSX but for your business logic.
 
