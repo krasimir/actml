@@ -68,3 +68,7 @@ run(
 ```
 
 Notice how `GetMySchedule` and `AmIGoingToTheBeach` became pure functions which only accept what they need. I know what you are thinking - "Do we really need such kung-fu to make those functions pure?". Well, we may achieve the same thing but we need a fourth function that act as a composition layer and wires everything. That is one of the benefits of ActML. It is your glue layer where you say what needs to happen without specifying how.
+
+## What you need to use ActML
+
+ActML uses React's JSX transpiler to convert markup to function calls. By default the transpiler translates every tag to a `React.createElement` call.
