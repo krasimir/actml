@@ -23,7 +23,7 @@ async function amIGoingToTheBeach() {
 amIGoingToTheBeach();
 ```
 
-So, there are couple of things happening. We have this `getMySchedule` function which is using the asynchronous `getSeason` to get the current season. Based on the season `getMySchedule` decides what will be the user's activities. Then we have some logic in `App` that uses the schedule to decide what emojis to print in the console. 
+We have this `getMySchedule` function which is using the asynchronous `getSeason` to get the current season. Based on the season `getMySchedule` decides what will be the user's activities. Then we have some logic in `amIGoingToTheBeach` that uses the schedule to decide what emojis to print in the console. 
 
 There are couple of problems with this code. Of course the biggest one is that the user will never go to the beach because the fake endpoint always returns `{"season": "not summer"}`. Besides that we have a dependency problem. `getMySchedule` not only needs the current season but also it knows how to get it because it directly uses `getSeason`. Sure, we can use some more composition by getting the season in `amIGoingToTheBeach` and passing it as parameter to `getSeason` but wouldn't be cool if we can use a code like this:
 
