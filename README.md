@@ -4,6 +4,8 @@
 
 - [Concept](#concept)
 - [What you need to use ActML](#what-you-need-to-use-actml)
+- [What is an _actor_](#what-is-an-actor)
+- [Type of actors](#type-of-actors)
 
 ## Concept
 
@@ -81,6 +83,38 @@ ActML uses React's JSX transpiler to convert markup to function calls. By defaul
 import { A } from 'actml';
 ```
 
-The first line is to say to the transpiler that we don't want `React.createElement()` but `A()`. The second line is there because otherwise you'll get `ReferenceError: A is not defined` error. And of course because the `A` function is defining the _actors_ of ActML.
+The first line is to say to the transpiler that we don't want `React.createElement()` but `A()`. The second line is there because otherwise you'll get `ReferenceError: A is not defined` error. And of course because the `A` function is defining the code unit of ActML - the _actor_.
 
-From a tools perspective you probably need some sort of [Babel](https://babeljs.io/docs/en/babel-preset-react) integration. There's a Redux+ActML example app [here](https://github.com/krasimir/actml/tree/master/examples/react-redux-app) that you can check out.
+From a tools perspective you need some sort of [Babel](https://babeljs.io/docs/en/babel-preset-react) integration. There's a Redux+ActML example app [here](https://github.com/krasimir/actml/tree/master/examples/react-redux-app) that you can check out.
+
+## What is an _actor_
+
+I struggled finding a proper name of the smallest unit in ActML. That is the well known JavaScript function. However, I didn't want to use the word _function_ neither _component_ so I decided to call it _actor_. In the context of ActML the _actor_ is a JavaScript function. The code below defines two different actors:
+
+```js
+/** @jsx A */
+import { A, run } from 'actml';
+
+const Foo = function () { console.log('Foo'); }
+const Bar = function () { console.log('Bar'); }
+
+run(
+  <A>
+    <Foo />
+    <Bar />
+  </A>
+);
+// > Foo
+// > Bar
+```
+
+## Type of actors
+
+The actor could be three things:
+
+* A function
+* An asynchronous function
+* A generator
+
+In general ActML assumes that every of the actors is asynchronous. And it executes the functions from the outer to inner ones and from top to bottom. All the three types of actors may return another actor. In the case of generator we may `yield` also another generator. For example:
+
