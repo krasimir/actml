@@ -235,7 +235,7 @@ run(
 
 ### Setting initial context value
 
-The `run` function accepts a second argument which is the initial state of the context. We can pass an object in the format of key-value.
+The `run` function accepts a second argument which is the initial state of the context. We can pass an object in the format of key-value pairs.
 
 ```js
 const Print = function({ name }) {
@@ -269,7 +269,7 @@ export default initialContext;
 
 
 // App.js
-import initialContext from './initialContext';
+import initialContext from './context.js';
 
 run(
   <A>
