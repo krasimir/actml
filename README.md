@@ -212,6 +212,21 @@ run(
 We can go even further and provide a function which receives the value and returns a props object:
 
 ```js
+const IKnowTheAnswer = function() {
+  return 42;
+};
+const Print = function({ message }) {
+  console.log(`The answer is ${message}`);
+};
+const formatMessage = a => ({
+  message: a < 50 ? 'less then 50' : 'more then 50'
+});
 
+run(
+  <A>
+    <IKnowTheAnswer exports="answer" />
+    <Print $answer={ formatMessage } />
+  </A>
+);
 ```
 
