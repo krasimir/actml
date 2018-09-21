@@ -8,6 +8,8 @@
 - [Getting in and out of your function/element](#getting-in-and-out-of-your-functionelement)
 - [Context API](#context-api)
   - [Setting in and getting out from the context](#setting-in-and-getting-out-from-the-context)
+  - [Setting initial context value](#setting-initial-context-value)
+  - [Using the context API as a dependency management tool](#using-the-context-api-as-a-dependency-management-tool)
 
 ## Concept
 
@@ -228,5 +230,80 @@ run(
     <Print $answer={ formatMessage } />
   </A>
 );
+// Prints out: The answer is less then 50
 ```
 
+### Setting initial context value
+
+The `run` function accepts a second argument which is the initial state of the context. We can pass an object in the format of key-value.
+
+```js
+const Print = function({ name }) {
+  console.log(`Hello ${name}`);
+};
+const initialContext = {
+  name: 'David'
+};
+
+run(<Print $name />, initialContext);
+// Prints out: Hello David
+```
+
+### Using the context API as a dependency management tool
+
+Because the context is available in every element we may use it to deliver dependencies. It works not only with variables but also with other elements. For example:
+
+```js
+// context.js
+const initialContext = {
+  async getSeason({ endpoint }) {
+    const result = await fetch(endpoint);
+    const { season } = await result.json();
+    return season;
+  },
+  print({ season }) {
+    console.log(`The season is ${season}`);
+  }
+};
+export default initialContext;
+
+
+// App.js
+import initialContext from './initialContext';
+
+run(
+  <A>
+    <getSeason endpoint="https://www.mocky.io/v2/5ba2a2b52f00006a008d2e0d">
+      { season => <print season={season} /> }
+    </getSeason>
+  </A>,
+  initialContext
+);
+// Prints out: The season is not summer 
+```
+
+Notice how `getSeason` and `print` are only defined in the context and they don't exist in `App.js`. And here we have to mention that this is only possible because of the JSX transpiler. Also they both start with a lowercase letter. That is really important because:
+
+```js
+<getSeason />
+```
+
+gets transpiled to
+
+```js
+A("getSeason", null);
+```
+
+while
+
+```js
+<GetSeason />
+```
+
+to
+
+```js
+A(GetSeason, null);
+```
+
+In the second case there **must** be a function `GetSeason` while in the first case there's just a string `getSeason` passed to ActML runner.
