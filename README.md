@@ -4,7 +4,9 @@
 
 - [Concept](#concept)
 - [What you need to use ActML](#what-you-need-to-use-actml)
-- [What is a ActML element](#what-is-a-actml-element)
+- [What is an ActML element](#what-is-an-actml-element)
+- [Getting in and out of your function/element](#getting-in-and-out-of-your-functionelement)
+- [Context API](#context-api)
 
 ## Concept
 
@@ -84,7 +86,7 @@ The first line is to say to the transpiler that we don't want `React.createEleme
 
 From a tools perspective you need some sort of [Babel](https://babeljs.io/docs/en/babel-preset-react) integration. There's a Redux+ActML example app [here](https://github.com/krasimir/actml/tree/master/examples/react-redux-app) that you can check out.
 
-## What is a ActML element
+## What is an ActML element
 
 In the context of ActML the _element_ is a JavaScript function. The code below defines two different ActML elements:
 
@@ -135,4 +137,35 @@ function * Logic() {
 
 run(<Logic />); // prints out: No beach!
 ```
+
+## Getting in and out of your function/element
+
+The input to your ActML is the attributes that we pass to the tag. They come as `props` to your function. For example:
+
+```js
+const Foo = function (props) {
+  console.log(`Hello ${ props.name }`);
+}
+
+run(<Foo name='John' />); // outputs "Hello John"
+```
+
+The output or in other words the returned value of your element is available to its children via the [FACC (function as children pattern)](https://github.com/krasimir/react-in-patterns/blob/master/book/chapter-4/README.md#function-as-a-children-render-prop):
+
+```js
+const Foo = function (props) {
+  return `Hello ${ props.name }`;
+}
+
+run(
+  <Foo name='John'>
+    { message => console.log(message) }
+  </Foo>
+);
+// outputs again "Hello John"
+```
+
+Also the returned by a function value gets injected into the ActML's runner context and it can be fetched from there via the context API.
+
+## Context API
 
