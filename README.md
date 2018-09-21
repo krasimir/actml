@@ -7,6 +7,7 @@
 - [What is an ActML element](#what-is-an-actml-element)
 - [Getting in and out of your function/element](#getting-in-and-out-of-your-functionelement)
 - [Context API](#context-api)
+  - [Setting in and getting out from the context](#setting-in-and-getting-out-from-the-context)
 
 ## Concept
 
@@ -168,4 +169,49 @@ run(
 Also the returned by a function value gets injected into the ActML's runner context and it can be fetched from there via the context API.
 
 ## Context API
+
+Using the FACC pattern everywhere is not very convenient. So, there's a context object which is shared through all the elements in the currently executed set of elements. Think about it as a JavaScript object with `set` and `get` method. In one side we are registering stuff inside by using the `set` method and from another we are getting them using the `get` method.
+
+### Setting in and getting out from the context
+
+In order to register a variable inside the context we have to use the special prop `exports`. As a value we add the name of our variable. For example:
+
+```js
+const IKnowTheAnswer = function () {
+  return 42;
+}
+const Print = function ({ answer }) {
+  console.log(`The answer is ${ answer }`);
+}
+
+run(
+  <A>
+    <IKnowTheAnswer exports='answer' />
+    <Print $answer />
+  </A>
+);
+```
+
+`exports='answer'` creates a variable with name `answer` and value whatever `IKnowTheAnswer` returns. Then later we use the `$` (dollar sign) plus the name of the variable to inject its value to the `Print` function.
+
+Sometimes we don't want to use the same name of a variable so we can change it by setting an attribute value:
+
+```js
+const Print = function ({ data }) {
+  console.log(`The answer is ${ data }`);
+}
+
+run(
+  <A>
+    <IKnowTheAnswer exports='answer' />
+    <Print $answer='data' />
+  </A>
+);
+```
+
+We can go even further and provide a function which receives the value and returns a props object:
+
+```js
+
+```
 

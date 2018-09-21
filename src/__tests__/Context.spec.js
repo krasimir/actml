@@ -80,13 +80,6 @@ describe('Given the Context', () => {
       expect(context.getPosts).toBeCalledWith({ url: 'foo', exports: 'posts' });
       expect(Z).toBeCalledWith({ posts: 'bar' });
     });
-    it('should warn if we try to override an already defined key', async () => {
-      const Z = () => 'a';
-      const B = () => 'b';
-      const warn = jest.fn();
-
-      await run(<A><Z exports='foo'></Z><B exports='foo'></B></A>);
-    });
     it('should accept a function for "exports" prop', async () => {
       const Z = () => ({ type: 'foo', total: 47 });
       const B = jest.fn();
@@ -99,6 +92,19 @@ describe('Given the Context', () => {
       );
 
       expect(B).toBeCalledWith({ num: 47 });
+    });
+    it('should accept a function as value of a context API prop', async () => {
+      const Z = () => 55;
+      const B = jest.fn();
+
+      await run(
+        <A>
+          <Z exports='num' />
+          <B $num={ n => ({ a: n, b: n})} />
+        </A>
+      );
+
+      expect(B).toBeCalledWith({ a: 55, b: 55 });
     });
   });
 });

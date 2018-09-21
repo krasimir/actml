@@ -22,7 +22,7 @@ const handleElementError = async function (error, props, context) {
 // middlewares
 async function execute(element) {
   const { func, props, context } = element;
-  var normalizedProps = props;
+  var normalizedProps = { ...props };
 
   if (props) {
     normalizedProps = { ...props };
@@ -32,9 +32,16 @@ async function execute(element) {
         const value = context.get(prop);
 
         if (typeof value !== 'undefined') {
-          normalizedProps[
-            typeof props[propName] === 'string' ? props[propName] : prop
-          ] = value;
+          if (typeof props[propName] === 'string') {
+            normalizedProps[props[propName]] = value;  
+          } else if (typeof props[propName] === 'function') {
+            normalizedProps = {
+              ...normalizedProps,
+              ...props[propName](value)
+            }
+          } else {
+            normalizedProps[prop] = value;
+          }
           delete normalizedProps[propName];
         }
       }
