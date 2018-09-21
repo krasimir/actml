@@ -1,12 +1,12 @@
 /** @jsx A */
 import { A, run } from '..';
-import Actor from '../Actor';
+import Element from '../Element';
 
 const fakeAsync = (resolveWith, delay) => new Promise(done => {
   setTimeout(() => done(resolveWith), delay);
 });
 
-describe('Given the Dactory library', () => {
+describe('Given the ActML library', () => {
   describe('when running a simple function', () => {
     it('should run the function as it is a jsx syntax', async () => {
       const Func = jest.fn();
@@ -324,11 +324,11 @@ describe('Given the Dactory library', () => {
   });
   describe('when we want control the logic flow', () => {
     describe('and we want to stop the current branch', () => {
-      it('should stop the current branch if there is a Actor.errors.STOP_PROCESSING thrown', async () => {
+      it('should stop the current branch if there is a Element.errors.STOP_PROCESSING thrown', async () => {
         const App = () => {}
         const Z = jest.fn();
         const B = jest.fn().mockImplementation(() => {
-          throw new Error(Actor.errors.STOP_PROCESSING);
+          throw new Error(Element.errors.STOP_PROCESSING);
         });
         const C = jest.fn();
 

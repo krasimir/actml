@@ -1,25 +1,25 @@
-import Parallel from './actors/Parallel';
-import * as ReduxMethods from './actors/redux';
+import Parallel from './elements/Parallel';
+import * as ReduxMethods from './elements/redux';
 import Pipeline from './Pipeline';
-import Actor from './Actor';
+import Element from './Element';
 import { createContext } from './Context';
 
 function create(func, props, ...children) {
   // using D as a dymmy component
-  if (func === create) return Actor(function() { return this.context.dump(); }, props, children);
-  return Actor(func, props, children);
+  if (func === create) return Element(function() { return this.context.dump(); }, props, children);
+  return Element(func, props, children);
 }
-async function run(actor, contextData) {
+async function run(element, contextData) {
   const context = createContext(contextData);
 
-  if (Actor.isItAnActor(actor)) {
-    if (Actor.isItAnActor(actor.func)) {
-      actor.func.mergeToProps(actor.props);
-      return await actor.func.run(context);
+  if (Element.isItAnElement(element)) {
+    if (Element.isItAnElement(element.func)) {
+      element.func.mergeToProps(element.props);
+      return await element.func.run(context);
     }
-    return await actor.run(context);
+    return await element.run(context);
   }
-  return await create(actor, null).run(context);
+  return await create(element, null).run(context);
 }
 
 const Redux = { ...ReduxMethods };

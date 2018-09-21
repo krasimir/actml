@@ -5,7 +5,7 @@ const delay = (what, delay) => new Promise(done => {
   setTimeout(() => (what(), done()), delay);
 });
 
-describe('Given the Parallel actor', () => {
+describe('Given the Parallel element', () => {
   describe('when using Parallel', () => {
     it('should run its children in parallel', async () => {
       const temp = [];

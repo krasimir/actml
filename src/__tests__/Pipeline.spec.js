@@ -11,13 +11,13 @@ describe('Given the Pipeline utility', () => {
       const scope = { foo: 'bar' };
       const Z = jest.fn();
       const B = jest.fn();
-      const M1 = async function (actor) {
-        Z(actor);
+      const M1 = async function (element) {
+        Z(element);
         await fakeAsync(40);
         temp.push('M1');
       }
-      const M2 = async function (actor) {
-        B(actor);
+      const M2 = async function (element) {
+        B(element);
         await fakeAsync(10);
         temp.push('M2');
       }

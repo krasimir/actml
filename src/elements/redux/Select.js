@@ -1,8 +1,8 @@
 import Integration from './Integration';
-import Actor from '../../Actor';
+import Element from '../../Element';
 
 export default async function Select(props) {
-  if (props && Actor.isItAnActor(props.selector)) {
+  if (props && Element.isItAnElement(props.selector)) {
     const s = await props.selector.run(this.context);
     return s(Integration.getState());
   }

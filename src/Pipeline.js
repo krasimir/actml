@@ -1,16 +1,16 @@
-import Actor from './Actor';
+import Element from './Element';
 
 // helpers
-const handleActorError = async function (error, props, context) {
+const handleElementError = async function (error, props, context) {
   if (props && props.onError) {
     props.onError.mergeToProps({ error });
 
     const onErrorStrategy = await props.onError.run(context);
 
     if (onErrorStrategy === false) {
-      throw new Error(Actor.errors.STOP_PROCESSING);
+      throw new Error(Element.errors.STOP_PROCESSING);
     } else if (onErrorStrategy === true) {
-      throw new Error(Actor.errors.CONTINUE_PROCESSING);
+      throw new Error(Element.errors.CONTINUE_PROCESSING);
     } else {
       // swallowing the error
     }      
@@ -20,8 +20,8 @@ const handleActorError = async function (error, props, context) {
 }
 
 // middlewares
-async function execute(actor) {
-  const { func, props, context } = actor;
+async function execute(element) {
+  const { func, props, context } = element;
   var normalizedProps = props;
 
   if (props) {
@@ -42,13 +42,13 @@ async function execute(actor) {
   }
 
   try {
-    actor.result = await func.call(actor, normalizedProps);
+    element.result = await func.call(element, normalizedProps);
   } catch (error) {
-    await handleActorError(error, normalizedProps, context);
+    await handleElementError(error, normalizedProps, context);
   }
 }
-async function processResult(actor) {
-  const { result, context, props } = actor;
+async function processResult(element) {
+  const { result, context, props } = element;
 
   if (props && props.exports) {
     if (typeof props.exports === 'function') {
@@ -63,7 +63,7 @@ async function processResult(actor) {
   }
 
   if (result) {
-    if (Actor.isItAnActor(result)) {
+    if (Element.isItAnElement(result)) {
       await result.run(context);
     }
     // Generator
@@ -73,21 +73,21 @@ async function processResult(actor) {
 
       while(!genRes.done) {
         genRes = gen.next(genRes.value);
-        if (Actor.isItAnActor(genRes.value)) {
+        if (Element.isItAnElement(genRes.value)) {
           genRes.value = await genRes.value.run(context);
         }
       }
-      actor.result = genRes.value;
+      element.result = genRes.value;
     }
   }
 }
-async function processChildren(actor) {
-  const { func, children, result, context } = actor;
+async function processChildren(element) {
+  const { func, children, result, context } = element;
 
   // FACC pattern
-  if (children && children.length === 1 && !Actor.isItAnActor(children[0])) {
-    const resultOfFACC = await children[0].call(actor, result);
-    if (Actor.isItAnActor(resultOfFACC)) {
+  if (children && children.length === 1 && !Element.isItAnElement(children[0])) {
+    const resultOfFACC = await children[0].call(element, result);
+    if (Element.isItAnElement(resultOfFACC)) {
       await resultOfFACC.run(context);
     }
   
@@ -106,9 +106,9 @@ async function processChildren(actor) {
           await w.run(context);
         }
       } catch (error) {
-        if (error.message === Actor.errors.STOP_PROCESSING) {
+        if (error.message === Element.errors.STOP_PROCESSING) {
           break;
-        } else if(!(error.message === Actor.errors.CONTINUE_PROCESSING)) {
+        } else if(!(error.message === Element.errors.CONTINUE_PROCESSING)) {
           throw error;
         }
       }
@@ -123,7 +123,7 @@ export default function Pipeline() {
     const entry = API.find(entryName);
 
     entry.enabled = false;
-    return entry.func({ ...API.scopeActor, result });
+    return entry.func({ ...API.scopeElement, result });
   }
 
   API.add = function add(func, name) {
@@ -150,13 +150,13 @@ export default function Pipeline() {
 
     while(entry = entries[pointer]) {
       if (entry.enabled) {
-        await entry.func(API.scopeActor);
+        await entry.func(API.scopeElement);
       }
       pointer += 1;
     }
   };
-  API.setScope = function (scopeActor) {
-    API.scopeActor = scopeActor;
+  API.setScope = function (scopeElement) {
+    API.scopeElement = scopeElement;
   }
 
   return API;

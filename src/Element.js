@@ -1,6 +1,6 @@
 import { createDefaultPipeline } from './Pipeline';
 
-export default function Actor(func, props, children) {
+export default function Element(func, props, children) {
   return {
 
     func,
@@ -28,8 +28,8 @@ export default function Actor(func, props, children) {
 }
 
 // Static props
-Actor.isItAnActor = actor => actor && !!actor.run;
-Actor.errors = {
+Element.isItAnElement = element => element && !!element.run;
+Element.errors = {
   STOP_PROCESSING: 'STOP_PROCESSING',
   CONTINUE_PROCESSING: 'CONTINUE_PROCESSING'
 };
