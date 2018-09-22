@@ -12,6 +12,7 @@
   - [Using the context API as a dependency management tool](#using-the-context-api-as-a-dependency-management-tool)
 - [Predefined elements](#predefined-elements)
   - [Running elements in parallel](#running-elements-in-parallel)
+- [Examples](#examples)
 
 ## Concept
 
@@ -326,3 +327,8 @@ run(<Parallel><Z /><M /></Parallel>);
 ```
 
 `Z` and `M` run in parallel which means that `M` is not waiting for `Z` to finish.
+
+## Examples
+
+* [Codesandbox](https://codesandbox.io/s/qx667yqvj9)
+* [React+Redux+ActML app](https://github.com/krasimir/actml/tree/master/examples/react-redux-app)
