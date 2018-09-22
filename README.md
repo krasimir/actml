@@ -10,6 +10,8 @@
   - [Setting in and getting out from the context](#setting-in-and-getting-out-from-the-context)
   - [Setting initial context value](#setting-initial-context-value)
   - [Using the context API as a dependency management tool](#using-the-context-api-as-a-dependency-management-tool)
+- [Predefined elements](#predefined-elements)
+  - [Running elements in parallel](#running-elements-in-parallel)
 
 ## Concept
 
@@ -282,7 +284,7 @@ run(
 // Prints out: The season is not summer 
 ```
 
-Notice how `getSeason` and `print` are only defined in the context and they don't exist in `App.js`. And here we have to mention that this is only possible because of the JSX transpiler. Also they both start with a lowercase letter. That is really important because:
+Notice how `getSeason` and `print` are only defined in the context and they don't exist in `App.js`. And here we have to mention that this is only possible because of the JSX transpiler. They both should start with a lowercase letter. That is really important because:
 
 ```js
 <getSeason />
@@ -307,3 +309,20 @@ A(GetSeason, null);
 ```
 
 In the second case there **must** be a function `GetSeason` while in the first case there's just a string `getSeason` passed to ActML runner.
+
+## Predefined elements
+
+There are some predefined elements that come with ActML core package.
+
+### Running elements in parallel
+
+```js
+import { A, run, Parallel } from 'actml';
+
+const Z = await function () { ... }
+const M = function () { ... }
+
+run(<Parallel><Z /><M /></Parallel>);
+```
+
+`Z` and `M` run in parallel which means that `M` is not waiting for `Z` to finish.
