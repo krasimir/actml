@@ -20,5 +20,8 @@ describe('Given the Parallel element', () => {
         expect(temp).toEqual(['b', 'a']);
       }, 60);
     });
+    it.skip('should use Promise.all to resolve all the elements inside', () => {
+      expect('not working').toBe('working');
+    });
   });
 });

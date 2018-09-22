@@ -1,33 +1,35 @@
 /** @jsx A */
-import { A, run } from '..';
-import { createContext } from '../Context';
+import { A, run, Parallel } from '..';
 
 const fakeAsync = (resolveWith, delay) => new Promise(done => {
   setTimeout(() => done(resolveWith), delay);
 });
+const delay = (what, delay) => new Promise(done => {
+  setTimeout(() => (what(), done()), delay);
+});
 
-describe('Given the Context', () => {
-  describe('when using the context', () => {
-    it('should provide methods for setting, getting and dumping data', async () => {
-      const context = createContext({ foo: 'bar' });
-
-      context.set('a', 'b');
-
-      expect(context.get('a')).toBe('b');
-      expect(context.dump()).toStrictEqual({ foo: 'bar', a: 'b' });
-    });
-    it('should pass variables between siblings', async () => {
+describe('Given the ActML library', () => {
+  describe('when dealing with elements communication', () => {
+    it.only('should pass variables between elements', async () => {
       const print = jest.fn();
+      const Z = jest.fn();
       const GetToken = async () => fakeAsync('XXX', 50);
       const UseToken = ({ token }) => print(token);
       const App = () => {};
 
       await run(
         <App>
-          <GetToken exports='token' />
+          <A>
+            <A>
+              <GetToken exports='token'>
+                <Z $token />
+              </GetToken>
+            </A>
+          </A>
           <UseToken $token />
         </App>
       );
+      expect(Z).toBeCalledWith({ token: 'XXX' });
       expect(print).toBeCalledWith('XXX');
     });
     it('should allow renaming of a prop', async () => {
@@ -105,6 +107,32 @@ describe('Given the Context', () => {
       );
 
       expect(B).toBeCalledWith({ a: 55, b: 55 });
+    });
+    it('should scope variables but not deps', async () => {
+      const Foo = () => 100;
+      const Bar = () => fakeAsync(200, 10);
+      const Delay = () => fakeAsync(undefined, 20);
+      const Z1 = jest.fn();
+      const Z2 = jest.fn();
+
+      await run(
+        <A>
+          <Parallel>
+            <Bar exports='answer'>
+              <Z1 $answer/>
+            </Bar>
+            <Foo exports='answer'>
+              <Delay />
+              <Z2 $answer/>
+            </Foo>
+          </Parallel>
+        </A>
+      );
+
+      await delay(() => {
+        expect(Z1).toBeCalledWith({ answer: 200 });
+        expect(Z2).toBeCalledWith({ answer: 100 });
+      }, 50);
     });
   });
 });

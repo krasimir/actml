@@ -1,5 +1,5 @@
 /** @jsx A */
-import { A, run } from '..';
+import { A, run, Parallel } from '..';
 import Element from '../Element';
 
 const fakeAsync = (resolveWith, delay) => new Promise(done => {
@@ -59,7 +59,7 @@ describe('Given the ActML library', () => {
 
       expect(Func).toBeCalledWith({ foo: 10, bar: 20 });
     });
-    it(`work continue processing dialects if we return such as a result`, async () => {
+    it(`should continue processing elements if we return such as a result`, async () => {
       const Bar = jest.fn();
       const Foo = jest.fn().mockImplementation(() => {
         return <Bar $answer />;
@@ -79,11 +79,12 @@ describe('Given the ActML library', () => {
   describe('when using the wrapper <A />', () => {
     it('should work just fine :)', async () => {
       const F = jest.fn().mockImplementation(() => 42);
+      const M = jest.fn();
 
-      const result = await run(<A><F exports='answer'/></A>);
+      const result = await run(<A><F exports='answer'><M $answer /></F></A>);
 
       expect(F).toBeCalled();
-      expect(result.answer).toStrictEqual(42);
+      expect(M).toBeCalledWith({ answer: 42 });
     });
   });
   describe('when having nested functions', () => {
@@ -398,17 +399,12 @@ describe('Given the ActML library', () => {
         return <E $answer message={ message } />;
       }
 
-      const result = await run(Func);
+      await run(Func);
 
       expect(Z).toBeCalledWith({ foo: 'bar' });
       expect(B).toBeCalledWith({ bar: 'foo', exports: 'answer' });
       expect(C).toBeCalledWith(42);
       expect(E).toBeCalledWith({ answer: 42, message: 'the answer is 42' });
-      expect(result).toMatchObject({
-        message: 'the answer is 42',
-        answer: 42,
-        contextData: { answer: 42 }
-      });
     });
   });
 });

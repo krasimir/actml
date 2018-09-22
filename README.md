@@ -65,7 +65,7 @@ run(
 );
 ```
 
-Or if we use ActML's context API:
+Or if we use [ActML's context API](#context-api):
 
 ```js
 run(

@@ -1,11 +1,11 @@
 import Element from './Element';
 
 // helpers
-const handleElementError = async function (error, props, context) {
+const handleElementError = async function (error, props, element) {
   if (props && props.onError) {
     props.onError.mergeToProps({ error });
 
-    const onErrorStrategy = await props.onError.run(context);
+    const onErrorStrategy = await props.onError.run(element);
 
     if (onErrorStrategy === false) {
       throw new Error(Element.errors.STOP_PROCESSING);
@@ -20,8 +20,9 @@ const handleElementError = async function (error, props, context) {
 }
 
 // middlewares
+
 async function execute(element) {
-  const { func, props, context } = element;
+  const { func, props, lookUp } = element;
   var normalizedProps = { ...props };
 
   if (props) {
@@ -29,7 +30,7 @@ async function execute(element) {
     Object.keys(props).forEach(propName => {
       if (propName.charAt(0) === '$') {
         const prop = propName.substr(1, propName.length);
-        const value = context.get(prop);
+        const value = lookUp.call(element, prop);
 
         if (typeof value !== 'undefined') {
           if (typeof props[propName] === 'string') {
@@ -51,11 +52,12 @@ async function execute(element) {
   try {
     element.result = await func.call(element, normalizedProps);
   } catch (error) {
-    await handleElementError(error, normalizedProps, context);
+    await handleElementError(error, normalizedProps, element);
   }
 }
+
 async function processResult(element) {
-  const { result, context, props } = element;
+  const { result, props, scope, parent } = element;
 
   if (props && props.exports) {
     if (typeof props.exports === 'function') {
@@ -63,15 +65,19 @@ async function processResult(element) {
 
       Object
         .keys(exportedProps)
-        .forEach(key => context.set(key, exportedProps[key]));
+        .forEach(key => {
+          scope.set(key, exportedProps[key]);
+          parent.scope.set(key, exportedProps[key]);
+        });
     } else {
-      context.set(props.exports, result);
+      scope.set(props.exports, result);
+      parent.scope.set(props.exports, result);
     }
   }
 
   if (result) {
     if (Element.isItAnElement(result)) {
-      await result.run(context);
+      await result.run(element);
     }
     // Generator
     if (typeof result.next === 'function') {
@@ -81,21 +87,22 @@ async function processResult(element) {
       while(!genRes.done) {
         genRes = gen.next(genRes.value);
         if (Element.isItAnElement(genRes.value)) {
-          genRes.value = await genRes.value.run(context);
+          genRes.value = await genRes.value.run(element);
         }
       }
       element.result = genRes.value;
     }
   }
 }
+
 async function processChildren(element) {
-  const { func, children, result, context } = element;
+  const { func, children, result } = element;
 
   // FACC pattern
   if (children && children.length === 1 && !Element.isItAnElement(children[0])) {
     const resultOfFACC = await children[0].call(element, result);
     if (Element.isItAnElement(resultOfFACC)) {
-      await resultOfFACC.run(context);
+      await resultOfFACC.run(element);
     }
   
   // nested tags
@@ -108,9 +115,9 @@ async function processChildren(element) {
 
       try {
         if (parallelProcessing) {
-          w.run(context);
+          w.run(element);
         } else {
-          await w.run(context);
+          await w.run(element);
         }
       } catch (error) {
         if (error.message === Element.errors.STOP_PROCESSING) {
