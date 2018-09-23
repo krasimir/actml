@@ -44,7 +44,9 @@ async function GetProfile() {
 run(
   <A>
     <GetProfile exports="name" />
-    <Greeting $name>{message => console.log(message)}</Greeting>
+    <Greeting $name>
+      { message => console.log(message) }
+    </Greeting>
   </A>
 );
 ```
