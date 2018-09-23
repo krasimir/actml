@@ -62,9 +62,9 @@ Isn't it like writing React? Let's see step by step what ActML does.
 4. `<Greeting>` also has a function as child and it sends its result there which in our case is the full message to the user.
 5. `<Print>` just gets the message and prints it out in the console.
 
-__Here is a working [Codesandbox](https://codesandbox.io/s/341xn5vrlq) of the code above.__
+_Here is a working [Codesandbox](https://codesandbox.io/s/341xn5vrlq) of the code above._
 
-If you like what you see then I guess you should keep reading :smile: 
+So, that is the concept of ActML. It allows us to define in a declarative fashion our business logic. Same as our UI. There is nothing (almost) imperative. In fact all the code that we pass to the `run` function is nothing but definitions of _what_ should happen. It is not saying _how_. This is extremely powerful concept because it shifts the responsibility to another level and makes the development a lot more easier. That is because we use composition over raw implementation. If you like this way of thinking then ActML may help you.
 
 ## What you need to use ActML
 
