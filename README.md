@@ -16,7 +16,7 @@
 
 ## Concept
 
-Wouldn't be cool if we can define a function and execute it the same as a React component. Like for example:
+Wouldn't be cool if we can define a function and execute it the same way as we render React component. Like for example:
 
 ```js
 const Greeting = function () {
@@ -25,6 +25,27 @@ const Greeting = function () {
 
 run(<Greeting />).then(
   message => console.log(message)
+);
+```
+
+What if we have more functions, they depend on each other and some of them are asynchronous:
+
+```js
+const Greeting = function({ name }) {
+  return `Hey ${name}!`;
+};
+async function GetProfile() {
+  const response = await fetch('https://reqres.in/api/users/2');
+  const { data: { first_name, last_name } } = await response.json();
+
+  return first_name + ' ' + last_name;
+}
+
+run(
+  <A>
+    <GetProfile exports="name" />
+    <Greeting $name>{message => console.log(message)}</Greeting>
+  </A>
 );
 ```
 
