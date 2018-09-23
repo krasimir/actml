@@ -3,12 +3,15 @@ import Pipeline from '../Pipeline';
 const fakeAsync = delay => new Promise(done => {
   setTimeout(() => done(), delay);
 });
+const createElement = () => ({
+
+});
 
 describe('Given the Pipeline utility', () => {
   describe('when adding middlewares and running the pipeline', () => {
     it('should run every middleware', async () => {
       const temp = [];
-      const scope = { foo: 'bar' };
+      const element = {};
       const Z = jest.fn();
       const B = jest.fn();
       const M1 = async function (element) {
@@ -21,23 +24,22 @@ describe('Given the Pipeline utility', () => {
         await fakeAsync(10);
         temp.push('M2');
       }
-      const pipeline = Pipeline();
+      const pipeline = Pipeline(element);
 
       pipeline.add(M1);
       pipeline.add(M2);
-      pipeline.setScope(scope);
 
       await pipeline.process();
 
-      expect(Z).toBeCalledWith(scope);
-      expect(B).toBeCalledWith(scope);
+      expect(Z).toBeCalledWith(element);
+      expect(B).toBeCalledWith(element);
       expect(temp).toMatchObject(['M1', 'M2']);
     });
   });
   describe('when using the `find` method', () => {
     it('should return the specified middleware', async () => {
       const M = () => {};
-      const pipeline = Pipeline();
+      const pipeline = Pipeline({});
 
       pipeline.add(M, 'mmm');
 
@@ -45,7 +47,7 @@ describe('Given the Pipeline utility', () => {
     });
     it('should thrown an error if the middleware is not there', async () => {
       const M = () => {};
-      const pipeline = Pipeline();
+      const pipeline = Pipeline({});
 
       pipeline.add(M, 'foo');
 
@@ -56,7 +58,7 @@ describe('Given the Pipeline utility', () => {
     it('should not run the disabled middleware', async () => {
       const M1 = jest.fn();
       const M2 = jest.fn();
-      const pipeline = Pipeline();
+      const pipeline = Pipeline({});
 
       pipeline.add(M1, 'm1');
       pipeline.add(M2, 'm2');
@@ -68,20 +70,20 @@ describe('Given the Pipeline utility', () => {
       expect(M2).toBeCalled();
     });
   });
-  describe('when running a specific middleware', () => {
-    it('should not run the disabled middleware', async () => {
+  describe('when running a specific middleware manually', () => {
+    it('should disable the middleware', async () => {
       const M1 = jest.fn();
       const M2 = jest.fn();
-      const scope = { foo: 'bar' };
-      const pipeline = Pipeline();
+      const pipeline = Pipeline({ foo: 'bar' });
 
-      pipeline.setScope(scope);
       pipeline.add(M1, 'm1');
       pipeline.add(M2, 'm2');
 
       await pipeline('m2', 'test');
+      await pipeline.process();
 
       expect(M2).toBeCalledWith({ foo: 'bar', result: 'test' });
+      expect(M2).toHaveBeenCalledTimes(1);
     });
   });
 });

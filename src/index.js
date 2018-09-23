@@ -2,7 +2,6 @@ import Parallel from './elements/Parallel';
 import * as ReduxMethods from './elements/redux';
 import Pipeline from './Pipeline';
 import Element from './Element';
-import { createStorage } from './Storage';
 
 function create(func, props, ...children) {
   // using A as a dymmy component
@@ -20,8 +19,7 @@ function create(func, props, ...children) {
   }
   return Element(func, props, children);
 }
-async function run(element, contextData) {
-  const context = createStorage(contextData);
+async function run(element, context = {}) {
   const rootElement = Element.createRootElement(context);
 
   if (Element.isItAnElement(element)) {

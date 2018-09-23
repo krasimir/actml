@@ -390,7 +390,7 @@ describe('Given the ActML library', () => {
       const B = jest.fn().mockImplementation(() => fakeAsync(42, 10));
       const C = jest.fn().mockImplementation(answer => `the answer is ${ answer }`);
       const E = jest.fn().mockImplementation(function({ message, answer }) {
-        return { message, answer, contextData: this.context.dump() };
+        return { message, answer, contextData: this.context };
       });
       const Func = function *() {
         yield <Z foo='bar' />;

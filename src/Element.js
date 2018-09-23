@@ -18,7 +18,7 @@ export default function Element(func, props, children) {
       this.props = Object.assign({}, this.props, additionalProps);
     },
     dispatch(type, value) {
-      if (this.scopedVars.indexOf(type) >= 0) {
+      if (this.scopedVars.indexOf(type) >= 0 || this.scopedVars[0] === '*') {
         this.scope[type] = value;
       } else {
         this.parent.dispatch(type, value);
@@ -40,7 +40,7 @@ export default function Element(func, props, children) {
       this.pipeline = this.func.pipeline || createDefaultPipeline(this);
 
       if (typeof func === 'string') {
-        this.func = this.context.get(func);
+        this.func = this.context[func];
       }
 
       return await this.pipeline.process();
@@ -61,7 +61,7 @@ Element.createRootElement = function (context) {
       let value = this.scope[key];
       if (typeof value !== 'undefined') return value;
 
-      value = this.context.get(key);
+      value = this.context[key];
       if (typeof value !== 'undefined') return value;
 
       throw new Error(`"${ key }" is not defined in the global scope neither in the context.`);

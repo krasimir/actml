@@ -73,6 +73,27 @@ describe('Given the ActML library', () => {
 
       expect(ZScope).toStrictEqual({ f: 'foo', b: 'bar' });
     });
+    it('should provide an API for scoping everything', async () => {
+      const B = jest.fn();
+      const Z = jest.fn();
+      const M = jest.fn();
+      const C = jest.fn().mockImplementation(() => 42);
+      const D = jest.fn();
+
+      return run(
+        <B>
+          <Z scope='*'>
+            <C exports='foo'/>
+            <C exports='bar'/>
+            <D $foo $bar/>
+          </Z>
+          <M $foo />
+        </B>
+      ).catch(error => {
+        expect(D).toBeCalledWith({ foo: 42, bar: 42 });
+        expect(error.message).toBe("\"foo\" is not defined in the global scope neither in the context.");
+      });
+    });
     it('should allow renaming of a prop', async () => {
       const print = jest.fn();
       const GetToken = async () => fakeAsync('XXX', 50);
@@ -80,7 +101,7 @@ describe('Given the ActML library', () => {
       const App = () => {};
 
       await run(
-        <App scope='blah'>
+        <App>
           <GetToken exports='blah' />
           <UseToken $blah='token' />
         </App>
@@ -111,7 +132,7 @@ describe('Given the ActML library', () => {
       const Z = jest.fn();
 
       await run(
-        <A scope='posts'>
+        <A>
           <getPosts url='foo' exports='posts'/>
           <Z $posts />
         </A>,
@@ -154,7 +175,7 @@ describe('Given the ActML library', () => {
       const Z1 = jest.fn();
       const Z2 = jest.fn();
 
-      await run(
+      const { scope, context } = await run(
         <A>
           <Parallel>
             <Bar exports='answer'>

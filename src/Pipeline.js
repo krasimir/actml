@@ -135,7 +135,7 @@ async function processChildren(element) {
 
 export default function Pipeline(element) {
   if (!element) {
-    throw new Error('A Pipeline can not be created by passing an Element.');
+    throw new Error('A Pipeline can not be created with no Element.');
   }
   const middlewares = [];
   const pipeline = function(middleware, result) {
