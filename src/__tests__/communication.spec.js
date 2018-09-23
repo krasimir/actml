@@ -10,7 +10,7 @@ const delay = (what, delay) => new Promise(done => {
 
 describe('Given the ActML library', () => {
   describe('when dealing with elements communication', () => {
-    it.only('should pass variables between elements', async () => {
+    it('should pass variables between elements by using the global scope', async () => {
       const print = jest.fn();
       const Z = jest.fn();
       const GetToken = async () => fakeAsync('XXX', 50);
@@ -32,6 +32,47 @@ describe('Given the ActML library', () => {
       expect(Z).toBeCalledWith({ token: 'XXX' });
       expect(print).toBeCalledWith('XXX');
     });
+    it('should disable the variable bubbling if there is scoping', async () => {
+      const Z = jest.fn();
+      const B = jest.fn();
+      const C = jest.fn().mockImplementation(() => 'foo');
+      const D = jest.fn();
+      const E = jest.fn();
+
+      return run(
+        <A>
+          <Z scope='faf'>
+            <B>
+              <C exports='faf' />
+            </B>
+            <E $faf/>
+          </Z>
+          <D $faf />
+        </A>
+      ).catch(error => {
+        expect(E).toBeCalledWith({ faf: 'foo' });
+        expect(error.message).toBe('\"faf\" is not defined in the global scope neither in the context.');
+      });
+    });
+    it('should support comma separated scoped variables', async () => {
+      var ZScope;
+      const Z = jest.fn().mockImplementation(function () { ZScope = this.scope });
+      const B = jest.fn();
+      const C = jest.fn().mockImplementation(() => 'foo');
+      const D = jest.fn().mockImplementation(() => 'bar');
+
+      await run(
+        <Z scope='f, b'>
+          <B>
+            <C exports='f'>
+              <D exports='b' />
+            </C>
+          </B>
+        </Z>
+      );
+
+      expect(ZScope).toStrictEqual({ f: 'foo', b: 'bar' });
+    });
     it('should allow renaming of a prop', async () => {
       const print = jest.fn();
       const GetToken = async () => fakeAsync('XXX', 50);
@@ -39,30 +80,28 @@ describe('Given the ActML library', () => {
       const App = () => {};
 
       await run(
-        <App>
+        <App scope='blah'>
           <GetToken exports='blah' />
           <UseToken $blah='token' />
         </App>
       );
       expect(print).toBeCalledWith('XXX');
     });
-    it('should keep the same context', async () => {
+    it('should fallback to the context if the variable is missing in the scope', async () => {
       const Z = jest.fn();
       const B = jest.fn();
       const C = jest.fn();
       const c = { foo: 'bar' };
 
       await run(
-        <Z $foo>
-          <B $foo>
+        <Z>
+          <B>
             <C $foo/>
           </B>
         </Z>,
         c
       );
 
-      expect(Z).toBeCalledWith({ foo: 'bar' });
-      expect(B).toBeCalledWith({ foo: 'bar' });
       expect(C).toBeCalledWith({ foo: 'bar' });
     });
     it('should be able the use the context as DI container', async () => {
@@ -72,7 +111,7 @@ describe('Given the ActML library', () => {
       const Z = jest.fn();
 
       await run(
-        <A>
+        <A scope='posts'>
           <getPosts url='foo' exports='posts'/>
           <Z $posts />
         </A>,
@@ -87,7 +126,7 @@ describe('Given the ActML library', () => {
       const B = jest.fn();
 
       await run(
-        <A>
+        <A scope='num'>
           <Z exports={ ({ total }) => ({ num: total }) } />
           <B $num />
         </A>
@@ -95,12 +134,12 @@ describe('Given the ActML library', () => {
 
       expect(B).toBeCalledWith({ num: 47 });
     });
-    it('should accept a function as value of a context API prop', async () => {
+    it('should accept a function as value of a scope variable', async () => {
       const Z = () => 55;
       const B = jest.fn();
 
       await run(
-        <A>
+        <A scope='num'>
           <Z exports='num' />
           <B $num={ n => ({ a: n, b: n})} />
         </A>
@@ -108,7 +147,7 @@ describe('Given the ActML library', () => {
 
       expect(B).toBeCalledWith({ a: 55, b: 55 });
     });
-    it('should scope variables but not deps', async () => {
+    it('should scope variables to only parent by default', async () => {
       const Foo = () => 100;
       const Bar = () => fakeAsync(200, 10);
       const Delay = () => fakeAsync(undefined, 20);

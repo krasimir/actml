@@ -6,7 +6,18 @@ import { createStorage } from './Storage';
 
 function create(func, props, ...children) {
   // using A as a dymmy component
-  if (func === create) return Element(function A() { return this.context.dump(); }, props, children);
+  if (func === create) {
+    return Element(
+      function A() {
+        return {
+          scope: this.scope,
+          context: this.context
+        }
+      },
+      props,
+      children
+    );
+  }
   return Element(func, props, children);
 }
 async function run(element, contextData) {

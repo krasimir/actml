@@ -27,7 +27,7 @@ describe('Given the Pipeline utility', () => {
       pipeline.add(M2);
       pipeline.setScope(scope);
 
-      await pipeline.run();
+      await pipeline.process();
 
       expect(Z).toBeCalledWith(scope);
       expect(B).toBeCalledWith(scope);
@@ -62,7 +62,7 @@ describe('Given the Pipeline utility', () => {
       pipeline.add(M2, 'm2');
       pipeline.disable('m1');
 
-      await pipeline.run();
+      await pipeline.process();
 
       expect(M1).not.toBeCalled();
       expect(M2).toBeCalled();

@@ -22,15 +22,16 @@ const handleElementError = async function (error, props, element) {
 // middlewares
 
 async function execute(element) {
-  const { func, props, lookUp } = element;
+  const { func, props } = element;
   var normalizedProps = { ...props };
 
+  // normalizing props
   if (props) {
     normalizedProps = { ...props };
     Object.keys(props).forEach(propName => {
       if (propName.charAt(0) === '$') {
         const prop = propName.substr(1, propName.length);
-        const value = lookUp.call(element, prop);
+        const value = element.readFromScope(prop);
 
         if (typeof value !== 'undefined') {
           if (typeof props[propName] === 'string') {
@@ -49,6 +50,7 @@ async function execute(element) {
     });
   }
 
+  // actual running of the function
   try {
     element.result = await func.call(element, normalizedProps);
   } catch (error) {
@@ -57,7 +59,7 @@ async function execute(element) {
 }
 
 async function processResult(element) {
-  const { result, props, scope, parent } = element;
+  const { result, props, scope } = element;
 
   if (props && props.exports) {
     if (typeof props.exports === 'function') {
@@ -66,12 +68,12 @@ async function processResult(element) {
       Object
         .keys(exportedProps)
         .forEach(key => {
-          scope.set(key, exportedProps[key]);
-          parent.scope.set(key, exportedProps[key]);
+          scope[key] = exportedProps[key];
+          element.dispatch(key, exportedProps[key]);
         });
     } else {
-      scope.set(props.exports, result);
-      parent.scope.set(props.exports, result);
+      scope[props.exports] = result;
+      element.dispatch(props.exports, result);
     }
   }
 
@@ -131,20 +133,23 @@ async function processChildren(element) {
   }
 }
 
-export default function Pipeline() {
-  const entries = [];
-  const API = function(entryName, result) {
-    const entry = API.find(entryName);
+export default function Pipeline(element) {
+  if (!element) {
+    throw new Error('A Pipeline can not be created by passing an Element.');
+  }
+  const middlewares = [];
+  const pipeline = function(middleware, result) {
+    const entry = pipeline.find(middleware);
 
     entry.enabled = false;
-    return entry.func({ ...API.scopeElement, result });
+    return entry.func({ ...element, result });
   }
 
-  API.add = function add(func, name) {
-    entries.push({ name, func, enabled: true });
+  pipeline.add = function add(func, name) {
+    middlewares.push({ name, func, enabled: true });
   }
-  API.find = function (n) {
-    const entry = entries.find(({ name }) => name === n);
+  pipeline.find = function (n) {
+    const entry = middlewares.find(({ name }) => name === n);
 
     if (entry) {
       return entry;
@@ -152,36 +157,34 @@ export default function Pipeline() {
       throw new Error(`Sorry, there is no pipeline entry with name "${ n }"`);
     }
   };
-  API.disable = function (name) {
+  pipeline.disable = function (name) {
     this.find(name).enabled = false;
   };
-  API.enable = function (name) {
+  pipeline.enable = function (name) {
     this.find(name).enabled = true;
   };
-  API.run = async function () {
+  pipeline.process = async function () {
     let entry;
     let pointer = 0;
 
-    while(entry = entries[pointer]) {
+    while(entry = middlewares[pointer]) {
       if (entry.enabled) {
-        await entry.func(API.scopeElement);
+        await entry.func(element);
       }
       pointer += 1;
     }
+    return element.result;
   };
-  API.setScope = function (scopeElement) {
-    API.scopeElement = scopeElement;
-  }
 
-  return API;
+  return pipeline;
 }
 
 Pipeline.execute = execute;
 Pipeline.processResult = processResult;
 Pipeline.processChildren = processChildren;
 
-export function createDefaultPipeline() {
-  const pipeline = Pipeline();
+export function createDefaultPipeline(element) {
+  const pipeline = Pipeline(element);
 
   pipeline.add(execute);
   pipeline.add(processResult, 'result');
