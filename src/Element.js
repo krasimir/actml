@@ -33,7 +33,7 @@ export default function Element(func, props, children) {
     },
     async run(parent) {
       if (!parent) {
-        throw new Error('The Element can not be run without a parent.');
+        throw new Error('The Element can not be run with no parent.');
       }
       this.parent = parent;
       this.context = parent.context;
