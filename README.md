@@ -6,7 +6,7 @@
 - [What you need to use ActML](#what-you-need-to-use-actml)
 - [What is an ActML element](#what-is-an-actml-element)
 - [Getting in and out of your function/element](#getting-in-and-out-of-your-functionelement)
-- [Context API](#context-api)
+- [Scope API](#scope-api)
   - [Setting in and getting out from the context](#setting-in-and-getting-out-from-the-context)
   - [Setting initial context value](#setting-initial-context-value)
   - [Using the context API as a dependency management tool](#using-the-context-api-as-a-dependency-management-tool)
@@ -34,7 +34,7 @@ What if we have more functions, they depend on each other and some of them are a
 const Greeting = function({ name }) {
   return `Hey ${name}!`;
 };
-async function GetProfile() {
+async function GetProfileName() {
   const response = await fetch('https://reqres.in/api/users/2');
   const { data: { first_name, last_name } } = await response.json();
 
@@ -46,7 +46,7 @@ function Print({ message }) {
 
 run(
   <A>
-    <GetProfile exports="name" />
+    <GetProfileName exports="name" />
     <Greeting $name>
       { message => <Print message={message} /> }
     </Greeting>
@@ -57,14 +57,14 @@ run(
 Isn't it like writing React? Let's see step by step what ActML does.
 
 1. The `<A>` element is just a wrapper.
-2. `<GetProfile>` is an asynchronous function so ActML waits till the function is done. `<GetProfile>` also returns a result and has `exports` prop defined. That is a special prop which is saying "Export a variable with name `name` and make it available for other elements".
-3. `<Greeting>` needs the name of the user and uses the special dollar sign notation which to ActML processor means "Inject a variable with name `name` as a prop".
-4. `<Greeting>` also has a function as child and it sends its result there which in our case is the full message to the user.
+2. `<GetProfileName>` is an asynchronous function so ActML waits till its promise is resolved. `<GetProfileName>` also returns a result and has `exports` prop defined. That is a special prop which is saying "Export a variable with name `name` and make it available for other elements".
+3. `<Greeting>` needs the `name` of the user and uses the special dollar sign notation which to ActML processor means "Inject a variable with name `name` as a prop".
+4. `<Greeting>` also has a function as child and it sends its result there which in our case is the full message.
 5. `<Print>` just gets the message and prints it out in the console.
 
 _Here is a working [Codesandbox](https://codesandbox.io/s/341xn5vrlq) of the code above._
 
-So, that is the concept of ActML. It allows us to define in a declarative fashion our business logic. Same as our UI. There is nothing (almost) imperative. In fact all the code that we pass to the `run` function is nothing but definitions of _what_ should happen. It is not saying _how_. This is extremely powerful concept because it shifts the responsibility to another level and makes the development a lot more easier. That is because we use composition over raw implementation. If you like this way of thinking then ActML may help you.
+So, that is the concept of ActML. It allows us to define in a declarative fashion our business logic. Same as our UI. There is nothing (almost) imperative. In fact all the code that we pass to the `run` function is nothing but definitions of _what_ should happen. It is not saying _how_. This is extremely powerful concept because it shifts the responsibility to another level and makes the development a lot more easier. We use composition over raw implementation. If you like this way of thinking then ActML may be for you.
 
 ## What you need to use ActML
 
@@ -77,7 +77,7 @@ import { A } from 'actml';
 
 The first line is to say to the transpiler that we don't want `React.createElement()` but `A()`. The second line is there because otherwise you'll get `ReferenceError: A is not defined` error. And of course because the `A` function is defining the core unit of ActML - an ActML element.
 
-From a tools perspective you need some sort of [Babel](https://babeljs.io/docs/en/babel-preset-react) integration. There's a Redux+ActML example app [here](https://github.com/krasimir/actml/tree/master/examples/react-redux-app) that you can check out.
+From a tools perspective you need some sort of [Babel](https://babeljs.io/docs/en/babel-preset-react) integration. There's a React+Redux+ActML example app [here](https://github.com/krasimir/actml/tree/master/examples/react-redux-app) that you can check.
 
 ## What is an ActML element
 
@@ -106,7 +106,7 @@ To be more specific the element may be three things:
 * An asynchronous function
 * A generator
 
-In general ActML runner assumes that every of the elements is asynchronous. It executes the functions from the outer to inner ones and from top to bottom. All the three types of elements may return another element. In the case of generator we may `yield` also another element. For example:
+In general ActML processor assumes that every of the elements is asynchronous. It executes the functions from the outer to inner ones and from top to bottom. All the three types of elements may return another element. In the case of generator we may `yield` also another element. For example:
 
 ```js
 function Print({ message }) {
@@ -131,9 +131,11 @@ function * Logic() {
 run(<Logic />); // prints out: No beach!
 ```
 
+_[Codesandbox](https://codesandbox.io/s/o41140ro85) with the example._
+
 ## Getting in and out of your function/element
 
-The input to your ActML is the attributes that we pass to the tag. They come as `props` to your function. For example:
+The input to your ActML element is the attributes that we pass to the tag or if we have to make a parallel with React - the `props`. For example:
 
 ```js
 const Foo = function (props) {
@@ -158,11 +160,36 @@ run(
 // outputs again "Hello John"
 ```
 
-Also the returned by a function value gets injected into the ActML's runner context and it can be fetched from there via the context API.
+Another way to pass data between elements is the Scope API. Read about that below.
 
-## Context API
+## Scope API
 
-Using the FACC pattern everywhere is not very convenient. So, there's a context object which is shared through all the elements in the currently executed set of elements. Think about it as a JavaScript object with `set` and `get` method. In one side we are registering stuff inside by using the `set` method and from another we are getting them using the `get` method.
+Using the FACC pattern everywhere is not very convenient. So there is a Scope API that can keep data and share it with other elements.  Let's take the following example:
+
+
+```js
+const Foo = () => 'Jon Snow';
+
+<App>
+  <Foo exports='name'>
+    <Zoo $name />
+  </Foo>
+  <Bar $name />
+</App>
+```
+
+Every ActML element has a `scope` object. It is really just a plain JavaScript object `{}` and every time when we use `exports` we are saving something there. For example the `scope` object of the `Foo` element is equal to `{ name: 'Jon Snow' }`. Together with creating the `name` variable in the `scope` of `Foo` we are also _sending_ an event to the parent `App` element. Then the scope of `App` also has the variable `name` with value `Jon Snow`. Then `App` sends an event to his parent and so on. Overall we have the following picture:
+
+```js
+<App> scope={ name: 'Jon Snow' }
+  <Foo exports='name'> scope={ name: 'Jon Snow' }
+    <Zoo $name />
+  </Foo>
+  <Bar $name />
+</App>
+```
+
+If we want to read something from the scope we use the dollar sign (`$`) plus the name of the variable. Like it is done in the example - `$name`. First the element checks in its own scope object. If it doesn't find the variable there asks the parent and the parent of the parent and so on. In the code above `Zoo` reads the `name` from `Foo`'s scope while `Bar` reads it from `App`'s scope.
 
 ### Setting in and getting out from the context
 

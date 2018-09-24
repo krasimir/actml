@@ -86,6 +86,24 @@ describe('Given the ActML library', () => {
       expect(F).toBeCalled();
       expect(M).toBeCalledWith({ answer: 42 });
     });
+    it('should should scope everything by default', async () => {
+      const F = jest.fn().mockImplementation(() => 42);
+      const M = jest.fn();
+
+      const result = await run(
+        <A>
+          <F exports='foo' />
+          <F exports='bar' />
+          <A>
+            <A>
+              <M $foo $bar />
+            </A>
+          </A>
+        </A>
+      );
+
+      expect(M).toBeCalledWith({ foo: 42, bar: 42 });
+    });
   });
   describe('when having nested functions', () => {
     it('should run the functions on every level', async () => {
@@ -260,10 +278,9 @@ describe('Given the ActML library', () => {
       const B = jest.fn();
       const C = () => 'bar';
       const Logic = async () => fakeAsync({ status: false, answer: 42 }, 20);
-      const App = () => {};
 
       await run(
-        <App>
+        <A>
           <C exports='foo' />
           <Logic>
             {
@@ -272,7 +289,7 @@ describe('Given the ActML library', () => {
               }
             }
           </Logic>
-        </App>
+        </A>
       );
 
       expect(Z).not.toBeCalled();
@@ -399,7 +416,7 @@ describe('Given the ActML library', () => {
         return <E $answer message={ message } />;
       }
 
-      await run(Func);
+      await run(<A><Func /></A>);
 
       expect(Z).toBeCalledWith({ foo: 'bar' });
       expect(B).toBeCalledWith({ bar: 'foo', exports: 'answer' });

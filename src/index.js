@@ -13,7 +13,7 @@ function create(func, props, ...children) {
           context: this.context
         }
       },
-      props,
+      { ...props, scope: '*' },
       children
     );
   }

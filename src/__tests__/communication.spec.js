@@ -15,19 +15,19 @@ describe('Given the ActML library', () => {
       const Z = jest.fn();
       const GetToken = async () => fakeAsync('XXX', 50);
       const UseToken = ({ token }) => print(token);
-      const App = () => {};
+      const T = () => {};
 
       await run(
-        <App>
-          <A>
-            <A>
+        <A>
+          <T>
+            <T>
               <GetToken exports='token'>
                 <Z $token />
               </GetToken>
-            </A>
-          </A>
+            </T>
+          </T>
           <UseToken $token />
-        </App>
+        </A>
       );
       expect(Z).toBeCalledWith({ token: 'XXX' });
       expect(print).toBeCalledWith('XXX');
@@ -98,13 +98,12 @@ describe('Given the ActML library', () => {
       const print = jest.fn();
       const GetToken = async () => fakeAsync('XXX', 50);
       const UseToken = ({ token }) => print(token);
-      const App = () => {};
 
       await run(
-        <App>
+        <A>
           <GetToken exports='blah' />
           <UseToken $blah='token' />
-        </App>
+        </A>
       );
       expect(print).toBeCalledWith('XXX');
     });

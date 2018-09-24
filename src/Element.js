@@ -54,9 +54,7 @@ Element.createRootElement = function (context) {
   return {
     context,
     scope: {},
-    dispatch(type, value){
-      this.scope[type] = value;
-    },
+    dispatch(){},
     readFromScope(key) {
       let value = this.scope[key];
       if (typeof value !== 'undefined') return value;
