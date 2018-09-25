@@ -62,7 +62,7 @@ Element.createRootElement = function (context) {
       value = this.context[key];
       if (typeof value !== 'undefined') return value;
 
-      throw new Error(`"${ key }" is not defined in the global scope neither in the context.`);
+      throw new Error(`Undefined variable "${ key }".`);
     }
   }
 }

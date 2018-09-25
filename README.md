@@ -7,11 +7,14 @@
 - [What is an ActML element](#what-is-an-actml-element)
 - [Getting in and out of your function/element](#getting-in-and-out-of-your-functionelement)
 - [Scope API](#scope-api)
-  - [Setting in and getting out from the context](#setting-in-and-getting-out-from-the-context)
-  - [Setting initial context value](#setting-initial-context-value)
-  - [Using the context API as a dependency management tool](#using-the-context-api-as-a-dependency-management-tool)
+  - [Understanding "exports" and "scope" props](#understanding-%22exports%22-and-%22scope%22-props)
+  - [Catching all the variables](#catching-all-the-variables)
+  - [More advanced export and import](#more-advanced-export-and-import)
+- [Context API](#context-api)
 - [Predefined elements](#predefined-elements)
+  - [Wrapper that scopes everything](#wrapper-that-scopes-everything)
   - [Running elements in parallel](#running-elements-in-parallel)
+- [Error handling](#error-handling)
 - [Examples](#examples)
 
 ## Concept
@@ -164,11 +167,17 @@ Another way to pass data between elements is the Scope API.
 
 ## Scope API
 
-Using the FACC pattern everywhere is not very convenient. So there is a Scope API that can keep data and share it with other elements.  Let's take the following example:
+The scope API is a primary mechanism for transferring data between ActML elements.
 
+### Understanding "exports" and "scope" props
+
+Using the FACC pattern everywhere is not very convenient. So there is a Scope API that can keep data and share it with other elements. Let's take the following example:
 
 ```js
 const Foo = () => 'Jon Snow';
+const App = () => {};
+const Zoo = ({ name }) => console.log('Zar: ' + name);
+const Bar = ({ name }) => console.log('Bar: ' + name);
 
 <App>
   <Foo exports='name'>
@@ -178,156 +187,143 @@ const Foo = () => 'Jon Snow';
 </App>
 ```
 
-Every ActML element has a `scope` object. It is really just a plain JavaScript object `{}` and every time when we use `exports` we are saving something there. For example the `scope` object of the `Foo` element is equal to `{ name: 'Jon Snow' }`. Together with creating the `name` variable in the `scope` of `Foo` we are also _sending_ an event to the parent `App` element. Then the `App` element may decide if it is interested in that variable and keeps it also in its scope. In the example above that's not happening so the `name` variable is only set in the scope of `<Foo>`
+Every ActML element has a `scope` object. It is really just a plain JavaScript object `{}` and every time when we use `exports` we are saving something there. For example the `scope` object of the `Foo` element is equal to `{ name: 'Jon Snow' }`. Together with creating the `name` variable in the `scope` of `Foo` we are also _sending_ an event to the parent `App` element. Then the `App` element should decide if it is interested in that variable or not. If yes then it keeps it in its scope. In the example above that is not happening so the `name` variable is only set in the scope of `<Foo>`. That is why in this latest example we will get `Zar: Jon Snow` followed by the error `Undefined variable "name".`.
+
+To solve the problem we have to instruct `<App>` element to _catch_ the `name` variable and also keeps it in its scope. This happens by the special prop called `scope`:
 
 ```js
-<App> scope={ name: 'Jon Snow' }
-  <Foo exports='name'> scope={ name: 'Jon Snow' }
+const Foo = () => 'Jon Snow';
+const App = () => {};
+const Zoo = ({ name }) => console.log('Zar: ' + name);
+const Bar = ({ name }) => console.log('Bar: ' + name);
+
+<App scope='name'>
+  <Foo exports='name'>
     <Zoo $name />
   </Foo>
   <Bar $name />
 </App>
 ```
 
-If we want to read something from the scope we use the dollar sign (`$`) plus the name of the variable. Like it is done in the example - `$name`. First the element checks in its own scope object. If it doesn't find the variable there asks the parent and the parent of the parent and so on. In the code above `Zoo` reads the `name` from `Foo`'s scope while `Bar` reads it from `App`'s scope.
+Now the result of `<Foo>` is available for `<Bar>` element too. The value of `name` is consistent across the different scopes. Changing it in one place means that it is updated in the other ones too.
 
-### Setting in and getting out from the context
+Another important note here is that once a variable gets caught it doesn't bubble up. So if there are other elements as parents they will not receive it. 
 
-In order to register a variable inside the context we have to use the special prop `exports`. As a value we add the name of our variable. For example:
+### Catching all the variables
+
+There is a special `*` (star) value that we can pass to the `scope` prop which means "Catch all the variables". The example above will look like this:
 
 ```js
-const IKnowTheAnswer = function () {
-  return 42;
-}
-const Print = function ({ answer }) {
-  console.log(`The answer is ${ answer }`);
-}
-
-run(
-  <A>
-    <IKnowTheAnswer exports='answer' />
-    <Print $answer />
-  </A>
-);
+<App scope='*'>
+  <Foo exports='name'>
+    <Zoo $name />
+  </Foo>
+  <Bar $name />
+</App>
 ```
 
-`exports='answer'` creates a variable with name `answer` and value whatever `IKnowTheAnswer` returns. Then later we use the `$` (dollar sign) plus the name of the variable to inject its value to the `Print` function.
+For convenience the element `<A>` has its `scope` property set to `*` by default. So `<App scope='*'>` could be just replaced by `<A>`. Or in other words if we want to catch all the variables we may use `<A>` directly.
 
-Sometimes we don't want to use the same name of a variable so we can change it by setting an attribute value:
+### More advanced export and import
 
-```js
-const Print = function ({ data }) {
-  console.log(`The answer is ${ data }`);
-}
-
-run(
-  <A>
-    <IKnowTheAnswer exports='answer' />
-    <Print $answer='data' />
-  </A>
-);
-```
-
-We can go even further and provide a function which receives the value and returns a props object:
+The `exports` prop may also accept a function. The function receives the result of the function and **must** return an object (key-value pairs). This approach is useful when we want to apply some transformation of the element's result without modifying the actual element. For example:
 
 ```js
-const IKnowTheAnswer = function() {
-  return 42;
-};
-const Print = function({ message }) {
-  console.log(`The answer is ${message}`);
-};
-const formatMessage = a => ({
-  message: a < 50 ? 'less then 50' : 'more then 50'
+const Foo = () => 'Jon Snow';
+const transform = name => ({
+  originalName: name,
+  lowercaseName: name.toLowerCase(),
+  uppercaseName: name.toUpperCase()
 });
 
 run(
   <A>
-    <IKnowTheAnswer exports="answer" />
-    <Print $answer={ formatMessage } />
+    <Foo exports={ transform }>
+      <Zoo $lowercaseName />
+    </Foo>
+    <Bar $uppercaseName />
   </A>
 );
-// Prints out: The answer is less then 50
 ```
 
-### Setting initial context value
-
-The `run` function accepts a second argument which is the initial state of the context. We can pass an object in the format of key-value pairs.
+`<Zoo>` and `<Bar>` now accept `lowercaseName` and `uppercaseName` as props. This however may be too long for typing. We can rename those like so:
 
 ```js
-const Print = function({ name }) {
-  console.log(`Hello ${name}`);
-};
-const initialContext = {
-  name: 'David'
-};
-
-run(<Print $name />, initialContext);
-// Prints out: Hello David
-```
-
-### Using the context API as a dependency management tool
-
-Because the context is available in every element we may use it to deliver dependencies. It works not only with variables but also with other elements. For example:
-
-```js
-// context.js
-const initialContext = {
-  async getSeason({ endpoint }) {
-    const result = await fetch(endpoint);
-    const { season } = await result.json();
-    return season;
-  },
-  print({ season }) {
-    console.log(`The season is ${season}`);
-  }
-};
-export default initialContext;
-
-
-// App.js
-import initialContext from './context.js';
-
 run(
   <A>
-    <getSeason endpoint="https://www.mocky.io/v2/5ba2a2b52f00006a008d2e0d">
-      { season => <print season={season} /> }
-    </getSeason>
-  </A>,
-  initialContext
+    <Foo exports={ transform }>
+      <Zoo $lowercaseName="name" />
+    </Foo>
+    <Bar $uppercaseName="name" />
+  </A>
 );
-// Prints out: The season is not summer 
 ```
 
-Notice how `getSeason` and `print` are only defined in the context and they don't exist in `App.js`. And here we have to mention that this is only possible because of the JSX transpiler. They both should start with a lowercase letter. That is really important because:
+We can also pass a function and apply some transformation of the data before importing.
 
 ```js
-<getSeason />
+<Bar $uppercaseName={ name => ({ len: name.length }) } />
+```
+
+This wat `<Bar>` element will receive a prop called `len` which contains the number of letters in the `uppercaseName` variable.
+
+## Context API
+
+Now when you know about the scope API we could make a parallel with the context API. The scope API is more like a local placeholder of information. While the context API is globally available and it is more about injecting elements.
+
+The `run` function accepts a second argument which is the initial context. We can pass an object in the format of key-value pairs. For example:
+
+```js
+const Zoo = ({ message }) => console.log('The message is: ' + message);
+const context = {
+  getMessage({ name }) {
+    return `Hello ${name}!`;
+  }
+};
+
+run(
+  <getMessage name="Jon Snow" exports="message">
+    <Zoo $message />
+  </getMessage>,
+  context
+);
+
+// Prints out: The message is: Hello Jon Snow!
+```
+
+Notice how `getMessage` is defined in the context. We have to stress out that this is only possible because of the JSX transpiler. Everything that goes into the context must start with a lower case letter. That is because:
+
+```js
+<getMessage />
 ```
 
 gets transpiled to
 
 ```js
-A("getSeason", null);
+A("getMessage", null);
 ```
 
 while
 
 ```js
-<GetSeason />
+<GetMessage />
 ```
 
 to
 
 ```js
-A(GetSeason, null);
+A(GetMessage, null);
 ```
 
-In the second case there **must** be a function `GetSeason` while in the first case there's just a string `getSeason` passed to ActML runner.
+In the second case there **must** be a function called `GetMessage` while in the first case there's just a string `getMessage` passed to ActML processor. This may looks weird but is really powerful API for delivering dependencies deep down your ActML tree. Imagine how you define your context once and then write your logic distributed between different files.
 
 ## Predefined elements
 
 There are some predefined elements that come with ActML core package.
+
+### Wrapper that scopes everything
+
+The `<A>` element has the ability to scope everything. So if you need that functionality and you a wrapper this is a good element to use.
 
 ### Running elements in parallel
 
@@ -341,6 +337,10 @@ run(<Parallel><Z /><M /></Parallel>);
 ```
 
 `Z` and `M` run in parallel which means that `M` is not waiting for `Z` to finish.
+
+## Error handling
+
+...
 
 ## Examples
 

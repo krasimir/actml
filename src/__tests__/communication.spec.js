@@ -51,7 +51,7 @@ describe('Given the ActML library', () => {
         </A>
       ).catch(error => {
         expect(E).toBeCalledWith({ faf: 'foo' });
-        expect(error.message).toBe('\"faf\" is not defined in the global scope neither in the context.');
+        expect(error.message).toBe('Undefined variable \"faf\".');
       });
     });
     it('should support comma separated scoped variables', async () => {
@@ -91,7 +91,7 @@ describe('Given the ActML library', () => {
         </B>
       ).catch(error => {
         expect(D).toBeCalledWith({ foo: 42, bar: 42 });
-        expect(error.message).toBe("\"foo\" is not defined in the global scope neither in the context.");
+        expect(error.message).toBe("Undefined variable \"foo\".");
       });
     });
     it('should allow renaming of a prop', async () => {
@@ -142,17 +142,24 @@ describe('Given the ActML library', () => {
       expect(Z).toBeCalledWith({ posts: 'bar' });
     });
     it('should accept a function for "exports" prop', async () => {
-      const Z = () => ({ type: 'foo', total: 47 });
+      const Z = () => 'Hello World';
       const B = jest.fn();
+      const C = jest.fn();
+      const transform = name => ({
+        u: name.toUpperCase(),
+        l: name.toLowerCase()
+      });
 
       await run(
         <A scope='num'>
-          <Z exports={ ({ total }) => ({ num: total }) } />
-          <B $num />
+          <Z exports={ transform } />
+          <B $u />
+          <C $l />
         </A>
       );
 
-      expect(B).toBeCalledWith({ num: 47 });
+      expect(B).toBeCalledWith({ u: 'HELLO WORLD' });
+      expect(C).toBeCalledWith({ l: 'hello world' });
     });
     it('should accept a function as value of a scope variable', async () => {
       const Z = () => 55;
