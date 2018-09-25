@@ -54,17 +54,17 @@ run(
 );
 ```
 
-Isn't it like writing React? Let's see step by step what ActML does.
+Let's see step by step what ActML does:
 
 1. The `<A>` element is just a wrapper.
-2. `<GetProfileName>` is an asynchronous function so ActML waits till its promise is resolved. `<GetProfileName>` also returns a result and has `exports` prop defined. That is a special prop which is saying "Export a variable with name `name` and make it available for other elements".
-3. `<Greeting>` needs the `name` of the user and uses the special dollar sign notation which to ActML processor means "Inject a variable with name `name` as a prop".
+2. `<GetProfileName>` is an asynchronous function so ActML waits till its promise is resolved. It also returns a result and has `exports` prop defined. That is a special prop which is saying "Export a variable with name `name` and make it available for other elements".
+3. `<Greeting>` needs that `name` variable and uses the special dollar sign notation which to ActML processor means "Inject a variable with name `name` as a prop".
 4. `<Greeting>` also has a function as child and it sends its result there which in our case is the full message.
 5. `<Print>` just gets the message and prints it out in the console.
 
 _Here is a working [Codesandbox](https://codesandbox.io/s/341xn5vrlq) of the code above._
 
-So, that is the concept of ActML. It allows us to define in a declarative fashion our business logic. Same as our UI. There is nothing (almost) imperative. In fact all the code that we pass to the `run` function is nothing but definitions of _what_ should happen. It is not saying _how_. This is extremely powerful concept because it shifts the responsibility to another level and makes the development a lot more easier. We use composition over raw implementation. If you like this way of thinking then ActML may be for you.
+So, that is the concept of ActML. It allows us to define in a declarative fashion our business logic. Same as our UI. There is nothing (almost) imperative. In fact all the code that we pass to the `run` function is nothing but definitions of _what_ should happen. It is not saying _how_. This is extremely powerful concept because it shifts the responsibility to another level and makes the development a lot more easier. We use composition over raw implementation. If you like this way of thinking then ActML may be your way to deal with asynchronous logic.
 
 ## What you need to use ActML
 
@@ -106,7 +106,7 @@ To be more specific the element may be three things:
 * An asynchronous function
 * A generator
 
-In general ActML processor assumes that every of the elements is asynchronous. It executes the functions from the outer to inner ones and from top to bottom. All the three types of elements may return another element. In the case of generator we may `yield` also another element. For example:
+ActML processor assumes that every of the elements is asynchronous. It executes the functions from the outer to inner ones and from top to bottom. All the three types of elements may return another element. In the case of generator we may `yield` also another element. For example:
 
 ```js
 function Print({ message }) {
@@ -160,7 +160,7 @@ run(
 // outputs again "Hello John"
 ```
 
-Another way to pass data between elements is the Scope API. Read about that below.
+Another way to pass data between elements is the Scope API.
 
 ## Scope API
 
@@ -178,7 +178,7 @@ const Foo = () => 'Jon Snow';
 </App>
 ```
 
-Every ActML element has a `scope` object. It is really just a plain JavaScript object `{}` and every time when we use `exports` we are saving something there. For example the `scope` object of the `Foo` element is equal to `{ name: 'Jon Snow' }`. Together with creating the `name` variable in the `scope` of `Foo` we are also _sending_ an event to the parent `App` element. Then the scope of `App` also has the variable `name` with value `Jon Snow`. Then `App` sends an event to his parent and so on. Overall we have the following picture:
+Every ActML element has a `scope` object. It is really just a plain JavaScript object `{}` and every time when we use `exports` we are saving something there. For example the `scope` object of the `Foo` element is equal to `{ name: 'Jon Snow' }`. Together with creating the `name` variable in the `scope` of `Foo` we are also _sending_ an event to the parent `App` element. Then the `App` element may decide if it is interested in that variable and keeps it also in its scope. In the example above that's not happening so the `name` variable is only set in the scope of `<Foo>`
 
 ```js
 <App> scope={ name: 'Jon Snow' }
