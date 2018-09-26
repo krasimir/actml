@@ -167,32 +167,25 @@ describe('Given the ActML library', () => {
     });
   });
   describe('when there is an error', () => {
-    it('should swallow the error if the handler returns nothing (`undefined`)', async () => {
+    it('should swallow the error and stop the execution by default', async () => {
       const Problem = function() {
         return iDontExist; // throws an error "iDontExist is not defined"
       };
-      const Z = () => {};
-      const B = () => {};
-      const Handler = () => {};
+      const Z = jest.fn();
+      const B = jest.fn();
+      const Handler = jest.fn();
 
-      await run(<A><Z><B><Problem onError={ <Handler /> }/></B></Z></A>);
-    });
-    it('should stop processing if the error handler returns `false`', async () => {
-      const Problem = function() {
-        return iDontExist; // throws an error "iDontExist is not defined"
-      };
-      const App = function() {};
-      const HandleError = jest.fn().mockImplementation(() => false);
-      const AfterError = jest.fn();
-      
       await run(
-        <App exports='answer'>
-          <Problem onError={ <HandleError /> } />
-          <AfterError />
-        </App>
+        <A>
+          <Z />
+          <Problem onError={ <Handler /> }/>
+          <B />
+        </A>
       );
-      expect(HandleError).toBeCalled();
-      expect(AfterError).not.toBeCalled();
+
+      expect(Z).toBeCalled();
+      expect(B).not.toBeCalled();
+      expect(Handler).toBeCalled();
     });
     it('should continue processing if the error handler returns `true`', async () => {
       const Problem = function() {
@@ -226,7 +219,7 @@ describe('Given the ActML library', () => {
       );
       expect(spy).toBeCalledWith('iDontExist is not defined');
     });
-    it('should fire the onError handler with the same context', async () => {
+    it('should allow the handler to access scoped variables', async () => {
       const Problem = function() {
         return iDontExist; // throws an error "iDontExist is not defined"
       };
@@ -248,7 +241,7 @@ describe('Given the ActML library', () => {
       const App = function() {};
       const Wrapper = function() {};
       const Dummy = () => 42;
-      const HandleErrorA = jest.fn().mockImplementation(() => false);
+      const HandleErrorA = jest.fn();
       const AfterErrorA = jest.fn();
       const B = jest.fn();
       const C = jest.fn();

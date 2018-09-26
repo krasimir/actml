@@ -6,13 +6,10 @@ const handleElementError = async function (error, props, element) {
 
     const onErrorStrategy = await props.onError.run(element);
 
-    if (onErrorStrategy === false) {
-      throw new Error(Element.errors.STOP_PROCESSING);
-    } else if (onErrorStrategy === true) {
+    if (onErrorStrategy === true) {
       throw new Error(Element.errors.CONTINUE_PROCESSING);
-    } else {
-      // swallowing the error
-    }      
+    }
+    throw new Error(Element.errors.STOP_PROCESSING);    
   } else {
     throw error;
   }

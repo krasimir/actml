@@ -13,8 +13,9 @@
     "url": "git+https://github.com/krasimir/actml.git"
   },
   "keywords": [
-    "dialect",
-    "jsx"
+    "actml",
+    "jsx",
+    "react"
   ],
   "author": "Krasimir Tsonev",
   "license": "MIT",
