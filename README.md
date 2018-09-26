@@ -420,7 +420,7 @@ await run(
 );
 ```
 
-We will see `B` followed by `C` but not `Z` because there's an error at that level.
+We will see `B` followed by `C` but not `Z` because there's an error at that level. Here is a [Codesandbox](https://codesandbox.io/s/qlpwp2nn06) with an example.
 
 ## Examples
 
