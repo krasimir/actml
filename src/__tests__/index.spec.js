@@ -1,5 +1,5 @@
 /** @jsx A */
-import { A, run, Parallel } from '..';
+import { A, run, Parallel, pipeline } from '..';
 import Element from '../Element';
 
 const fakeAsync = (resolveWith, delay) => new Promise(done => {
@@ -290,7 +290,7 @@ describe('Given the ActML library', () => {
     });
   });
   describe('when working with the pipeline', () => {
-    it(`- should be possible to process the children many times
+    it.only(`- should be possible to process the children many times
         - and pass data to them`, async () => {
       const store = {
         subscribe(callback) {
@@ -298,12 +298,16 @@ describe('Given the ActML library', () => {
         }
       }
       const Func = async function () {
-        await this.pipeline('children', 'foo');
+        // await this.pipeline('children', 'foo');
         store.subscribe(async () => {
-          await this.pipeline('children', 'bar');
-          await this.pipeline('children');
+          // await this.pipeline('children', 'bar');
+          // await this.pipeline('children');
         });
       }
+      Func.middlewares = [
+        { func: pipeline.middlewares.execute, enabled: true },
+        { func: pipeline.middlewares.processChildren, enabled: false }
+      ];
       const Z = jest.fn();
       const B = jest.fn();
 

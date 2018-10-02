@@ -12,6 +12,6 @@ export default function SubscribeOnce(props) {
       }
     });
   } else {
-    throw new Error('<Subscribe> requires `type` prop.');
+    throw new Error('<SubscribeOnce> requires `type` prop.');
   }
 }

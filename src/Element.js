@@ -1,4 +1,4 @@
-import { createDefaultPipeline } from './Pipeline';
+import createPipeline from './createPipeline';
 import { getScopedVars, getFuncName } from './utils';
 
 export default function Element(func, props, children) {
@@ -37,13 +37,20 @@ export default function Element(func, props, children) {
       }
       this.parent = parent;
       this.context = parent.context;
-      this.pipeline = this.func.pipeline || createDefaultPipeline(this);
+
+      if (!this.pipeline) {
+        if (this.func.middlewares) {
+          this.pipeline = createPipeline(this, this.func.middlewares);
+        } else {
+          this.pipeline = createPipeline(this);
+        }
+      }
 
       if (typeof func === 'string') {
         this.func = this.context[func];
       }
 
-      return await this.pipeline.process();
+      return await this.pipeline();
     }
   }
 }
