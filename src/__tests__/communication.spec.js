@@ -10,7 +10,7 @@ const delay = (what, delay) => new Promise(done => {
 
 describe('Given the ActML library', () => {
   describe('when dealing with elements communication', () => {
-    it('should pass variables between elements by using the global scope', async () => {
+    it('should pass variables between elements by using the scope', async () => {
       const print = jest.fn();
       const Z = jest.fn();
       const GetToken = async () => fakeAsync('XXX', 50);
