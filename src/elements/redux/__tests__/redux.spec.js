@@ -22,7 +22,7 @@ describe('Given the Redux integration', () => {
     reset();
   });
   describe('when using the Subscribe word', () => {
-    it('should subscribe to a Redux action', async () => { 
+    it.only('should subscribe to a Redux action', async () => { 
       const store = setup(
         { answer: null },
         (state, action) => (action.type === 'ANSWER' ? { answer: action.value } : state)

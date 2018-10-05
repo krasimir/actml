@@ -1,4 +1,4 @@
-import createPipeline from './createPipeline';
+import createProcessor from './createProcessor';
 import { getScopedVars, getFuncName } from './utils';
 
 export default function Element(func, props, children) {
@@ -9,7 +9,7 @@ export default function Element(func, props, children) {
     scopedVars: getScopedVars(props),
     name: getFuncName(func),
     scope: {},
-    pipeline: undefined,
+    processor: undefined,
     result: undefined,
     context: undefined,
     parent: undefined,
@@ -38,19 +38,19 @@ export default function Element(func, props, children) {
       this.parent = parent;
       this.context = parent.context;
 
-      if (!this.pipeline) {
-        if (this.func.middlewares) {
-          this.pipeline = createPipeline(this, this.func.middlewares);
-        } else {
-          this.pipeline = createPipeline(this);
-        }
+      if (!this.processor) {
+        this.processor = createProcessor(this, this.func.processor);
       }
 
       if (typeof func === 'string') {
-        this.func = this.context[func];
+        if (this.context[func]) {
+          this.func = this.context[func];
+        } else {
+          throw new Error(`"${ func }" is missing in the context.`);
+        }
       }
 
-      return await this.pipeline();
+      return await this.processor();
     }
   }
 }

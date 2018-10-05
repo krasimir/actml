@@ -1,5 +1,5 @@
 /** @jsx A */
-import { A, run, Parallel, pipeline } from '..';
+import { A, run, Parallel, Processor } from '..';
 import Element from '../Element';
 
 const fakeAsync = (resolveWith, delay) => new Promise(done => {
@@ -49,7 +49,7 @@ describe('Given the ActML library', () => {
 
       await run(Z);
 
-      expect(Func).toBeCalledWith({ foo: 10 });
+      expect(Func).toBeCalledWith(expect.objectContaining({ foo: 10 }));
     });
     it(`- should execute the function with the given merged params
         - return the result even if we use it as a tag`, async () => {
@@ -57,7 +57,7 @@ describe('Given the ActML library', () => {
       const Z = <Func foo={ 10 }/>;
       await run(<Z bar={ 20 }/>);
 
-      expect(Func).toBeCalledWith({ foo: 10, bar: 20 });
+      expect(Func).toBeCalledWith(expect.objectContaining({ foo: 10, bar: 20 }));
     });
     it(`should continue processing elements if we return such as a result`, async () => {
       const Bar = jest.fn();
@@ -73,7 +73,7 @@ describe('Given the ActML library', () => {
       );
 
       expect(Foo).toBeCalled();
-      expect(Bar).toBeCalledWith({ answer: 42 });
+      expect(Bar).toBeCalledWith(expect.objectContaining({ answer: 42 }));
     });
   });
   describe('when using the wrapper <A />', () => {
@@ -84,7 +84,7 @@ describe('Given the ActML library', () => {
       const result = await run(<A><F exports='answer'><M $answer /></F></A>);
 
       expect(F).toBeCalled();
-      expect(M).toBeCalledWith({ answer: 42 });
+      expect(M).toBeCalledWith(expect.objectContaining({ answer: 42 }));
     });
     it('should should scope everything by default', async () => {
       const F = jest.fn().mockImplementation(() => 42);
@@ -102,7 +102,7 @@ describe('Given the ActML library', () => {
         </A>
       );
 
-      expect(M).toBeCalledWith({ foo: 42, bar: 42 });
+      expect(M).toBeCalledWith(expect.objectContaining({ foo: 42, bar: 42 }));
     });
   });
   describe('when having nested functions', () => {
@@ -286,28 +286,44 @@ describe('Given the ActML library', () => {
       );
 
       expect(Z).not.toBeCalled();
-      expect(B).toBeCalledWith({ answer: 42, foo: 'bar' });
+      expect(B).toBeCalledWith(expect.objectContaining({ answer: 42, foo: 'bar' }));
     });
   });
   describe('when working with the pipeline', () => {
-    it.only(`- should be possible to process the children many times
+    it('should allow setting middlewares', async () => {
+      const spyA = jest.fn();
+      const spyB = jest.fn();
+      const FooBar = function () {
+        spyA();
+      }
+      FooBar.processor = [
+        spyB
+      ]
+
+      await run(<FooBar />);
+
+      expect(spyA).not.toBeCalled();
+      expect(spyB).toBeCalledWith(expect.objectContaining({
+        func: FooBar,
+        name: 'FooBar'
+      }));
+    });
+    it(`- should be possible to process the children many times
         - and pass data to them`, async () => {
       const store = {
         subscribe(callback) {
           setTimeout(callback, 20);
         }
       }
-      const Func = async function () {
-        // await this.pipeline('children', 'foo');
+      const Func = async function ({ children }) {
+        await children('foo');
         store.subscribe(async () => {
-          // await this.pipeline('children', 'bar');
-          // await this.pipeline('children');
+          await children('bar');
+          await children();
         });
       }
-      Func.middlewares = [
-        { func: pipeline.middlewares.execute, enabled: true },
-        { func: pipeline.middlewares.processChildren, enabled: false }
-      ];
+      Func.processor = [ Processor.execute ];
+
       const Z = jest.fn();
       const B = jest.fn();
 
@@ -329,12 +345,12 @@ describe('Given the ActML library', () => {
 
       expect(Z).toHaveBeenCalledTimes(3);
       expect(B).toHaveBeenCalledTimes(3);
-      expect(Z).toBeCalledWith({ data: 'foo' });
-      expect(B).toBeCalledWith({ data: 'foo' });
-      expect(Z).toBeCalledWith({ data: 'bar' });
-      expect(B).toBeCalledWith({ data: 'bar' });
-      expect(Z).toBeCalledWith({ data: undefined });
-      expect(B).toBeCalledWith({ data: undefined });
+      expect(Z).toBeCalledWith(expect.objectContaining({ data: 'foo' }));
+      expect(B).toBeCalledWith(expect.objectContaining({ data: 'foo' }));
+      expect(Z).toBeCalledWith(expect.objectContaining({ data: 'bar' }));
+      expect(B).toBeCalledWith(expect.objectContaining({ data: 'bar' }));
+      expect(Z).toBeCalledWith(expect.objectContaining({ data: undefined }));
+      expect(B).toBeCalledWith(expect.objectContaining({ data: undefined }));
     });
   });
   describe('when we want control the logic flow', () => {
@@ -360,43 +376,6 @@ describe('Given the ActML library', () => {
         expect(C).not.toBeCalled();
       });
     });
-    describe('and we want to prevent the children processing', () => {
-      it('should stop the children processing using the pipeline', async () => {
-        const App = () => {}
-        const Z = jest.fn();
-        const B = jest.fn().mockImplementation(function (props) {
-          if (!props || props.flag !== true) {
-            this.pipeline.disable('children');
-          }
-        });
-        const C = jest.fn();
-        const E = jest.fn();
-        const F = jest.fn();
-
-        await run(
-          <App>
-            <Z />
-            <B>
-              <C />
-            </B>
-            <B>
-              {
-                () => E()
-              }
-            </B>
-            <B flag>
-              <F />
-            </B>
-          </App>
-        );
-
-        expect(Z).toBeCalled();
-        expect(B).toHaveBeenCalledTimes(3);
-        expect(C).not.toBeCalled();
-        expect(E).not.toBeCalled();
-        expect(F).toBeCalled();
-      });
-    });
   });
   describe('when the word is a generator', () => {
     it('should process the `yield`ed statements as words', async () => {
@@ -415,10 +394,10 @@ describe('Given the ActML library', () => {
 
       await run(<A><Func /></A>);
 
-      expect(Z).toBeCalledWith({ foo: 'bar' });
-      expect(B).toBeCalledWith({ bar: 'foo', exports: 'answer' });
+      expect(Z).toBeCalledWith(expect.objectContaining({ foo: 'bar' }));
+      expect(B).toBeCalledWith(expect.objectContaining(({ bar: 'foo', exports: 'answer' })));
       expect(C).toBeCalledWith(42);
-      expect(E).toBeCalledWith({ answer: 42, message: 'the answer is 42' });
+      expect(E).toBeCalledWith(expect.objectContaining({ answer: 42, message: 'the answer is 42' }));
     });
   });
 });

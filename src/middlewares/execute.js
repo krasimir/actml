@@ -1,4 +1,5 @@
 import Element from '../Element';
+import children from './children';
 
 const handleElementError = async function (error, props, element) {
   if (props && props.onError) {
@@ -42,6 +43,12 @@ export default async function execute(element) {
         }
       }
     });
+  }
+
+  // creating the `children` prop
+  normalizedProps.children = (result) => {
+    element.result = result;
+    return children(element);
   }
 
   // actual running of the function

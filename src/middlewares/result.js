@@ -1,6 +1,6 @@
 import Element from '../Element';
 
-export default async function processResult(element) {
+export default async function resultMiddleware (element) {
   const { result, props, scope } = element;
 
   if (props && props.exports) {

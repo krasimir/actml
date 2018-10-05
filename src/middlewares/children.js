@@ -1,6 +1,6 @@
 import Element from '../Element';
 
-export default async function processChildren(element) {
+export default async function childrenMiddleware(element) {
   const { func, children, result } = element;
 
   // FACC pattern
