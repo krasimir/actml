@@ -56,7 +56,6 @@ export default function Element(func, props, children) {
 }
 
 // Static
-Element.isItAnElement = element => element && !!element.run;
 Element.createRootElement = function (context) { 
   return {
     context,
@@ -73,7 +72,3 @@ Element.createRootElement = function (context) {
     }
   }
 }
-Element.errors = {
-  STOP_PROCESSING: 'STOP_PROCESSING',
-  CONTINUE_PROCESSING: 'CONTINUE_PROCESSING'
-};

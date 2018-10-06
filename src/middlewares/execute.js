@@ -1,5 +1,6 @@
-import Element from '../Element';
-import children from './children';
+import { STOP_PROCESSING, CONTINUE_PROCESSING } from '../constants';
+import childrenMiddleware from './children';
+import exportsMiddleware from './exports';
 
 const handleElementError = async function (error, props, element) {
   if (props && props.onError) {
@@ -8,15 +9,15 @@ const handleElementError = async function (error, props, element) {
     const onErrorStrategy = await props.onError.run(element);
 
     if (onErrorStrategy === true) {
-      throw new Error(Element.errors.CONTINUE_PROCESSING);
+      throw new Error(CONTINUE_PROCESSING);
     }
-    throw new Error(Element.errors.STOP_PROCESSING);    
+    throw new Error(STOP_PROCESSING);    
   } else {
     throw error;
   }
 }
 
-export default async function execute(element) {
+export default async function executeMiddleware(element) {
   const { func, props } = element;
   var normalizedProps = { ...props };
 
@@ -46,9 +47,10 @@ export default async function execute(element) {
   }
 
   // creating the `children` prop
-  normalizedProps.children = (result) => {
+  normalizedProps.children = result => {
     element.result = result;
-    return children(element);
+    exportsMiddleware(element);
+    childrenMiddleware(element);
   }
 
   // actual running of the function

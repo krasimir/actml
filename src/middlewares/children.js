@@ -1,12 +1,14 @@
-import Element from '../Element';
+import { STOP_PROCESSING, CONTINUE_PROCESSING } from '../constants';
+import { isItAnElement } from '../utils';
 
 export default async function childrenMiddleware(element) {
   const { func, children, result } = element;
 
   // FACC pattern
-  if (children && children.length === 1 && !Element.isItAnElement(children[0])) {
+  if (children && children.length === 1 && !isItAnElement(children[0])) {
     const resultOfFACC = await children[0].call(element, result);
-    if (Element.isItAnElement(resultOfFACC)) {
+
+    if (isItAnElement(resultOfFACC)) {
       await resultOfFACC.run(element);
     }
   
@@ -25,9 +27,9 @@ export default async function childrenMiddleware(element) {
           await w.run(element);
         }
       } catch (error) {
-        if (error.message === Element.errors.STOP_PROCESSING) {
+        if (error.message === STOP_PROCESSING) {
           break;
-        } else if(!(error.message === Element.errors.CONTINUE_PROCESSING)) {
+        } else if(!(error.message === CONTINUE_PROCESSING)) {
           throw error;
         }
       }

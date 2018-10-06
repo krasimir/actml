@@ -12,7 +12,7 @@ const {
   reset
 } = Redux;
 
-const nextTick = (delay = 1) => new Promise(done => setTimeout(done, delay));
+const delay = (d = 10) => new Promise(done => setTimeout(done, d));
 const setup = (initialState = {}, reducer = s => s) => {
   return createStore(reducer, initialState, applyMiddleware(middleware));
 }
@@ -21,8 +21,8 @@ describe('Given the Redux integration', () => {
   beforeEach(() => {
     reset();
   });
-  describe('when using the Subscribe word', () => {
-    it.only('should subscribe to a Redux action', async () => { 
+  describe('when using the Subscribe element', () => {
+    it('should subscribe to a Redux action', async () => { 
       const store = setup(
         { answer: null },
         (state, action) => (action.type === 'ANSWER' ? { answer: action.value } : state)
@@ -32,7 +32,9 @@ describe('Given the Redux integration', () => {
       await run(
         <Subscribe type='ANSWER'>
           {
-            ({ value }) => <Z value={ value } />
+            ({ value }) => {
+              return <Z value={ value } />
+            }
           }
         </Subscribe>
       );
@@ -41,11 +43,11 @@ describe('Given the Redux integration', () => {
       store.dispatch({ type: 'ANOTHER_ANSWER' });
       store.dispatch({ type: 'ANSWER', value: 200 });
 
-      await nextTick();
+      await delay();
 
       expect(Z).toHaveBeenCalledTimes(2);
-      expect(Z).toBeCalledWith({ value: 200 });
-      expect(Z).toBeCalledWith({ value: 100 });
+      expect(Z).toBeCalledWith(expect.objectContaining({ value: 200 }));
+      expect(Z).toBeCalledWith(expect.objectContaining({ value: 100 }));
     });
     it('should be able to register the action in the context', async () => {
       const ANSWER = 'ANSWER';
@@ -62,16 +64,16 @@ describe('Given the Redux integration', () => {
       );
 
       store.dispatch({ type: ANSWER, value: 100 });
-      await nextTick();
+      await delay();
       store.dispatch({ type: ANSWER, value: 200 });
-      await nextTick();
+      await delay();
 
       expect(Z).toHaveBeenCalledTimes(2);
-      expect(Z).toHaveBeenNthCalledWith(1, { action: { type: ANSWER, value: 100 } });
-      expect(Z).toHaveBeenNthCalledWith(2, { action: { type: ANSWER, value: 200 } });
+      expect(Z).toHaveBeenNthCalledWith(1, expect.objectContaining({ action: { type: ANSWER, value: 100 } }));
+      expect(Z).toHaveBeenNthCalledWith(2, expect.objectContaining({ action: { type: ANSWER, value: 200 } }));
     });
   });
-  describe('when using the SubscribeOnce word', () => {
+  describe('when using the SubscribeOnce element', () => {
     it('should subscribe to a Redux action only once', async () => { 
       const store = setup(
         { answer: null },
@@ -106,15 +108,15 @@ describe('Given the Redux integration', () => {
       store.dispatch({ type: 'ANSWER', value: 200 });
       store.dispatch({ type: 'ZAR', foo: 'bar' });
 
-      await nextTick();
+      await delay();
 
       expect(Z).toHaveBeenCalledTimes(1);
-      expect(Z).toBeCalledWith({ value: 100 });
-      expect(B).toBeCalledWith({ numOfSubscribes: 2 });
-      expect(C).toBeCalledWith({ action: { type: 'ZAR', foo: 'bar' } });
+      expect(Z).toBeCalledWith(expect.objectContaining({ value: 100 }));
+      expect(B).toBeCalledWith(expect.objectContaining({ numOfSubscribes: 2 }));
+      expect(C).toBeCalledWith(expect.objectContaining({ action: { type: 'ZAR', foo: 'bar' } }));
     });
   });
-  describe('when using the Action word', () => {
+  describe('when using the Action element', () => {
     it('should dispatch an action', async () => {
       const store = setup(
         { counter: 0 },
@@ -134,7 +136,7 @@ describe('Given the Redux integration', () => {
       expect(store.getState().counter).toBe(14);
     });
   });
-  describe('when using the Select word', () => {
+  describe('when using the Select element', () => {
     it('should get the data from the store', async () => {
       const store = setup(
         { user: { age: 40 } }
@@ -151,7 +153,7 @@ describe('Given the Redux integration', () => {
         </A>
       );
 
-      expect(Z).toBeCalledWith({ age: 40 });
+      expect(Z).toBeCalledWith(expect.objectContaining({ age: 40 }));
     });
     describe('and we have parameterized selector', () => {
       it('should get the data from the store', async () => {
@@ -172,7 +174,7 @@ describe('Given the Redux integration', () => {
           </A>
         );
   
-        expect(B).toBeCalledWith({ answer: false });
+        expect(B).toBeCalledWith(expect.objectContaining({ answer: false }));
       });
     });
   });

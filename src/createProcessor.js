@@ -1,9 +1,11 @@
 import execute from './middlewares/execute';
+import exports from './middlewares/exports';
 import result from './middlewares/result';
 import children from './middlewares/children';
 
 const DEFAULT_MIDDLEWARES = [
   execute,
+  exports,
   result,
   children
 ];

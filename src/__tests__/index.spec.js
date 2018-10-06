@@ -1,6 +1,6 @@
 /** @jsx A */
-import { A, run, Parallel, Processor } from '..';
-import Element from '../Element';
+import { A, run, Processor } from '..';
+import { STOP_PROCESSING } from '../constants';
 
 const fakeAsync = (resolveWith, delay) => new Promise(done => {
   setTimeout(() => done(resolveWith), delay);
@@ -298,7 +298,7 @@ describe('Given the ActML library', () => {
       }
       FooBar.processor = [
         spyB
-      ]
+      ];
 
       await run(<FooBar />);
 
@@ -359,7 +359,7 @@ describe('Given the ActML library', () => {
         const App = () => {}
         const Z = jest.fn();
         const B = jest.fn().mockImplementation(() => {
-          throw new Error(Element.errors.STOP_PROCESSING);
+          throw new Error(STOP_PROCESSING);
         });
         const C = jest.fn();
 

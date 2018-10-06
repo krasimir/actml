@@ -1,13 +1,11 @@
 import Integration from './Integration';
+import execute from '../../middlewares/execute';
 
-export default function SubscribeOnce(props) {
-  this.pipeline.disable('result');
-  this.pipeline.disable('children');
-  if (props && props.type) {
+function SubscribeOnce({ children, type }) {
+  if (type) {
     const removeListener = Integration.addListener(action => {
-      if (action.type === props.type) {
-        this.pipeline('result', action);
-        this.pipeline('children', action);
+      if (action.type === type) {
+        children(action);
         removeListener();
       }
     });
@@ -15,3 +13,6 @@ export default function SubscribeOnce(props) {
     throw new Error('<SubscribeOnce> requires `type` prop.');
   }
 }
+SubscribeOnce.processor = [ execute ];
+
+export default SubscribeOnce;

@@ -29,7 +29,7 @@ describe('Given the ActML library', () => {
           <UseToken $token />
         </A>
       );
-      expect(Z).toBeCalledWith({ token: 'XXX' });
+      expect(Z).toBeCalledWith(expect.objectContaining({ token: 'XXX' }));
       expect(print).toBeCalledWith('XXX');
     });
     it('should disable the variable bubbling if there is scoping', async () => {
@@ -50,7 +50,7 @@ describe('Given the ActML library', () => {
           <D $faf />
         </A>
       ).catch(error => {
-        expect(E).toBeCalledWith({ faf: 'foo' });
+        expect(E).toBeCalledWith(expect.objectContaining({ faf: 'foo' }));
         expect(error.message).toBe('Undefined variable \"faf\".');
       });
     });
@@ -90,7 +90,7 @@ describe('Given the ActML library', () => {
           <M $foo />
         </B>
       ).catch(error => {
-        expect(D).toBeCalledWith({ foo: 42, bar: 42 });
+        expect(D).toBeCalledWith(expect.objectContaining({ foo: 42, bar: 42 }));
         expect(error.message).toBe("Undefined variable \"foo\".");
       });
     });
@@ -122,7 +122,7 @@ describe('Given the ActML library', () => {
         c
       );
 
-      expect(C).toBeCalledWith({ foo: 'bar' });
+      expect(C).toBeCalledWith(expect.objectContaining({ foo: 'bar' }));
     });
     it('should be able the use the context as DI container', async () => {
       const context = {
@@ -138,8 +138,8 @@ describe('Given the ActML library', () => {
         context
       );
 
-      expect(context.getPosts).toBeCalledWith({ url: 'foo', exports: 'posts' });
-      expect(Z).toBeCalledWith({ posts: 'bar' });
+      expect(context.getPosts).toBeCalledWith(expect.objectContaining({ url: 'foo', exports: 'posts' }));
+      expect(Z).toBeCalledWith(expect.objectContaining({ posts: 'bar' }));
     });
     it('should accept a function for "exports" prop', async () => {
       const Z = () => 'Hello World';
@@ -158,8 +158,8 @@ describe('Given the ActML library', () => {
         </A>
       );
 
-      expect(B).toBeCalledWith({ u: 'HELLO WORLD' });
-      expect(C).toBeCalledWith({ l: 'hello world' });
+      expect(B).toBeCalledWith(expect.objectContaining({ u: 'HELLO WORLD' }));
+      expect(C).toBeCalledWith(expect.objectContaining({ l: 'hello world' }));
     });
     it('should accept a function as value of a scope variable', async () => {
       const Z = () => 55;
@@ -172,7 +172,7 @@ describe('Given the ActML library', () => {
         </A>
       );
 
-      expect(B).toBeCalledWith({ a: 55, b: 55 });
+      expect(B).toBeCalledWith(expect.objectContaining({ a: 55, b: 55 }));
     });
     it('should scope variables to only parent by default', async () => {
       const Foo = () => 100;
@@ -196,8 +196,8 @@ describe('Given the ActML library', () => {
       );
 
       await delay(() => {
-        expect(Z1).toBeCalledWith({ answer: 200 });
-        expect(Z2).toBeCalledWith({ answer: 100 });
+        expect(Z1).toBeCalledWith(expect.objectContaining({ answer: 200 }));
+        expect(Z2).toBeCalledWith(expect.objectContaining({ answer: 100 }));
       }, 50);
     });
   });

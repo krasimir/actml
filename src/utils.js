@@ -13,3 +13,5 @@ export const getScopedVars = function (props) {
   }
   return scoped;
 }
+
+export const isItAnElement = element => element && !!element.run;

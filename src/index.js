@@ -4,6 +4,7 @@ import execute from './middlewares/execute';
 import result from './middlewares/result';
 import childrenMiddleware from './middlewares/children';
 import Element from './Element';
+import { isItAnElement } from './utils';
 
 function create(func, props, ...children) {
   // using A as a dymmy component
@@ -24,8 +25,8 @@ function create(func, props, ...children) {
 async function run(element, context = {}) {
   const rootElement = Element.createRootElement(context);
 
-  if (Element.isItAnElement(element)) {
-    if (Element.isItAnElement(element.func)) {
+  if (isItAnElement(element)) {
+    if (isItAnElement(element.func)) {
       element.func.mergeToProps(element.props);
       return await element.func.run(rootElement);
     }
