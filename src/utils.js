@@ -4,6 +4,8 @@ export const getFuncName = function(fun) {
   var ret = fun.toString();
   ret = ret.substr('function '.length);
   ret = ret.substr(0, ret.indexOf('('));
+
+  if (ret === '') return 'unknown';
   return ret;
 }
 export const getScopedVars = function (props) {
@@ -15,3 +17,6 @@ export const getScopedVars = function (props) {
 }
 
 export const isItAnElement = element => element && !!element.run;
+
+var ids = 100;
+export const getId = () => ids++;

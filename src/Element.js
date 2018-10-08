@@ -1,8 +1,9 @@
-import createProcessor from './createProcessor';
-import { getScopedVars, getFuncName } from './utils';
+import Processor from './Processor';
+import { getScopedVars, getFuncName, getId } from './utils';
 
 export default function Element(func, props, children) {
   return {
+    id: getId(),
     func,
     props,
     children,
@@ -13,6 +14,7 @@ export default function Element(func, props, children) {
     result: undefined,
     context: undefined,
     parent: undefined,
+    debug: undefined,
 
     mergeToProps(additionalProps) {
       this.props = Object.assign({}, this.props, additionalProps);
@@ -24,12 +26,12 @@ export default function Element(func, props, children) {
         this.parent.dispatch(type, value);
       }
     },
-    readFromScope(key) {
+    readFromScope(key, requester) {
       const { scope, parent } = this;
       const value = scope[key];
 
       if (typeof value !== 'undefined') return value;
-      return parent.readFromScope(key);
+      return parent.readFromScope(key, requester);
     },
     async run(parent) {
       if (!parent) {
@@ -39,7 +41,7 @@ export default function Element(func, props, children) {
       this.context = parent.context;
 
       if (!this.processor) {
-        this.processor = createProcessor(this, this.func.processor);
+        this.processor = Processor(this, this.func.processor);
       }
 
       if (typeof func === 'string') {
@@ -61,14 +63,15 @@ Element.createRootElement = function (context) {
     context,
     scope: {},
     dispatch(){},
-    readFromScope(key) {
+    readFromScope(key, requester) {
       let value = this.scope[key];
       if (typeof value !== 'undefined') return value;
 
       value = this.context[key];
       if (typeof value !== 'undefined') return value;
 
-      throw new Error(`Undefined variable "${ key }".`);
+      requester = requester === '' ? 'unknown' : requester;
+      throw new Error(`Undefined variable "${ key }" requested by <${ requester }>.`);
     }
   }
 }

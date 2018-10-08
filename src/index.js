@@ -22,6 +22,7 @@ function create(func, props, ...children) {
   }
   return Element(func, props, children);
 }
+
 async function run(element, context = {}) {
   const rootElement = Element.createRootElement(context);
 

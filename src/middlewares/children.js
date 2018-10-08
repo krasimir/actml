@@ -1,7 +1,7 @@
 import { STOP_PROCESSING, CONTINUE_PROCESSING } from '../constants';
 import { isItAnElement } from '../utils';
 
-export default async function childrenMiddleware(element) {
+async function childrenMiddleware(element) {
   const { func, children, result } = element;
 
   // FACC pattern
@@ -17,23 +17,16 @@ export default async function childrenMiddleware(element) {
     let pointer = 0;
     let parallelProcessing = !!func.processChildrenInParallel;
 
-    while(pointer < children.length) {
-      const w = children[pointer];
-
-      try {
-        if (parallelProcessing) {
-          w.run(element);
-        } else {
-          await w.run(element);
-        }
-      } catch (error) {
-        if (error.message === STOP_PROCESSING) {
-          break;
-        } else if(!(error.message === CONTINUE_PROCESSING)) {
-          throw error;
-        }
+    if (parallelProcessing) {
+      await Promise.all(children.map(w => w.run(element)));
+    } else {
+      while(pointer < children.length) {
+        await children[pointer].run(element);
+        pointer++;
       }
-      pointer++;
     }
   }
 }
+childrenMiddleware._name = 'CHILDREN';
+
+export default childrenMiddleware;

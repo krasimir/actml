@@ -1,6 +1,6 @@
 import { isItAnElement } from '../utils';
 
-export default async function resultMiddleware (element) {
+async function resultMiddleware (element) {
   const { result } = element;
 
   if (result) {
@@ -23,3 +23,7 @@ export default async function resultMiddleware (element) {
     }
   }
 }
+
+resultMiddleware._name = 'RESULTS';
+
+export default resultMiddleware;

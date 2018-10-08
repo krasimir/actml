@@ -51,7 +51,7 @@ describe('Given the ActML library', () => {
         </A>
       ).catch(error => {
         expect(E).toBeCalledWith(expect.objectContaining({ faf: 'foo' }));
-        expect(error.message).toBe('Undefined variable \"faf\".');
+        expect(error.message).toBe('Undefined variable \"faf\" requested by <unknown>.');
       });
     });
     it('should support comma separated scoped variables', async () => {
@@ -91,7 +91,7 @@ describe('Given the ActML library', () => {
         </B>
       ).catch(error => {
         expect(D).toBeCalledWith(expect.objectContaining({ foo: 42, bar: 42 }));
-        expect(error.message).toBe("Undefined variable \"foo\".");
+        expect(error.message).toBe("Undefined variable \"foo\" requested by <unknown>.");
       });
     });
     it('should allow renaming of a prop', async () => {

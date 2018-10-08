@@ -1,4 +1,4 @@
-import createProcessor from '../createProcessor';
+import Processor from '../Processor';
 
 const fakeAsync = delay => new Promise(done => {
   setTimeout(() => done(), delay);
@@ -24,7 +24,7 @@ describe('Given the processor utility', () => {
         await fakeAsync(10);
         temp.push('M2');
       }
-      const processor = createProcessor(element, [ M1, M2 ]);
+      const processor = Processor(element, [ M1, M2 ]);
 
       await processor();
 
@@ -37,7 +37,7 @@ describe('Given the processor utility', () => {
     it('should disable the middleware', async () => {
       const M1 = jest.fn().mockImplementation(element => (element.result = 'test'));
       const M2 = jest.fn();
-      const processor = createProcessor({ foo: 'bar' }, [ M1, M2 ]);
+      const processor = Processor({ foo: 'bar' }, [ M1, M2 ]);
 
       await processor();
 

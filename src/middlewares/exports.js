@@ -1,4 +1,4 @@
-export default async function exportMiddleware (element) {
+async function exportsMiddleware (element) {
   const { result, props, scope } = element;
 
   if (props && props.exports) {
@@ -17,3 +17,7 @@ export default async function exportMiddleware (element) {
     }
   }
 }
+
+exportsMiddleware._name = 'EXPORTS';
+
+export default exportsMiddleware;

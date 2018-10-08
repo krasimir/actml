@@ -2,23 +2,8 @@ import { STOP_PROCESSING, CONTINUE_PROCESSING } from '../constants';
 import childrenMiddleware from './children';
 import exportsMiddleware from './exports';
 
-const handleElementError = async function (error, props, element) {
-  if (props && props.onError) {
-    props.onError.mergeToProps({ error });
-
-    const onErrorStrategy = await props.onError.run(element);
-
-    if (onErrorStrategy === true) {
-      throw new Error(CONTINUE_PROCESSING);
-    }
-    throw new Error(STOP_PROCESSING);    
-  } else {
-    throw error;
-  }
-}
-
-export default async function executeMiddleware(element) {
-  const { func, props } = element;
+async function executeMiddleware(element) {
+  const { func, props, name } = element;
   var normalizedProps = { ...props };
 
   // normalizing props
@@ -27,7 +12,7 @@ export default async function executeMiddleware(element) {
     Object.keys(props).forEach(propName => {
       if (propName.charAt(0) === '$') {
         const prop = propName.substr(1, propName.length);
-        const value = element.readFromScope(prop);
+        const value = element.readFromScope(prop, name);
 
         if (typeof value !== 'undefined') {
           if (typeof props[propName] === 'string') {
@@ -54,9 +39,9 @@ export default async function executeMiddleware(element) {
   }
 
   // actual running of the function
-  try {
-    element.result = await func.call(element, normalizedProps);
-  } catch (error) {
-    await handleElementError(error, normalizedProps, element);
-  }
+  element.result = await func.call(element, normalizedProps);
 }
+
+executeMiddleware._name = 'EXECUTE';
+
+export default executeMiddleware;
