@@ -1,5 +1,5 @@
 /** @jsx A */
-import { A, run, Parallel } from '..';
+import { A, run } from '..';
 
 const fakeAsync = (resolveWith, delay) => new Promise(done => {
   setTimeout(() => done(resolveWith), delay);
@@ -183,15 +183,13 @@ describe('Given the ActML library', () => {
 
       const { scope, context } = await run(
         <A>
-          <Parallel>
-            <Bar exports='answer'>
-              <Z1 $answer/>
-            </Bar>
-            <Foo exports='answer'>
-              <Delay />
-              <Z2 $answer/>
-            </Foo>
-          </Parallel>
+          <Bar exports='answer'>
+            <Z1 $answer/>
+          </Bar>
+          <Foo exports='answer'>
+            <Delay />
+            <Z2 $answer/>
+          </Foo>
         </A>
       );
 

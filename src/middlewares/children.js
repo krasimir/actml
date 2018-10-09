@@ -15,15 +15,10 @@ async function childrenMiddleware(element) {
   // nested tags
   } else if (children && children.length > 0) {
     let pointer = 0;
-    let parallelProcessing = !!func.processChildrenInParallel;
 
-    if (parallelProcessing) {
-      await Promise.all(children.map(w => w.run(element)));
-    } else {
-      while(pointer < children.length) {
-        await children[pointer].run(element);
-        pointer++;
-      }
+    while(pointer < children.length) {
+      await children[pointer].run(element);
+      pointer++;
     }
   }
 }

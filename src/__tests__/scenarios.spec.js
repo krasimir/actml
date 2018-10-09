@@ -7,7 +7,7 @@ const fakeAsync = (resolveWith, delay) => new Promise(done => {
 
 describe('Given the ActML library', () => {
   describe('when we have elements running in parallel but also we use the scope API', () => {
-    it('must handle the async processes in the correct order', async () => {
+    it.skip('must handle the async processes in the correct order', async () => {
       const storage = [];
       const Z = function ZZ() { return fakeAsync(42, 40); }
       const B = jest.fn();
@@ -17,13 +17,11 @@ describe('Given the ActML library', () => {
 
       await run(
         <A scope='newIdx' debug>
-          <Parallel>
-            <Z exports='newIdx' />
-            <B>
-              <C />
-              <D />
-            </B>
-          </Parallel>
+          <Z exports='newIdx' />
+          <B>
+            <C />
+            <D />
+          </B>
           <A $newIdx>{ ({ newIdx }) => <E newIdx={ newIdx } /> }</A>
         </A>
       );

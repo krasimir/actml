@@ -1,4 +1,3 @@
-import Parallel from './elements/Parallel';
 import * as ReduxMethods from './elements/redux';
 import execute from './middlewares/execute';
 import result from './middlewares/result';
@@ -43,7 +42,6 @@ const A = create;
 export {
   A,
   run,
-  Parallel,
   Processor,
   Redux
 };
