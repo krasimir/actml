@@ -24,24 +24,7 @@ describe('Given the Debugger utility', () => {
         {}
       );
 
-      expect(logs).toStrictEqual([
-        ["<A>"],
-        [ "props:", { "debug": expect.any(Object), "scope": "*" } ],
-        ["<Z>"],
-        ["<B>"],
-        ["</B>"],
-        ["result:", 42],
-        ["</Z>"],
-        ["<C>"],
-        ["</C>"],
-        ["<B>"],
-        [ "props:", { "exports": "resultOfB" } ],
-        [ "</B>" ],
-        [ "result:", 42 ],
-        [ "</A>" ],
-        [ "result:", { "scope": { "resultOfB": 42 }, "context": {} } ]
-      ])
-
+      expect(logs).toStrictEqual([["<A>"], ["<Z>"], ["<B>"], ["</B>"], ["</Z>"], ["<C>"], ["</C>"], ["<B>"], ["</B>"],["</A>"]])
     });
   });
 });

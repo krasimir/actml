@@ -7,41 +7,32 @@ const fakeAsync = (resolveWith, delay) => new Promise(done => {
 
 describe('Given the ActML library', () => {
   describe('when running a simple function', () => {
-    it('should run the function as it is a jsx syntax', async () => {
-      const Func = jest.fn();
-
-      await run(Func);
-
-      expect(Func).toBeCalled();
-    });
     it('should return the result of the function', async () => {
       const Func = jest.fn().mockImplementation(() => 'foo');
 
-      const result = await run(Func);
+      const result = await run(<Func />);
 
       expect(result).toBe('foo');
     });
     it('should return the result of the function even if it is async', async () => {
       const Func = jest.fn().mockImplementation(() => fakeAsync('foo', 30));
 
-      const result = await run(Func);
+      const result = await run(<Func />);
 
       expect(result).toBe('foo');
     });
-    it('should run the function and its children as it is a jsx syntax', async () => {
+    it('should run the function and its children', async () => {
       const Z = jest.fn();
       const B = jest.fn();
       const Func = function () {
         return <A><Z /><B /></A>;
       };
 
-      await run(Func);
+      await run(<Func />);
 
       expect(Z).toBeCalled();
       expect(B).toBeCalled();
     });
-  });
-  describe('when running a jsx function', () => {
     it('should execute the function with the given params', async () => {
       const Func = jest.fn();
       const Z = <Func foo={ 10 }/>;
@@ -49,14 +40,6 @@ describe('Given the ActML library', () => {
       await run(Z);
 
       expect(Func).toBeCalledWith(expect.objectContaining({ foo: 10 }));
-    });
-    it(`- should execute the function with the given merged params
-        - return the result even if we use it as a tag`, async () => {
-      const Func = jest.fn();
-      const Z = <Func foo={ 10 }/>;
-      await run(<Z bar={ 20 }/>);
-
-      expect(Func).toBeCalledWith(expect.objectContaining({ foo: 10, bar: 20 }));
     });
     it(`should continue processing elements if we return such as a result`, async () => {
       const Bar = jest.fn();
@@ -283,32 +266,110 @@ describe('Given the ActML library', () => {
       expect(Handler).toBeCalled();
     });
   });
-  describe('when we have the FACC pattern', () => {
-    it(`- should run the FACC with the return as a param
-        - should continue processing the dialect returned by the FACC`, async () => {
+  describe('when we have an expression as a child', () => {
+    it('should provide an access to the passed child', async () => {
       const Z = jest.fn();
-      const B = jest.fn();
-      const C = () => 'bar';
-      const Logic = async () => fakeAsync({ status: false, answer: 42 }, 20);
+      const Logic = function({ children }) {
+        return <Z answer={ children.answer } />;
+      }
+
+      await run(<Logic>{{ answer: 20 }}</Logic>);
+
+      expect(Z).toBeCalledWith(expect.objectContaining({ answer: 20 }));
+    });
+    it('should provide an access to the passed children', async () => {
+      const Z = jest.fn();
+      const Logic = function({ children }) {
+        return <Z data={ children } />;
+      }
+
+      await run(<Logic>{ 20 }{ 30 }</Logic>);
+
+      expect(Z).toBeCalledWith(expect.objectContaining({ data: [20, 30] }));
+    });
+    it('should continue processing the children as ActML', async () => {
+      const Z = jest.fn();
+      const Logic = function({ children }) {
+        children(42);
+      }
 
       await run(
-        <A>
-          <C exports='foo' />
-          <Logic>
-            {
-              ({ status, answer }) => {
-                return status ? <Z /> : <B answer={ answer } $foo/>
-              }
+        <Logic>
+          {
+            value => {
+              return <Z value={ value }/>;
             }
-          </Logic>
-        </A>
+          }
+        </Logic>
       );
 
-      expect(Z).not.toBeCalled();
-      expect(B).toBeCalledWith(expect.objectContaining({ answer: 42, foo: 'bar' }));
+      expect(Z).toBeCalledWith(expect.objectContaining({ value: 42 }));
+    });
+    it('should still work even if we pass a generator', async () => {
+      const Z = jest.fn();
+      const Logic = function({ children }) {
+        children(42);
+      }
+
+      await run(
+        <Logic>
+          {
+            function * (answer) {
+              yield <Z answer={ answer } />
+            }
+          }
+        </Logic>
+      );
+
+      expect(Z).toBeCalledWith(expect.objectContaining({ answer: 42 }));
+    });
+    it('should allow us to process the children many times when they are ActML elements', async () => {
+      const Logic = async function ({ children }) {
+        await children({ answer: 42 });
+      }
+      Logic.processor = [ Processor.execute ];
+      const Z = jest.fn();
+      const ZWrapper = function ZWrapper({ answer }) {
+        return <Z answer={ answer }/>
+      }
+      const B = jest.fn();
+      const C = jest.fn();
+
+      await run(
+        <Logic>
+          <ZWrapper $answer/>
+          <B $answer><C $answer/></B>
+        </Logic>
+      );
+
+      expect(Z).toBeCalledWith(expect.objectContaining({ answer: 42 }));
+      expect(B).toBeCalledWith(expect.objectContaining({ answer: 42 }));
+      expect(C).toBeCalledWith(expect.objectContaining({ answer: 42 }));
+    });
+    it('should keep the context in the FACC', async () => {
+      const Z = jest.fn();
+      const Logic = async function({ children }) {
+        await children(42);
+      }
+      const context = {
+        myService: ({ value }) => value * 2
+      }
+
+      await run(
+        <Logic>
+          {
+            value => {
+              return <myService value={value} exports='answer'><Z $answer/></myService>;
+            }
+          }
+        </Logic>,
+        context
+      );
+
+      expect(Z).toBeCalledWith(expect.objectContaining({ answer: 84 }));
     });
   });
-  describe('when working with the pipeline', () => {
+  describe('when working with the custom processor', () => {
     it('should allow setting middlewares', async () => {
       const spyA = jest.fn();
       const spyB = jest.fn();

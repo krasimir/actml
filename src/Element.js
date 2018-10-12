@@ -19,6 +19,9 @@ export default function Element(func, props, children) {
     mergeToProps(additionalProps) {
       this.props = Object.assign({}, this.props, additionalProps);
     },
+    mergeToScope(additionalProps) {
+      this.scope = Object.assign({}, this.scope, additionalProps);
+    },
     dispatch(type, value) {
       if (this.scopedVars.indexOf(type) >= 0 || this.scopedVars[0] === '*') {
         this.scope[type] = value;
@@ -39,39 +42,20 @@ export default function Element(func, props, children) {
       }
       this.parent = parent;
       this.context = parent.context;
-
+      
       if (!this.processor) {
         this.processor = Processor(this, this.func.processor);
-      }
-
-      if (typeof func === 'string') {
-        if (this.context[func]) {
-          this.func = this.context[func];
-        } else {
-          throw new Error(`"${ func }" is missing in the context.`);
+        
+        if (typeof func === 'string') {
+          if (this.context[func]) {
+            this.func = this.context[func];
+          } else {
+            throw new Error(`"${ func }" is missing in the context.`);
+          }
         }
       }
 
       return await this.processor();
-    }
-  }
-}
-
-// Static
-Element.createRootElement = function (context) { 
-  return {
-    context,
-    scope: {},
-    dispatch(){},
-    readFromScope(key, requester) {
-      let value = this.scope[key];
-      if (typeof value !== 'undefined') return value;
-
-      value = this.context[key];
-      if (typeof value !== 'undefined') return value;
-
-      requester = requester === '' ? 'unknown' : requester;
-      throw new Error(`Undefined variable "${ key }" requested by <${ requester }>.`);
     }
   }
 }

@@ -32,8 +32,8 @@ describe('Given the Redux integration', () => {
       await run(
         <Subscribe type='ANSWER'>
           {
-            ({ value }) => {
-              return <Z value={ value } />
+            ({ action }) => {
+              return <Z value={ action.value } />
             }
           }
         </Subscribe>
@@ -49,7 +49,7 @@ describe('Given the Redux integration', () => {
       expect(Z).toBeCalledWith(expect.objectContaining({ value: 200 }));
       expect(Z).toBeCalledWith(expect.objectContaining({ value: 100 }));
     });
-    it('should be able to register the action in the context', async () => {
+    it('should be able to register the action in the scope', async () => {
       const ANSWER = 'ANSWER';
       const store = setup(
         { answer: null },
@@ -58,8 +58,8 @@ describe('Given the Redux integration', () => {
       const Z = jest.fn();
       
       await run(
-        <Subscribe type={ ANSWER } exports='action'>
-          <Z $action />
+        <Subscribe type={ ANSWER } exports='aaa'>
+          <Z $aaa />
         </Subscribe>
       );
 
@@ -69,8 +69,8 @@ describe('Given the Redux integration', () => {
       await delay();
 
       expect(Z).toHaveBeenCalledTimes(2);
-      expect(Z).toHaveBeenNthCalledWith(1, expect.objectContaining({ action: { type: ANSWER, value: 100 } }));
-      expect(Z).toHaveBeenNthCalledWith(2, expect.objectContaining({ action: { type: ANSWER, value: 200 } }));
+      expect(Z).toHaveBeenNthCalledWith(1, expect.objectContaining({ aaa: { type: ANSWER, value: 100 } }));
+      expect(Z).toHaveBeenNthCalledWith(2, expect.objectContaining({ aaa: { type: ANSWER, value: 200 } }));
     });
   });
   describe('when using the SubscribeOnce element', () => {
@@ -89,11 +89,11 @@ describe('Given the Redux integration', () => {
           <SubscribeOnce type='ZAR' exports='action'>
             <C $action />
           </SubscribeOnce>
-          <SubscribeOnce type='ANSWER'>
+          <SubscribeOnce type='ANSWER' exports='data'>
             {
-              ({ value }) => (
+              ({ data }) => (
                 <A>
-                  <Z value={ value } />
+                  <Z value={ data.value } />
                   <Inspect>{ ({ numOfSubscribes }) => <B numOfSubscribes={ numOfSubscribes } /> }</Inspect>
                 </A>
               )

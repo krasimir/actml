@@ -1,12 +1,6 @@
-export const getFuncName = function(fun) {
-  if (typeof fun === 'string') return fun;
-
-  var ret = fun.toString();
-  ret = ret.substr('function '.length);
-  ret = ret.substr(0, ret.indexOf('('));
-
-  if (ret === '') return 'unknown';
-  return ret;
+export const getFuncName = function (func) {
+  const result = /function\*?\s+([\w\$]+)\s*\(/.exec(func.toString());
+  return result ? result[1] : '';
 }
 export const getScopedVars = function (props) {
   let scoped = [];

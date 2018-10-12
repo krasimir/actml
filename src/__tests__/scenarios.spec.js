@@ -6,27 +6,24 @@ const fakeAsync = (resolveWith, delay) => new Promise(done => {
 });
 
 describe('Given the ActML library', () => {
-  describe('when we have elements running in parallel but also we use the scope API', () => {
-    it.skip('must handle the async processes in the correct order', async () => {
-      const storage = [];
-      const Z = function ZZ() { return fakeAsync(42, 40); }
-      const B = jest.fn();
-      const C = jest.fn().mockImplementation(() => fakeAsync(null, 10));
-      const D = jest.fn().mockImplementation(() => fakeAsync(null, 10));
-      const E = jest.fn();
+  describe('when we have a FACC that returns raw data', () => {
+    it('should present the data at the exit', async () => {
+      async function GetData({ children }) {
+        return children([{ n: 2 }, { n: 4 }]);
+      }
+      function Get() {
+        return (
+          <GetData exports='arr'>
+            {data => {
+              return data.map(({ n }) => n + 1);
+            }}
+          </GetData>
+        );
+      }
 
-      await run(
-        <A scope='newIdx' debug>
-          <Z exports='newIdx' />
-          <B>
-            <C />
-            <D />
-          </B>
-          <A $newIdx>{ ({ newIdx }) => <E newIdx={ newIdx } /> }</A>
-        </A>
-      );
+      const { arr } = await run(<A><Get /></A>);
 
-      expect(E).toBeCalledWith({ newIdx: 42 });
+      expect(arr).toStrictEqual([ 3, 5 ]);
     });
   });
 });

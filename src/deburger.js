@@ -25,13 +25,11 @@ export default customOptions => {
 
     if (options.severity[type]) {
       if (type === 'IN') {
-        log(`${ indent }<${ element.name }>`);
-        element.props && log(`${ indent }props:`, element.props)
+        log(`<${ element.name }>`);
       } else if (type === 'OUT') {
-        log(`${ indent }</${ element.name }>`);
-        element.result && log(`${ indent }result:`, element.result)
+        log(`</${ element.name }>`);
       } else {
-        log(`${ indent }<${ element.name }>(${ type })`);
+        log(`<${ element.name }>(${ type })`);
       }
     }
   }

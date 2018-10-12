@@ -1,11 +1,9 @@
-import { execute, exports, result, children } from './middlewares';
+import { execute, children } from './middlewares';
 import deburger from './deburger';
 import { isItAnElement } from './utils';
 
 const DEFAULT_MIDDLEWARES = [
   execute,
-  exports,
-  result,
   children
 ];
 
@@ -41,28 +39,30 @@ export default function Processor(element, middlewares = DEFAULT_MIDDLEWARES) {
 
   // running the middlewares
   return async function () {
-    let entry;
-    let index = 0;
+    debugMode && element.debug('IN');
+    for(let index = 0; index < middlewares.length; index++) {
+      let entry = middlewares[index];
 
-    try {
-      debugMode && element.debug('IN');
-      while(entry = middlewares[index]) {
+      if (!entry) {
+        throw new Error(`Falsy middleware at index ${ index }!`);
+      }
+
+      try {
         debugMode && element.debug(`${ entry._name }_IN`);
         await entry(element);
-        index++;
         debugMode && element.debug(`${ entry._name }_OUT`);
-      }
-      debugMode && element.debug('OUT');
-    } catch(error) {
-      if (props && props.onError) {
-        props.onError.mergeToProps({ error });
-        if (!await props.onError.run(element)) {
-          index = middlewares.length + 1;
-        };
-      } else {
-        throw error;
+      } catch(error) {
+        if (props && props.onError) {
+          props.onError.mergeToProps({ error });
+          if (!await props.onError.run(element)) {
+            index = middlewares.length + 1;
+          };
+        } else {
+          throw error;
+        }
       }
     }
+    debugMode && element.debug('OUT');
     
     return element.result;
   }
