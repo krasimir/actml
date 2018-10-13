@@ -1,5 +1,5 @@
 /** @jsx A */
-import { A, Redux } from 'actml';
+import { A, run, Redux } from 'actml';
 import {
   POSTS_LOADED,
   GET_DETAILS,
@@ -16,22 +16,23 @@ const FetchPosts = () => (
   </getPosts>
 );
 
-export default function StartUp() {
-  return (
-    <A>
+export default function StartUp(context) {
+  run(
+    <A debug>
       <FetchPosts />    
       <Subscribe type={ NEW_POST } exports='post'>
         <addPost $post />
         <FetchPosts />
       </Subscribe>
-      <Subscribe type={ GET_DETAILS } exports={ ({ id }) => ({ id })}>
-        <getPost $id exports='postWithDetails'/>
+      <Subscribe type={ GET_DETAILS }>
+        <getPost exports='postWithDetails' $action={ ({ id }) => ({ id })}/>
         <Action type={ UPDATE_POST } $postWithDetails='data' />
       </Subscribe>
-      <Subscribe type={ DELETE_POST } exports={ ({ id }) => ({ id })}>
-        <deletePost $id />
+      <Subscribe type={ DELETE_POST }>
+        <deletePost $action={ ({ id }) => ({ id })} />
         <FetchPosts />
       </Subscribe>
-    </A>
+    </A>,
+    context
   )
 }

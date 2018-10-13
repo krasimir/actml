@@ -5,7 +5,7 @@ import createStore from './redux/store';
 import Header from './components/Header';
 import NewPost from './components/NewPost';
 import { run } from 'actml';
-import Logic from './logic';
+import logic from './logic';
 import { getPosts, addPost, getPost, deletePost } from './services/posts';
 
 class App extends React.Component {
@@ -24,12 +24,9 @@ ReactDOM.render(
   document.querySelector('#content')
 );
 
-run(
-  Logic,
-  {
-    getPosts: getPosts('/api/posts'),
-    addPost: addPost('/api/post'),
-    getPost: getPost('/api/post/'),
-    deletePost: deletePost('/api/post/')
-  }
-);
+logic({
+  getPosts: getPosts('/api/posts'),
+  addPost: addPost('/api/post'),
+  getPost: getPost('/api/post/'),
+  deletePost: deletePost('/api/post/')
+});

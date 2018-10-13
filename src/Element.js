@@ -57,6 +57,7 @@ export default function Element(func, props, children) {
         if (typeof func === 'string') {
           if (this.context[func]) {
             this.func = this.context[func];
+            this.name = getFuncName(this.func);
           } else {
             throw new Error(`"${ func }" is missing in the context.`);
           }

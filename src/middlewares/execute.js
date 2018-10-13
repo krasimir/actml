@@ -75,11 +75,11 @@ async function processResult(element) {
   }
 }
 function resolveExports(element) {
-  const { props, scope } = element;
+  const { props, scope, result } = element;
 
   if (props && props.exports) {
     if (typeof props.exports === 'function') {
-      const exportedProps = props.exports(element.result);
+      const exportedProps = props.exports(result);
 
       Object
         .keys(exportedProps)
@@ -88,7 +88,7 @@ function resolveExports(element) {
           element.dispatch(key, exportedProps[key]);
         });
     } else {
-      scope[props.exports] = element.result;
+      scope[props.exports] = result;
       element.dispatch(props.exports, element.result);
     }
   }
