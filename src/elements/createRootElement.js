@@ -1,5 +1,6 @@
-export default function Root(context) { 
+export default function createRootElement(context) { 
   return {
+    __actml: true,
     context,
     scope: {},
     dispatch(){},

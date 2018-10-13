@@ -1,20 +1,22 @@
 import Processor from './Processor';
-import { getScopedVars, getFuncName, getId } from './utils';
+import { getFuncName, getId } from './utils';
 
 export default function Element(func, props, children) {
+  const scopedVars = props && props.scope ? props.scope.split(/, ?/) : [];
+  let processor;
+
   return {
+    __actml: true,
     id: getId(),
     func,
     props,
     children,
-    scopedVars: getScopedVars(props),
     name: getFuncName(func),
     scope: {},
-    processor: undefined,
     result: undefined,
     context: undefined,
     parent: undefined,
-    debug: undefined,
+    debug: false,
 
     mergeToProps(additionalProps) {
       this.props = Object.assign({}, this.props, additionalProps);
@@ -23,7 +25,7 @@ export default function Element(func, props, children) {
       this.scope = Object.assign({}, this.scope, additionalProps);
     },
     dispatch(type, value) {
-      if (this.scopedVars.indexOf(type) >= 0 || this.scopedVars[0] === '*') {
+      if (scopedVars.indexOf(type) >= 0 || scopedVars[0] === '*') {
         this.scope[type] = value;
       } else {
         this.parent.dispatch(type, value);
@@ -42,9 +44,15 @@ export default function Element(func, props, children) {
       }
       this.parent = parent;
       this.context = parent.context;
+      this.debug = parent.debug;
+
+      // setting the debug flag
+      if (this.props && typeof this.props.debug !== 'undefined') {
+        this.debug = true;
+      }
       
-      if (!this.processor) {
-        this.processor = Processor(this, this.func.processor);
+      if (!processor) {
+        processor = Processor(this, this.func.processor);
         
         if (typeof func === 'string') {
           if (this.context[func]) {
@@ -55,7 +63,7 @@ export default function Element(func, props, children) {
         }
       }
 
-      return await this.processor();
+      return await processor();
     }
   }
 }

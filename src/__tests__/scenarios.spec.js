@@ -1,9 +1,5 @@
 /** @jsx A */
-import { A, run, Parallel } from '..';
-
-const fakeAsync = (resolveWith, delay) => new Promise(done => {
-  setTimeout(() => done(resolveWith), delay);
-});
+import { A, run } from '..';
 
 describe('Given the ActML library', () => {
   describe('when we have a FACC that returns raw data', () => {

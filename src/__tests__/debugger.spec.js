@@ -1,10 +1,22 @@
 /** @jsx A */
 import { A, run } from '..';
+import deburger from '../deburger';
+
+jest.mock('../deburger');
 
 describe('Given the Debugger utility', () => {
+  afterAll(() => {
+    deburger.mockRestore();
+  });
   describe('when we enable the debugger', () => {
     it('should print out logs', async () => {
       const logs = [];
+      deburger.mockImplementation((element, type) => {
+        logs.push({
+          name: element.name,
+          type
+        })
+      });
       const customLogger = (...args) => {
         logs.push(args.map(a => {
           if (typeof a === 'string') return a.replace(/ +/, '');
@@ -24,7 +36,50 @@ describe('Given the Debugger utility', () => {
         {}
       );
 
-      expect(logs).toStrictEqual([["<A>"], ["<Z>"], ["<B>"], ["</B>"], ["</Z>"], ["<C>"], ["</C>"], ["<B>"], ["</B>"],["</A>"]])
+      expect(logs).toStrictEqual(
+        [
+          {
+            name: 'A',
+            type: 'IN'
+          },
+          {
+            name: 'Z',
+            type: 'IN'
+          },
+          {
+            name: 'B',
+            type: 'IN'
+          },
+          {
+            name: 'B',
+            type: 'OUT'
+          },
+          {
+            name: 'Z',
+            type: 'OUT'
+          },
+          {
+            name: 'C',
+            type: 'IN'
+          },
+          {
+            name: 'C',
+            type: 'OUT'
+          },
+          {
+            name: 'B',
+            type: 'IN'
+          },
+          {
+            name: 'B',
+            type: 'OUT'
+          },
+          {
+            name: 'A',
+            type: 'OUT'
+          }
+        ]
+      )
     });
   });
 });

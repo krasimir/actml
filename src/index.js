@@ -4,25 +4,19 @@ import childrenMiddleware from './middlewares/children';
 import Element from './Element';
 import { isItAnElement } from './utils';
 import AElement from './elements/A';
-import Root from './elements/Root';
+import createRootElement from './elements/createRootElement';
 
 function create(func, props, ...children) {
-  // using A as a dymmy component
-  if (func === create) {
-    return Element(
-      AElement,
-      { ...props, scope: '*' },
-      children
-    );
-  }
-  return Element(func, props, children);
+  return func === create ?
+    Element(AElement, { ...props, scope: '*' }, children) :
+    Element(func, props, children);
 }
 
 async function run(element, context = {}) {
   if (isItAnElement(element)) {
-    return await element.run(Root(context));
+    return await element.run(createRootElement(context));
   }
-  throw new Error('`run` should be called with an ActML element.');
+  throw new Error('`run` should be called with an ActML element. You are passing:', element);
 }
 
 const Redux = { ...ReduxMethods };

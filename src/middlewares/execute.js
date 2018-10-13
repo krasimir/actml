@@ -1,58 +1,82 @@
 import { isItAnElement } from '../utils';
 import { A } from '../';
 
-export default async function executeMiddleware(element) {
-  const { func, props, name, children, scope } = element;
-  var normalizedProps = { ...props };
+function normalizeProps(element) {
+  const { props, name } = element;
+  let normalizedProps = { ...props };
 
-  // normalizing props
-  if (props) {
-    normalizedProps = { ...props };
-    Object.keys(props).forEach(propName => {
-      if (propName.charAt(0) === '$') {
-        const prop = propName.substr(1, propName.length);
-        const value = element.readFromScope(prop, name);
+  if (!props) return normalizedProps;
 
-        if (typeof value !== 'undefined') {
-          if (typeof props[propName] === 'string') {
-            normalizedProps[props[propName]] = value;  
-          } else if (typeof props[propName] === 'function') {
-            normalizedProps = {
-              ...normalizedProps,
-              ...props[propName](value)
-            }
-          } else {
-            normalizedProps[prop] = value;
+  Object.keys(props).forEach(propName => {
+    if (propName.charAt(0) === '$') {
+      const prop = propName.substr(1, propName.length);
+      const value = element.readFromScope(prop, name);
+
+      if (typeof value !== 'undefined') {
+        if (typeof props[propName] === 'string') {
+          normalizedProps[props[propName]] = value;  
+        } else if (typeof props[propName] === 'function') {
+          normalizedProps = {
+            ...normalizedProps,
+            ...props[propName](value)
           }
-          delete normalizedProps[propName];
+        } else {
+          normalizedProps[prop] = value;
         }
+        delete normalizedProps[propName];
       }
-    });
-  }
+    }
+  });
+
+  return normalizedProps;
+}
+function defineChildrenProp(element) {
+  const { children } = element;
 
   // passing a `children` prop
   if (children.length === 1 && !isItAnElement(children[0]) && typeof children[0] === 'function') {
     // FACC
-    normalizedProps.children = (...params) => {
+    return (...params) => {
       if (params.length === 0) params = [ undefined ];
       return A(children[0].bind(null, ...params), null).run(element);
     }
   } else if (children.find(isItAnElement)) {
-    // Everything else. The `children` prop is always considered a function.
-    normalizedProps.children = async (newProps) => {
+    // if an array of Elements pass a function
+    return async (newProps) => {
       element.mergeToScope(newProps);
       for(let i=0; i<children.length; i++) {
         await children[i].run(element);
       }
     }
-  } else {
-    normalizedProps.children = children.length === 1 ? children[0] : children;
   }
 
-  // actual running of the function
-  element.result = await func.call(element, normalizedProps);
+  return children.length === 1 ? children[0] : children;
+}
+async function processResult(element) {
+  const { result } = element;
 
-  // exporting data
+  if (result) {
+    // another ActML element
+    if (isItAnElement(result)) {
+      await result.run(element);
+    } else if (typeof result.next === 'function') {
+      // generator
+      const gen = result;
+      let genRes = { value: undefined, done: false };
+
+      while(!genRes.done) {
+        genRes = gen.next(genRes.value);
+        if (isItAnElement(genRes.value)) {
+          genRes.value = await genRes.value.run(element);
+        }
+      }
+      element.result = genRes.value;
+    }
+  }
+}
+function resolveExports(element) {
+  const { props, scope } = element;
+
   if (props && props.exports) {
     if (typeof props.exports === 'function') {
       const exportedProps = props.exports(element.result);
@@ -68,28 +92,13 @@ export default async function executeMiddleware(element) {
       element.dispatch(props.exports, element.result);
     }
   }
+}
 
-  // processing the result of the function
-  if (element.result) {
-    // another ActML element
-    if (isItAnElement(element.result)) {
-      if (props && props.debug) {
-        element.result.mergeToProps({ debug: props.debug });
-      }
-      return await element.result.run(element);
-    }
-    // generator
-    if (typeof element.result.next === 'function') {
-      const gen = element.result;
-      let genRes = { value: undefined, done: false };
-
-      while(!genRes.done) {
-        genRes = gen.next(genRes.value);
-        if (isItAnElement(genRes.value)) {
-          genRes.value = await genRes.value.run(element);
-        }
-      }
-      element.result = genRes.value;
-    }
-  }
+export default async function executeMiddleware(element) {
+  element.result = await element.func.call(element, {
+    ...normalizeProps(element),
+    children: defineChildrenProp(element)
+  });
+  await processResult(element);
+  resolveExports(element);
 }
