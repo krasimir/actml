@@ -229,21 +229,21 @@ describe('Given the ActML library', () => {
       const C = jest.fn();
       
       await run(
-        <App exports='answer'>
+        <App scope='answer'>
           <Wrapper onError={ <HandleErrorA><Dummy exports='answer' /></ HandleErrorA> }>
             <Problem />
             <AfterErrorA />
           </Wrapper>
           <Wrapper>
             <B />
-            <C/>
+            <C $answer/>
           </Wrapper>
         </App>
       );
       expect(HandleErrorA).toBeCalled();
       expect(AfterErrorA).not.toBeCalled();
       expect(B).toBeCalled();
-      expect(C).toBeCalled();
+      expect(C).toBeCalledWith(expect.objectContaining({ answer: 42 }));
     });
     it('should handle the error of the children', async () => {
       const Problem = function() {

@@ -13,7 +13,6 @@
 - [Context API](#context-api)
 - [Predefined elements](#predefined-elements)
   - [Wrapper that scopes everything](#wrapper-that-scopes-everything)
-  - [Running elements in parallel](#running-elements-in-parallel)
 - [Error handling](#error-handling)
 - [Examples](#examples)
 
@@ -34,8 +33,8 @@ run(<Greeting />).then(
 What if we have more functions, they depend on each other and some of them are asynchronous:
 
 ```js
-const Greeting = function({ name }) {
-  return `Hey ${name}!`;
+const Greeting = function({ name, children }) {
+  children(`Hey ${name}!`);
 };
 async function GetProfileName() {
   const response = await fetch('https://reqres.in/api/users/2');
@@ -67,7 +66,7 @@ Let's see step by step what ActML does:
 
 _Here is a working [Codesandbox](https://codesandbox.io/s/341xn5vrlq) of the code above._
 
-So, that is the concept of ActML. It allows us to define in a declarative fashion our business logic. Same as our UI. There is nothing (almost) imperative. In fact all the code that we pass to the `run` function is nothing but definitions of _what_ should happen. It is not saying _how_. This is extremely powerful concept because it shifts the responsibility to another level and makes the development a lot more easier. We use composition over raw implementation. If you like this way of thinking then ActML may be your way to deal with asynchronous logic.
+So, that is the concept of ActML. It allows us to define in a declarative fashion our business logic. Same as our UI. There is nothing (almost) imperative. In fact all the code that we pass to the `run` function is nothing but definitions of _what_ should happen. It is not saying _how_. This is extremely powerful concept because it shifts the responsibility to another levels and makes the development a lot more easier. We use composition over raw implementation. If you like this way of thinking then ActML may be your way to deal with asynchronous logic.
 
 ## What you need to use ActML
 
@@ -151,8 +150,8 @@ run(<Foo name='John' />); // outputs "Hello John"
 The output or in other words the returned value of your element is available to its children via the [FACC (function as children pattern)](https://github.com/krasimir/react-in-patterns/blob/master/book/chapter-4/README.md#function-as-a-children-render-prop):
 
 ```js
-const Foo = function (props) {
-  return `Hello ${ props.name }`;
+const Foo = function ({ name, children }) {
+  children(`Hello ${ name }`);
 }
 
 run(
@@ -187,7 +186,7 @@ const Bar = ({ name }) => console.log('Bar: ' + name);
 </App>
 ```
 
-Every ActML element has a `scope` object. It is really just a plain JavaScript object `{}` and every time when we use `exports` we are saving something there. For example the `scope` object of the `Foo` element is equal to `{ name: 'Jon Snow' }`. Together with creating the `name` variable in the `scope` of `Foo` we are also _sending_ an event to the parent `App` element. Then the `App` element should decide if it is interested in that variable or not. If yes then it keeps it in its scope. In the example above that is not happening so the `name` variable is only set in the scope of `<Foo>`. That is why in this latest example we will get `Zar: Jon Snow` followed by the error `Undefined variable "name".`.
+Every ActML element has a `scope` object. It is really just a plain JavaScript object `{}` and every time when we use `exports` we are saving something there. For example the `scope` object of the `Foo` element is equal to `{ name: 'Jon Snow' }`. Together with creating the `name` variable in the `scope` of `Foo` we are also _sending_ an event to the parent `App` element. Then the `App` element should decide if it is interested in that variable or not. If yes then it keeps it in its scope. In the example above that is not happening so the `name` variable is only set in the scope of `<Foo>`. That is why in this latest example we will get `Zar: Jon Snow` followed by the error `Undefined variable "name" requested by <Bar>.`.
 
 To solve the problem we have to instruct `<App>` element to _catch_ the `name` variable and also keeps it in its scope. This happens by the special prop called `scope`:
 
@@ -265,7 +264,7 @@ We can also pass a function and apply some transformation of the data before imp
 <Bar $uppercaseName={ name => ({ len: name.length }) } />
 ```
 
-This wat `<Bar>` element will receive a prop called `len` which contains the number of letters in the `uppercaseName` variable.
+`<Bar>` element will receive a prop called `len` which contains the number of letters in the `uppercaseName` variable.
 
 ## Context API
 
@@ -324,19 +323,6 @@ There are some predefined elements that come with ActML core package.
 ### Wrapper that scopes everything
 
 The `<A>` element has the ability to scope everything. So if you need that functionality and you a wrapper this is a good element to use.
-
-### Running elements in parallel
-
-```js
-import { A, run, Parallel } from 'actml';
-
-const Z = await function () { ... }
-const M = function () { ... }
-
-run(<Parallel><Z /><M /></Parallel>);
-```
-
-`Z` and `M` run in parallel which means that `M` is not waiting for `Z` to finish.
 
 ## Error handling
 
@@ -408,8 +394,8 @@ const C = () => console.log('C');
 
 await run(
   <App exports='answer'>
-    <Wrapper>
-      <Problem onError={ <HandleError /> } />
+    <Wrapper onError={ <HandleError /> }>
+      <Problem/>
       <Z />
     </Wrapper>
     <Wrapper>
