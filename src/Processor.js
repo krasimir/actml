@@ -1,4 +1,5 @@
-import { execute, children } from './middlewares';
+import execute from './middlewares/execute';
+import children from './middlewares/children';
 import deburger from './deburger';
 
 const DEFAULT_MIDDLEWARES = [

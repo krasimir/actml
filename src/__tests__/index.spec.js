@@ -326,6 +326,7 @@ describe('Given the ActML library', () => {
     it('should allow us to process the children many times when they are ActML elements', async () => {
       const Logic = async function ({ children }) {
         await children({ answer: 42 });
+        await children({ answer: 100 });
       }
       Logic.processor = [ Processor.execute ];
       const Z = jest.fn();
@@ -345,6 +346,9 @@ describe('Given the ActML library', () => {
       expect(Z).toBeCalledWith(expect.objectContaining({ answer: 42 }));
       expect(B).toBeCalledWith(expect.objectContaining({ answer: 42 }));
       expect(C).toBeCalledWith(expect.objectContaining({ answer: 42 }));
+      expect(Z).toBeCalledWith(expect.objectContaining({ answer: 100 }));
+      expect(B).toBeCalledWith(expect.objectContaining({ answer: 100 }));
+      expect(C).toBeCalledWith(expect.objectContaining({ answer: 100 }));
     });
     it('should keep the context in the FACC', async () => {
       const Z = jest.fn();
@@ -384,6 +388,7 @@ describe('Given the ActML library', () => {
 
       expect(spyA).not.toBeCalled();
       expect(spyB).toBeCalledWith(expect.objectContaining({
+        __actml: true,
         func: FooBar,
         name: 'FooBar'
       }));
@@ -433,35 +438,8 @@ describe('Given the ActML library', () => {
       expect(B).toBeCalledWith(expect.objectContaining({ data: undefined }));
     });
   });
-  describe('when we want control the logic flow', () => {
-    describe('and we want to stop the current branch', () => {
-      it('should stop the current branch if there is a Element.errors.STOP_PROCESSING thrown', async () => {
-        const App = () => {}
-        const Z = jest.fn();
-        const B = jest.fn().mockImplementation(() => {
-          throw new Error('Ops');
-        });
-        const C = jest.fn();
-
-        try {
-          await run(
-            <App>
-              <Z />
-              <B />
-              <C />
-            </App>
-          );
-        } catch(error) {
-          expect(error.message).toBe('Ops');
-          expect(Z).toBeCalled();
-          expect(B).toBeCalled();
-          expect(C).not.toBeCalled();
-        }
-      });
-    });
-  });
-  describe('when the word is a generator', () => {
-    it('should process the `yield`ed statements as words', async () => {
+  describe('when the function is a generator', () => {
+    it('should process the `yield`ed statements as elements', async () => {
       const Z = jest.fn();
       const B = jest.fn().mockImplementation(() => fakeAsync(42, 10));
       const C = jest.fn().mockImplementation(answer => `the answer is ${ answer }`);
