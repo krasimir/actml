@@ -1,14 +1,15 @@
 /** @jsx A */
 import { A, run } from '..';
 import deburger from '../deburger';
+import { formatElement } from '../deburger';
 
 jest.mock('../deburger');
 
 describe('Given the Debugger utility', () => {
-  afterAll(() => {
-    deburger.mockRestore();
-  });
   describe('when we enable the debugger', () => {
+    afterAll(() => {
+      jest.unmock('../deburger');
+    });
     it('should print out logs', async () => {
       const logs = [];
       deburger.mockImplementation((element, type) => {
@@ -17,18 +18,12 @@ describe('Given the Debugger utility', () => {
           type
         })
       });
-      const customLogger = (...args) => {
-        logs.push(args.map(a => {
-          if (typeof a === 'string') return a.replace(/ +/, '');
-          return a;
-        }));
-      }
       const Z = function Z() {};
       const B = function B() { return 42; };
       const C = function C() {};
 
       await run(
-        <A debug={ { log: customLogger } }>
+        <A debug>
           <Z><B /></Z>
           <C />
           <B exports='resultOfB'/>
@@ -80,6 +75,48 @@ describe('Given the Debugger utility', () => {
           }
         ]
       )
+    });
+    it('should display function names of functions passed via context', async () => {
+      const logs = [];
+      deburger.mockImplementation((element, type) => {
+        logs.push({
+          name: element.name,
+          type
+        })
+      });
+      const context = {
+        getData: () => {
+
+        }
+      }
+
+      await run(
+        <A debug>
+          <getData />
+        </A>,
+        context
+      );
+
+      expect(logs).toStrictEqual(
+        [
+          {
+            name: 'A',
+            type: 'IN'
+          },
+          {
+            name: 'getData',
+            type: 'IN'
+          },
+          {
+            name: 'getData',
+            type: 'OUT'
+          },
+          {
+            name: 'A',
+            type: 'OUT'
+          }
+        ]
+      );
     });
   });
 });

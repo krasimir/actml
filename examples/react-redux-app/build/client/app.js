@@ -74,6 +74,7 @@ function Element(func, props, children) {
         if (typeof func === 'string') {
           if (this.context[func]) {
             this.func = this.context[func];
+            this.name = (0, _utils.getFuncName)(this.func);
           } else {
             throw new Error('"' + func + '" is missing in the context.');
           }
@@ -751,18 +752,19 @@ async function processResult(element) {
 }
 function resolveExports(element) {
   var props = element.props,
-      scope = element.scope;
+      scope = element.scope,
+      result = element.result;
 
   if (props && props.exports) {
     if (typeof props.exports === 'function') {
-      var exportedProps = props.exports(element.result);
+      var exportedProps = props.exports(result);
 
       Object.keys(exportedProps).forEach(function (key) {
         scope[key] = exportedProps[key];
         element.dispatch(key, exportedProps[key]);
       });
     } else {
-      scope[props.exports] = element.result;
+      scope[props.exports] = result;
       element.dispatch(props.exports, element.result);
     }
   }
@@ -784,7 +786,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 var getFuncName = exports.getFuncName = function getFuncName(func) {
   var result = /function\*?\s+([\w\$]+)\s*\(/.exec(func.toString());
-  return result ? result[1] : '';
+  return result ? result[1] : 'unknown';
 };
 
 var isItAnElement = exports.isItAnElement = function isItAnElement(element) {

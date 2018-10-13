@@ -1,11 +1,14 @@
-const log = (...args) => console.log(...args);
-
 export default (element, type) => {
-  if (type === 'IN') {
-    log(`<${ element.name }>`);
-  } else if (type === 'OUT') {
-    log(`</${ element.name }>`);
-  } else {
-    log(`<${ element.name }>(${ type })`);
+  const { props, scope, result } = element;
+
+  switch(type) {
+    case 'IN':
+      console.log(`<${ element.name }>`, { props });
+      break;
+    case 'OUT':
+      console.log(`</${ element.name }>`, { scope, result });
+      break;
+    default:
+      console.log(`<${ element.name }>(${ type })`);
   }
 }
