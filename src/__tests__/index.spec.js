@@ -328,7 +328,6 @@ describe('Given the ActML library', () => {
         await children({ answer: 42 });
         await children({ answer: 100 });
       }
-      Logic.processor = [ Processor.execute ];
       const Z = jest.fn();
       const ZWrapper = function ZWrapper({ answer }) {
         return <Z answer={ answer }/>
@@ -373,26 +372,7 @@ describe('Given the ActML library', () => {
       expect(Z).toBeCalledWith(expect.objectContaining({ answer: 84 }));
     });
   });
-  describe('when working with the custom processor', () => {
-    it('should allow setting middlewares', async () => {
-      const spyA = jest.fn();
-      const spyB = jest.fn();
-      const FooBar = function () {
-        spyA();
-      }
-      FooBar.processor = [
-        spyB
-      ];
-
-      await run(<FooBar />);
-
-      expect(spyA).not.toBeCalled();
-      expect(spyB).toBeCalledWith(expect.objectContaining({
-        __actml: true,
-        func: FooBar,
-        name: 'FooBar'
-      }));
-    });
+  describe('when we want to control the processing of the children', () => {
     it(`- should be possible to process the children many times
         - and pass data to them`, async () => {
       const store = {
@@ -407,7 +387,6 @@ describe('Given the ActML library', () => {
           await children();
         });
       }
-      Func.processor = [ Processor.execute ];
 
       const Z = jest.fn();
       const B = jest.fn();

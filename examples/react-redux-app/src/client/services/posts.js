@@ -1,11 +1,11 @@
 export function getPosts(url) {
-  return async () => {
+  return async function getPosts () {
     const result = await fetch(url);
     return result.json();
   };
 }
 export function addPost(url) {
-  return async ({ post }) => {
+  return async function addPost ({ post }){
     await fetch(url, {
       method: 'POST',
       headers: {
@@ -17,13 +17,13 @@ export function addPost(url) {
   };
 }
 export function getPost(url) {
-  return async ({ id }) => {
+  return async function getPost ({ id }) {
     const result = await fetch(url + id);
     return result.json();
   };
 }
 export function deletePost(url) {
-  return async ({ id }) => {
+  return async function deletePost ({ id }) {
     const result = await fetch(url + id, {
       method: 'DELETE',
       headers: {

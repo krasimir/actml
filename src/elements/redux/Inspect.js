@@ -1,5 +1,4 @@
 import Integration from './Integration';
-import execute from '../../middlewares/execute';
 
 export default function Inspect({ children }) {
   const inspection = {
@@ -7,4 +6,3 @@ export default function Inspect({ children }) {
   }
   children(inspection);
 }
-Inspect.processor = [ execute ];

@@ -32,7 +32,7 @@ describe('Given the Redux integration', () => {
       await run(
         <Subscribe type='ANSWER'>
           {
-            ({ action }) => {
+            action => {
               return <Z value={ action.value } />
             }
           }
@@ -49,38 +49,6 @@ describe('Given the Redux integration', () => {
       expect(Z).toBeCalledWith(expect.objectContaining({ value: 200 }));
       expect(Z).toBeCalledWith(expect.objectContaining({ value: 100 }));
     });
-    it('should be able to register the action in the scope', async () => {
-      const ANSWER = 'ANSWER';
-      const store = setup(
-        { answer: null },
-        (state, action) => (action.type === 'ANSWER' ? { answer: action.value } : state)
-      );
-      const Z = jest.fn();
-      const B = jest.fn();
-      
-      await run(
-        <A>
-          <Subscribe type={ ANSWER } exports='aaa'>
-            <Z $aaa />
-          </Subscribe>
-          <Subscribe type={ ANSWER }>
-            <B $action/>
-          </Subscribe>
-        </A>
-      );
-
-      store.dispatch({ type: ANSWER, value: 100 });
-      await delay();
-      store.dispatch({ type: ANSWER, value: 200 });
-      await delay();
-
-      expect(Z).toHaveBeenCalledTimes(2);
-      expect(Z).toHaveBeenNthCalledWith(1, expect.objectContaining({ aaa: { type: ANSWER, value: 100 } }));
-      expect(Z).toHaveBeenNthCalledWith(2, expect.objectContaining({ aaa: { type: ANSWER, value: 200 } }));
-      expect(B).toHaveBeenCalledTimes(2);
-      expect(B).toHaveBeenNthCalledWith(1, expect.objectContaining({ action: { type: ANSWER, value: 100 } }));
-      expect(B).toHaveBeenNthCalledWith(2, expect.objectContaining({ action: { type: ANSWER, value: 200 } }));
-    });
   });
   describe('when using the SubscribeOnce element', () => {
     it('should subscribe to a Redux action only once', async () => { 
@@ -95,14 +63,18 @@ describe('Given the Redux integration', () => {
       await run(
         <A>
           <SubscribeOnce type='FOO' />
-          <SubscribeOnce type='ZAR' exports='action'>
-            <C $action />
+          <SubscribeOnce type='ZAR'>
+            {
+              action => {
+                return <C { ...action } />
+              }
+            }
           </SubscribeOnce>
           <SubscribeOnce type='ANSWER' exports='data'>
             {
-              ({ data }) => (
+              ({ value }) => (
                 <A>
-                  <Z value={ data.value } />
+                  <Z value={ value } />
                   <Inspect>{ ({ numOfSubscribes }) => <B numOfSubscribes={ numOfSubscribes } /> }</Inspect>
                 </A>
               )
@@ -122,7 +94,7 @@ describe('Given the Redux integration', () => {
       expect(Z).toHaveBeenCalledTimes(1);
       expect(Z).toBeCalledWith(expect.objectContaining({ value: 100 }));
       expect(B).toBeCalledWith(expect.objectContaining({ numOfSubscribes: 2 }));
-      expect(C).toBeCalledWith(expect.objectContaining({ action: { type: 'ZAR', foo: 'bar' } }));
+      expect(C).toBeCalledWith(expect.objectContaining({ type: 'ZAR', foo: 'bar' }));
     });
   });
   describe('when using the Action element', () => {

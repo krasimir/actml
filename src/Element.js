@@ -1,9 +1,8 @@
-import Processor from './Processor';
+import processor from './processor';
 import { getFuncName, getId } from './utils';
 
 export default function Element(func, props, children) {
   const scopedVars = props && props.scope ? props.scope.split(/, ?/) : [];
-  let processor;
 
   return {
     __actml: true,
@@ -51,20 +50,17 @@ export default function Element(func, props, children) {
         this.debug = true;
       }
       
-      if (!processor) {
-        processor = Processor(this, this.func.processor);
         
-        if (typeof func === 'string') {
-          if (this.context[func]) {
-            this.func = this.context[func];
-            this.name = getFuncName(this.func);
-          } else {
-            throw new Error(`"${ func }" is missing in the context.`);
-          }
+      if (typeof func === 'string') {
+        if (this.context[func]) {
+          this.func = this.context[func];
+          this.name = getFuncName(this.func);
+        } else {
+          throw new Error(`"${ func }" is missing in the context.`);
         }
       }
 
-      return await processor();
+      return await processor(this);
     }
   }
 }

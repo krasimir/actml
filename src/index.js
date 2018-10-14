@@ -1,6 +1,4 @@
 import * as ReduxMethods from './elements/redux';
-import execute from './middlewares/execute';
-import childrenMiddleware from './middlewares/children';
 import Element from './Element';
 import { isItAnElement } from './utils';
 import AElement from './elements/A';
@@ -20,12 +18,10 @@ async function run(element, context = {}) {
 }
 
 const Redux = { ...ReduxMethods };
-const Processor = { execute, children: childrenMiddleware };
 const A = create;
 
 export {
   A,
   run,
-  Processor,
   Redux
 };

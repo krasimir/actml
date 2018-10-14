@@ -158,19 +158,21 @@ function Processor(element) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-var log = function log() {
-  var _console;
-
-  return (_console = console).log.apply(_console, arguments);
-};
 
 exports.default = function (element, type) {
-  if (type === 'IN') {
-    log('<' + element.name + '>');
-  } else if (type === 'OUT') {
-    log('</' + element.name + '>');
-  } else {
-    log('<' + element.name + '>(' + type + ')');
+  var props = element.props,
+      scope = element.scope,
+      result = element.result;
+
+  switch (type) {
+    case 'IN':
+      console.log('<' + element.name + '>', { props: props });
+      break;
+    case 'OUT':
+      console.log('</' + element.name + '>', { scope: scope, result: result });
+      break;
+    default:
+      console.log('<' + element.name + '>(' + type + ')');
   }
 };
 
@@ -24286,13 +24288,13 @@ exports.addPost = addPost;
 exports.getPost = getPost;
 exports.deletePost = deletePost;
 function getPosts(url) {
-  return async function () {
+  return async function getPosts() {
     var result = await fetch(url);
     return result.json();
   };
 }
 function addPost(url) {
-  return async function (_ref) {
+  return async function addPost(_ref) {
     var post = _ref.post;
 
     await fetch(url, {
@@ -24306,7 +24308,7 @@ function addPost(url) {
   };
 }
 function getPost(url) {
-  return async function (_ref2) {
+  return async function getPost(_ref2) {
     var id = _ref2.id;
 
     var result = await fetch(url + id);
@@ -24314,7 +24316,7 @@ function getPost(url) {
   };
 }
 function deletePost(url) {
-  return async function (_ref3) {
+  return async function deletePost(_ref3) {
     var id = _ref3.id;
 
     var result = await fetch(url + id, {
