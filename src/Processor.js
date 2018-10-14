@@ -109,13 +109,15 @@ async function processChildren(element) {
   }
 }
 export default async function processor(element) {
-  const { debug, props } = element;
+  const { debug, props, name } = element;
+  const normalizedProps = normalizeProps(element);
+  const childrenProp = defineChildrenProp(element);
 
-  debug && deburger(element, 'IN');
+  debug && deburger({ name, props: normalizedProps }, 'IN');
   try {
     element.result = await element.func.call(element, {
-      ...normalizeProps(element),
-      children: defineChildrenProp(element)
+      ...normalizedProps,
+      children: childrenProp
     });
     await processResult(element);
     resolveExports(element);
