@@ -4,7 +4,8 @@ export default (element, type) => {
   switch(type) {
     case 'IN':
       if (console.group) {
-        console.group(`<${ element.name }>`, { props });
+        console.group(`<${ element.name }>`);
+        console.log({ props });
       } else {
         console.log(`<${ element.name }>`, { props });
       }
