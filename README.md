@@ -66,7 +66,7 @@ Let's see step by step what ActML does:
 
 _Here is a working [Codesandbox](https://codesandbox.io/s/341xn5vrlq) of the code above._
 
-So, that is the concept of ActML. It allows us to define in a declarative fashion our business logic. Same as our UI. There is nothing (almost) imperative. In fact all the code that we pass to the `run` function is nothing but definitions of _what_ should happen. It is not saying _how_. This is extremely powerful concept because it shifts the responsibility to another levels and makes the development a lot more easier. We use composition over raw implementation. If you like this way of thinking then ActML may be your way to deal with asynchronous logic.
+So, that is the concept of ActML. It allows us to define in a declarative fashion our business logic. Same as our UI. There is nothing (almost) imperative. In fact all the code that we pass to the `run` function is nothing but definitions of _what_ should happen. It is not saying _how_. This is extremely powerful concept because it shifts the responsibility to another levels and makes the development a lot more easier and predictable. We use composition over raw implementation. If you like this way of thinking then ActML may be your way to deal with asynchronous logic.
 
 ## What you need to use ActML
 
@@ -147,7 +147,7 @@ const Foo = function (props) {
 run(<Foo name='John' />); // outputs "Hello John"
 ```
 
-The output or in other words the returned value of your element is available to its children via the [FACC (function as children pattern)](https://github.com/krasimir/react-in-patterns/blob/master/book/chapter-4/README.md#function-as-a-children-render-prop):
+ActML does not process children which are not ActML elements. So, the first possible output is to pass a function as a child and call it via the `children prop. Or the so called [FACC (function as children pattern)](https://github.com/krasimir/react-in-patterns/blob/master/book/chapter-4/README.md#function-as-a-children-render-prop):
 
 ```js
 const Foo = function ({ name, children }) {
@@ -166,7 +166,7 @@ Another way to pass data between elements is the Scope API.
 
 ## Scope API
 
-The scope API is a primary mechanism for transferring data between ActML elements.
+The scope API is a mechanism for transferring data between ActML elements.
 
 ### Understanding "exports" and "scope" props
 
