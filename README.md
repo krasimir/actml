@@ -58,7 +58,7 @@ run(
 
 Let's see step by step what ActML does:
 
-1. The `<A>` element is just a wrapper.
+1. The `<A>` element is just a wrapper that comes with ActML module.
 2. `<GetProfileName>` is an asynchronous function so ActML waits till its promise is resolved. It also returns a result and has `exports` prop defined. That is a special prop which is saying "Export a variable with name `name` and make it available for other elements".
 3. `<Greeting>` needs that `name` variable and uses the special dollar sign notation which to ActML processor means "Inject a variable with name `name` as a prop".
 4. `<Greeting>` also has a function as child and it sends its result there which in our case is the full message.
