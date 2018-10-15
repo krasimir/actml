@@ -3,10 +3,17 @@ export default (element, type) => {
 
   switch(type) {
     case 'IN':
-      console.log(`<${ element.name }>`, { props });
+      if (console.group) {
+        console.group(`<${ element.name }>`, { props });
+      } else {
+        console.log(`<${ element.name }>`, { props });
+      }
       break;
     case 'OUT':
       console.log(`</${ element.name }>`, { scope, result });
+      if (console.group) {
+        groupEnd();  
+      }
       break;
     default:
       console.log(`<${ element.name }>(${ type })`);
