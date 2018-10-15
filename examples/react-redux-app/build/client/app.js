@@ -95,10 +95,17 @@ exports.default = function (element, type) {
 
   switch (type) {
     case 'IN':
-      console.log('<' + element.name + '>', { props: props });
+      if (console.group) {
+        console.group('<' + element.name + '>', { props: props });
+      } else {
+        console.log('<' + element.name + '>', { props: props });
+      }
       break;
     case 'OUT':
       console.log('</' + element.name + '>', { scope: scope, result: result });
+      if (console.group) {
+        groupEnd();
+      }
       break;
     default:
       console.log('<' + element.name + '>(' + type + ')');

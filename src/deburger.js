@@ -11,8 +11,8 @@ export default (element, type) => {
       break;
     case 'OUT':
       console.log(`</${ element.name }>`, { scope, result });
-      if (console.group) {
-        groupEnd();  
+      if (console.groupEnd) {
+        console.groupEnd();  
       }
       break;
     default:
