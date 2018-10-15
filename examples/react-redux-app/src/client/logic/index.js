@@ -20,17 +20,35 @@ export default function StartUp(context) {
   run(
     <A debug>
       <FetchPosts />    
-      <Subscribe type={ NEW_POST } exports='post'>
-        <addPost $post />
-        <FetchPosts />
+      <Subscribe type={ NEW_POST }>
+        {
+          post => (
+            <A>
+              <addPost post={ post } />
+              <FetchPosts />
+            </A>
+          )
+        }        
       </Subscribe>
       <Subscribe type={ GET_DETAILS }>
-        <getPost exports='postWithDetails' $action={ ({ id }) => ({ id })}/>
-        <Action type={ UPDATE_POST } $postWithDetails='data' />
+        {
+          ({ id }) => (
+            <A>
+              <getPost exports='postWithDetails' id={ id }/>
+              <Action type={ UPDATE_POST } $postWithDetails='data' />
+            </A>
+          )
+        }
       </Subscribe>
       <Subscribe type={ DELETE_POST }>
-        <deletePost $action={ ({ id }) => ({ id })} />
-        <FetchPosts />
+        {
+          ({ id }) => (
+            <A>
+              <deletePost id={ id } />
+              <FetchPosts />
+            </A>
+          )
+        }
       </Subscribe>
     </A>,
     context
