@@ -34,7 +34,6 @@ function normalizeProps(element) {
 function defineChildrenProp(element) {
   const { children } = element;
 
-  // passing a `children` prop
   if (children.length === 1 && !isItAnElement(children[0]) && typeof children[0] === 'function') {
     // FACC
     return (...params) => {
@@ -43,11 +42,10 @@ function defineChildrenProp(element) {
     }
   } else if (children.find(isItAnElement)) {
     // if an array of Elements pass a function
-    return async (newProps) => {
-      element.mergeToScope(newProps);
-      for(let i=0; i<children.length; i++) {
-        await children[i].run(element);
-      }
+    return async (newResult) => {
+      element.result = newResult;
+      resolveExports(element);
+      await processChildren(element);
     }
   }
 
@@ -109,24 +107,24 @@ async function processChildren(element) {
   }
 }
 export default async function processor(element) {
-  const { debug, props, name } = element;
+  const { debug, props, name, func } = element;
   const normalizedProps = normalizeProps(element);
   const childrenProp = defineChildrenProp(element);
 
   debug && deburger({ name, props: normalizedProps }, 'IN');
   try {
-    element.result = await element.func.call(element, {
+    element.result = await func.call(element, {
       ...normalizedProps,
       children: childrenProp
     });
     await processResult(element);
     resolveExports(element);
-    await processChildren(element);
+    !func.ignoreChildren && await processChildren(element);
   } catch(error) {
     if (props && props.onError) {
       props.onError.mergeToProps({ error });
       if (!await props.onError.run(element)) {
-        // index = middlewares.length + 1;
+        // ...
       };
     } else {
       throw error;

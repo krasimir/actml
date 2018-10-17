@@ -325,9 +325,10 @@ describe('Given the ActML library', () => {
     });
     it('should allow us to process the children many times when they are ActML elements', async () => {
       const Logic = async function ({ children }) {
-        await children({ answer: 42 });
-        await children({ answer: 100 });
+        await children(42);
+        await children(100);
       }
+      Logic.ignoreChildren = true;
       const Z = jest.fn();
       const ZWrapper = function ZWrapper({ answer }) {
         return <Z answer={ answer }/>
@@ -336,12 +337,15 @@ describe('Given the ActML library', () => {
       const C = jest.fn();
 
       await run(
-        <Logic>
+        <Logic exports='answer'>
           <ZWrapper $answer/>
           <B $answer><C $answer/></B>
         </Logic>
       );
 
+      expect(Z).toBeCalledTimes(2);
+      expect(B).toBeCalledTimes(2);
+      expect(C).toBeCalledTimes(2);
       expect(Z).toBeCalledWith(expect.objectContaining({ answer: 42 }));
       expect(B).toBeCalledWith(expect.objectContaining({ answer: 42 }));
       expect(C).toBeCalledWith(expect.objectContaining({ answer: 42 }));

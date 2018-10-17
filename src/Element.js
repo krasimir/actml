@@ -32,9 +32,8 @@ export default function Element(func, props, children) {
     },
     readFromScope(key, requester) {
       const { scope, parent } = this;
-      const value = scope[key];
 
-      if (typeof value !== 'undefined') return value;
+      if (scope.hasOwnProperty(key)) return scope[key];
       return parent.readFromScope(key, requester);
     },
     async run(parent) {
