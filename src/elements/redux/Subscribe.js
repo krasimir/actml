@@ -13,5 +13,6 @@ async function Subscribe({ children, type }) {
     throw new Error('<Subscribe> requires `type` prop.');
   }
 }
+Subscribe.ignoreChildren = true;
 
 export default Subscribe;

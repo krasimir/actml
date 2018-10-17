@@ -28,15 +28,21 @@ describe('Given the Redux integration', () => {
         (state, action) => (action.type === 'ANSWER' ? { answer: action.value } : state)
       );
       const Z = jest.fn();
+      const N = jest.fn();
       
       await run(
-        <Subscribe type='ANSWER'>
-          {
-            action => {
-              return <Z value={ action.value } />
+        <A>
+          <Subscribe type='ANSWER'>
+            {
+              action => {
+                return <Z value={ action.value } />
+              }
             }
-          }
-        </Subscribe>
+          </Subscribe>
+          <Subscribe type='ANSWER' exports={ ({ value }) => ({ answer: value }) }>
+            <N $answer/>
+          </Subscribe>
+        </A>
       );
 
       store.dispatch({ type: 'ANSWER', value: 100 });
@@ -48,6 +54,9 @@ describe('Given the Redux integration', () => {
       expect(Z).toHaveBeenCalledTimes(2);
       expect(Z).toBeCalledWith(expect.objectContaining({ value: 200 }));
       expect(Z).toBeCalledWith(expect.objectContaining({ value: 100 }));
+      expect(N).toHaveBeenCalledTimes(2);
+      expect(N).toBeCalledWith(expect.objectContaining({ answer: 200 }));
+      expect(N).toBeCalledWith(expect.objectContaining({ answer: 100 }));
     });
   });
   describe('when using the SubscribeOnce element', () => {

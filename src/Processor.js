@@ -118,7 +118,7 @@ export default async function processor(element) {
       children: childrenProp
     });
     await processResult(element);
-    resolveExports(element);
+    !func.ignoreChildren && resolveExports(element);
     !func.ignoreChildren && await processChildren(element);
   } catch(error) {
     if (props && props.onError) {

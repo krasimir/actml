@@ -14,5 +14,6 @@ function SubscribeOnce({ children, type }) {
     throw new Error('<SubscribeOnce> requires `type` prop.');
   }
 }
+SubscribeOnce.ignoreChildren = true;
 
 export default SubscribeOnce;
