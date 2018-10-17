@@ -24,9 +24,9 @@ acorn@^4.0.3:
   version "4.0.13"
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-4.0.13.tgz#105495ae5361d697bd195c825192e1ad7f253787"
 
-actml@0.11.5:
-  version "0.11.5"
-  resolved "https://registry.yarnpkg.com/actml/-/actml-0.11.5.tgz#9f31077f076f70d44f07f6c0ed2a5e4126e4ce9c"
+actml@0.11.7:
+  version "0.11.7"
+  resolved "https://registry.yarnpkg.com/actml/-/actml-0.11.7.tgz#7278f320c98f090c8c0f8d06a287279e8dd5926b"
 
 ansi-align@^2.0.0:
   version "2.0.0"
