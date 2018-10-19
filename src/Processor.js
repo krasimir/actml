@@ -33,31 +33,37 @@ function normalizeProps(element) {
 }
 function defineChildrenProp(element) {
   const { children } = element;
-
+  const childrenProp = {
+    value: children.length === 1 ? children[0] : children,
+    process: true
+  }
+  // FACC
   if (children.length === 1 && !isItAnElement(children[0]) && typeof children[0] === 'function') {
-    // FACC
-    return (...params) => {
+    childrenProp.value = (...params) => {
       if (params.length === 0) params = [ undefined ];
       return A(children[0].bind(null, ...params), null).run(element);
     }
-  } else if (children.find(isItAnElement)) {
-    // if an array of Elements pass a function
-    return async (newResult) => {
+  // if an array of Elements pass a function
+  } else if (children.length >= 3 && children[0] === '(' && children[children.length-1] === ')') {
+    childrenProp.process = false;
+    childrenProp.value = (newResult) => {
+      childrenProp.used = true;
       element.result = newResult;
+      processResult(element);
       resolveExports(element);
-      await processChildren(element);
+      processChildren(element);
     }
   }
 
-  return children.length === 1 ? children[0] : children;
+  return childrenProp;
 }
-async function processResult(element) {
+function processResult(element) {
   const { result } = element;
 
   if (result) {
     // another ActML element
     if (isItAnElement(result)) {
-      await result.run(element);
+      result.run(element);
     } else if (typeof result.next === 'function') {
       // generator
       const gen = result;
@@ -66,7 +72,7 @@ async function processResult(element) {
       while(!genRes.done) {
         genRes = gen.next(genRes.value);
         if (isItAnElement(genRes.value)) {
-          genRes.value = await genRes.value.run(element);
+          genRes.value = genRes.value.run(element);
         }
       }
       element.result = genRes.value;
@@ -75,7 +81,6 @@ async function processResult(element) {
 }
 function resolveExports(element) {
   const { props, scope, result } = element;
-
   if (props && props.exports) {
     if (typeof props.exports === 'function') {
       const exportedProps = props.exports(result);
@@ -92,7 +97,7 @@ function resolveExports(element) {
     }
   }
 }
-async function processChildren(element) {
+function processChildren(element) {
   const { children } = element;
   
   if (children && Array.isArray(children) && children.length > 0) {
@@ -100,30 +105,32 @@ async function processChildren(element) {
 
     while(pointer < children.length) {
       if (isItAnElement(children[pointer])) {
-        await children[pointer].run(element);
+        children[pointer].run(element);
       }
       pointer++;
     }
   }
 }
-export default async function processor(element) {
+export default function processor(element) {
   const { debug, props, name, func } = element;
   const normalizedProps = normalizeProps(element);
   const childrenProp = defineChildrenProp(element);
 
   debug && deburger({ name, props: normalizedProps }, 'IN');
   try {
-    element.result = await func.call(element, {
+    element.result = func.call(element, {
       ...normalizedProps,
-      children: childrenProp
+      children: childrenProp.value
     });
-    await processResult(element);
-    !func.ignoreChildren && resolveExports(element);
-    !func.ignoreChildren && await processChildren(element);
+    if (childrenProp.process) {
+      processResult(element);
+      resolveExports(element);
+      processChildren(element);
+    }
   } catch(error) {
     if (props && props.onError) {
       props.onError.mergeToProps({ error });
-      if (!await props.onError.run(element)) {
+      if (!props.onError.run(element)) {
         // ...
       };
     } else {

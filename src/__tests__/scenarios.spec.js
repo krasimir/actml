@@ -49,4 +49,28 @@ describe('Given the ActML library', () => {
       expect(arr).toStrictEqual([ 6, 10 ]);
     });
   });
+  describe('when we have concurrent activities happening and a chance for collisions', () => {
+    it.only('should not produce bugs related to overwriting `result` or `scope` properties of the element', async () => {
+      const Wrapper = async function ({ children }) {
+        await children({ value: 10 });
+        await children({ value: 20 });
+      }
+      const B = jest.fn();
+      const Z = async function ({ answer }) {
+        return <B answer={ answer.value } />;
+      }
+
+      await run(
+        <A>
+          <Wrapper exports='answer'>
+            (<Z $answer/>)
+          </Wrapper>
+        </A>
+      );
+
+      expect(B).toBeCalledTimes(2);
+      expect(B).toBeCalledWith(expect.objectContaining({ answer: 10 }));
+      expect(B).toBeCalledWith(expect.objectContaining({ answer: 20 }));
+    });
+  });
 });

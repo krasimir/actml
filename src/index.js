@@ -10,9 +10,9 @@ function create(func, props, ...children) {
     Element(func, props, children);
 }
 
-async function run(element, context = {}) {
+function run(element, context = {}) {
   if (isItAnElement(element)) {
-    return await element.run(createRootElement(context));
+    return element.run(createRootElement(context));
   }
   throw new Error('`run` should be called with an ActML element. You are passing:', element);
 }

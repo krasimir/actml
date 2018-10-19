@@ -121,13 +121,13 @@ describe('Given the ActML library', () => {
       expect(result).toBe(42);
     });
     describe('and we have nested functions', () => {
-      it('should wait till the promise is resolved before running the other nested functions', async () => {
+      it.only('should wait till the promise is resolved before running the other nested functions', async () => {
         var x = 0;
         var total = 0;
-        const Foo = async function() { x = 42; };
-        const Bar = ({ answer }) => total = answer() * 2;
+        const Foo = async function() { return 42; };
+        const Bar = ({ answer }) => (total = answer * 2);
 
-        await run(<Foo><Bar answer={ () => x } /></Foo>);
+        await run(<Foo exports='answer'><Bar $answer /></Foo>);
 
         expect(total).toBe(84);
       });
@@ -266,7 +266,7 @@ describe('Given the ActML library', () => {
       expect(Handler).toBeCalled();
     });
   });
-  describe('when we have an expression as a child', () => {
+  describe('when we work with the children prop', () => {
     it('should provide an access to the passed child', async () => {
       const Z = jest.fn();
       const Logic = function({ children }) {
@@ -323,12 +323,23 @@ describe('Given the ActML library', () => {
 
       expect(Z).toBeCalledWith(expect.objectContaining({ answer: 42 }));
     });
+    it('should not process the children if some of them is not ActML element', async () => {
+      const Z = jest.fn();
+      const Logic = async function() {}
+
+      await run(
+        <Logic value={ false }>
+          (<Z />)
+        </Logic>
+      );
+
+      expect(Z).not.toBeCalled();
+    });
     it('should allow us to process the children many times when they are ActML elements', async () => {
       const Logic = async function ({ children }) {
         await children(42);
         await children(100);
       }
-      Logic.ignoreChildren = true;
       const Z = jest.fn();
       const ZWrapper = function ZWrapper({ answer }) {
         return <Z answer={ answer }/>
@@ -337,10 +348,10 @@ describe('Given the ActML library', () => {
       const C = jest.fn();
 
       await run(
-        <Logic exports='answer'>
+        <Logic exports='answer'>(
           <ZWrapper $answer/>
           <B $answer><C $answer/></B>
-        </Logic>
+        )</Logic>
       );
 
       expect(Z).toBeCalledTimes(2);

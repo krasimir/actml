@@ -22,7 +22,7 @@ describe('Given the Redux integration', () => {
     reset();
   });
   describe('when using the Subscribe element', () => {
-    it('should subscribe to a Redux action', async () => { 
+    it.only('should subscribe to a Redux action', async () => { 
       const store = setup(
         { answer: null },
         (state, action) => (action.type === 'ANSWER' ? { answer: action.value } : state)
@@ -40,7 +40,7 @@ describe('Given the Redux integration', () => {
             }
           </Subscribe>
           <Subscribe type='ANSWER' exports={ ({ value }) => ({ answer: value }) }>
-            <N $answer/>
+            (<N $answer/>)
           </Subscribe>
         </A>
       );
@@ -55,8 +55,8 @@ describe('Given the Redux integration', () => {
       expect(Z).toBeCalledWith(expect.objectContaining({ value: 200 }));
       expect(Z).toBeCalledWith(expect.objectContaining({ value: 100 }));
       expect(N).toHaveBeenCalledTimes(2);
-      expect(N).toBeCalledWith(expect.objectContaining({ answer: 200 }));
       expect(N).toBeCalledWith(expect.objectContaining({ answer: 100 }));
+      expect(N).toBeCalledWith(expect.objectContaining({ answer: 200 }));
     });
   });
   describe('when using the SubscribeOnce element', () => {
