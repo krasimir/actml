@@ -11,10 +11,13 @@ function create(func, props, ...children) {
 }
 
 function run(element, context = {}) {
-  if (isItAnElement(element)) {
-    return element.run(createRootElement(context));
-  }
-  throw new Error('`run` should be called with an ActML element. You are passing:', element);
+  return new Promise(done => {
+    if (isItAnElement(element)) {
+      element.run(createRootElement(context), done);
+    } else {
+      throw new Error('`run` should be called with an ActML element. You are passing:', element);
+    }
+  });  
 }
 
 const Redux = { ...ReduxMethods };

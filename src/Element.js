@@ -36,7 +36,7 @@ export default function Element(func, props, children) {
       if (scope.hasOwnProperty(key)) return scope[key];
       return parent.readFromScope(key, requester);
     },
-    run(parent) {
+    run(parent, done) {
       if (!parent) {
         throw new Error('The Element can not be run with no parent.');
       }
@@ -58,7 +58,7 @@ export default function Element(func, props, children) {
         }
       }
 
-      return processor(this);
+      return processor(this, done);
     }
   }
 }

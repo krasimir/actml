@@ -2,11 +2,20 @@ import deburger from './deburger';
 import { isItAnElement } from './utils';
 import { A } from './';
 
-function normalizeProps(element) {
+const flow = function (workers, done, context = {}) {
+  if (workers.length === 0) {
+    done();
+  } else {
+    (workers.shift())(context, () => flow(workers, done, context));
+  }
+}
+
+function normalizeProps(context, done) {
+  const { element } = context;
   const { props, name } = element;
   let normalizedProps = { ...props };
 
-  if (!props) return normalizedProps;
+  if (!props) return done();
 
   Object.keys(props).forEach(propName => {
     if (propName.charAt(0) === '$') {
@@ -29,9 +38,11 @@ function normalizeProps(element) {
     }
   });
 
-  return normalizedProps;
+  context.normalizedProps = normalizedProps;
+  done();
 }
-function defineChildrenProp(element) {
+function defineChildrenProp(context, done) {
+  const { element } = context;
   const { children } = element;
   const childrenProp = {
     value: children.length === 1 ? children[0] : children,
@@ -41,46 +52,54 @@ function defineChildrenProp(element) {
   if (children.length === 1 && !isItAnElement(children[0]) && typeof children[0] === 'function') {
     childrenProp.value = (...params) => {
       if (params.length === 0) params = [ undefined ];
-      return A(children[0].bind(null, ...params), null).run(element);
+      return A(children[0].bind(null, ...params), null).run(element, () => {});
     }
   // if an array of Elements pass a function
   } else if (children.length >= 3 && children[0] === '(' && children[children.length-1] === ')') {
     childrenProp.process = false;
     childrenProp.value = (newResult) => {
-      childrenProp.used = true;
-      element.result = newResult;
-      processResult(element);
-      resolveExports(element);
-      processChildren(element);
+      context.result = newResult;
+      flow([ processResult, resolveExports, processChildren ], done, context);
     }
   }
 
-  return childrenProp;
+  context.childrenProp = childrenProp;
+  done();
 }
-function processResult(element) {
-  const { result } = element;
+function processResult(context, done) {
+  const { element, result } = context;
 
   if (result) {
     // another ActML element
     if (isItAnElement(result)) {
-      result.run(element);
+      return result.run(element, done);
     } else if (typeof result.next === 'function') {
       // generator
       const gen = result;
       let genRes = { value: undefined, done: false };
-
-      while(!genRes.done) {
+      let processGenerator = function () {
+        if (genRes.done) {
+          context.result = genRes.value;
+          return done();
+        }
         genRes = gen.next(genRes.value);
         if (isItAnElement(genRes.value)) {
-          genRes.value = genRes.value.run(element);
+          return genRes.value.run(element, newValue => {
+            genRes.value = newValue;
+            processGenerator();
+          });
         }
+        processGenerator();
       }
-      element.result = genRes.value;
+      return processGenerator(gen);
     }
   }
+  done();
 }
-function resolveExports(element) {
-  const { props, scope, result } = element;
+function resolveExports(context, done) {
+  const { element, result } = context;
+  const { props, scope } = element;
+
   if (props && props.exports) {
     if (typeof props.exports === 'function') {
       const exportedProps = props.exports(result);
@@ -93,50 +112,66 @@ function resolveExports(element) {
         });
     } else {
       scope[props.exports] = result;
-      element.dispatch(props.exports, element.result);
+      element.dispatch(props.exports, result);
     }
   }
+  done();
 }
-function processChildren(element) {
-  const { children } = element;
-  
+function processChildren(context, done) {
+  const { element } = context;
+  const children = element.children;
+
   if (children && Array.isArray(children) && children.length > 0) {
-    let pointer = 0;
-
-    while(pointer < children.length) {
-      if (isItAnElement(children[pointer])) {
-        children[pointer].run(element);
-      }
-      pointer++;
-    }
+    return flow(children.map(child => {
+      if (!isItAnElement(child)) return (context, childDone) => childDone();
+      return (context, childDone) => child.run(element, childDone);
+    }), done)
   }
+  done();
 }
-export default function processor(element) {
-  const { debug, props, name, func } = element;
-  const normalizedProps = normalizeProps(element);
-  const childrenProp = defineChildrenProp(element);
-
-  debug && deburger({ name, props: normalizedProps }, 'IN');
-  try {
-    element.result = func.call(element, {
-      ...normalizedProps,
-      children: childrenProp.value
+function execute(context, done) {
+  const { element } = context;
+  
+  context.result = element.func.call(element, {
+    ...context.normalizedProps,
+    children: context.childrenProp.value
+  });
+  if (context.result && context.result.then) {
+    return context.result.then(asyncResult => {
+      context.result = asyncResult;
+      done();
     });
-    if (childrenProp.process) {
-      processResult(element);
-      resolveExports(element);
-      processChildren(element);
-    }
+  }
+  done();
+}
+export default function processor(element, done) {
+  const context = { element };
+  const { props } = element;
+
+  try {
+    flow(
+      [
+        normalizeProps,
+        defineChildrenProp,
+        execute,
+        (context, done) => {
+          if (context.childrenProp.process) {
+            return flow([ processResult, resolveExports, processChildren ], done, context);
+          }
+          done();
+        }
+      ],
+      () => done(context.result),
+      context
+    );
   } catch(error) {
     if (props && props.onError) {
       props.onError.mergeToProps({ error });
-      if (!props.onError.run(element)) {
-        // ...
-      };
+      props.onError.run(element, done);
     } else {
       throw error;
     }
   }
-  debug && deburger(element, 'OUT');
-  return element.result;
+
+  return context.result;
 }

@@ -14,13 +14,6 @@ describe('Given the ActML library', () => {
 
       expect(result).toBe('foo');
     });
-    it('should return the result of the function even if it is async', async () => {
-      const Func = jest.fn().mockImplementation(() => fakeAsync('foo', 30));
-
-      const result = await run(<Func />);
-
-      expect(result).toBe('foo');
-    });
     it('should run the function and its children', async () => {
       const Z = jest.fn();
       const B = jest.fn();
@@ -56,6 +49,13 @@ describe('Given the ActML library', () => {
 
       expect(Foo).toBeCalled();
       expect(Bar).toBeCalledWith(expect.objectContaining({ answer: 42 }));
+    });
+    it('should return the result of the function even if it is async', async () => {
+      const Func = () => fakeAsync('foo', 42);
+
+      const { answer } = await run(<A><Func exports='answer'/></A>);
+
+      expect(answer).toBe('foo');
     });
   });
   describe('when using the wrapper <A />', () => {
@@ -121,7 +121,7 @@ describe('Given the ActML library', () => {
       expect(result).toBe(42);
     });
     describe('and we have nested functions', () => {
-      it.only('should wait till the promise is resolved before running the other nested functions', async () => {
+      it('should wait till the promise is resolved before running the other nested functions', async () => {
         var x = 0;
         var total = 0;
         const Foo = async function() { return 42; };
@@ -307,21 +307,27 @@ describe('Given the ActML library', () => {
     });
     it('should still work even if we pass a generator', async () => {
       const Z = jest.fn();
+      const B = () => fakeAsync(1, 20);
       const Logic = function({ children }) {
-        children(42);
+        return children(42);
       }
 
-      await run(
-        <Logic>
-          {
-            function * (answer) {
-              yield <Z answer={ answer } />
+      const { result } = await run(
+        <A>
+          <Logic exports='result'>
+            {
+              function * (answer) {
+                yield <Z answer={ answer } />;
+                yield <B />;
+                return 'foo';
+              }
             }
-          }
-        </Logic>
+          </Logic>
+        </A>
       );
 
       expect(Z).toBeCalledWith(expect.objectContaining({ answer: 42 }));
+      expect(result).toBe('foo')
     });
     it('should not process the children if some of them is not ActML element', async () => {
       const Z = jest.fn();
