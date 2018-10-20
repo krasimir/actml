@@ -178,12 +178,12 @@ describe('Given the ActML library', () => {
       expect(B).toBeCalled();
       expect(Handler).toBeCalled();
     });
-    it('should continue processing if the error handler returns `true`', async () => {
+    it('should continue processing the siblings', async () => {
       const Problem = function() {
         return iDontExist; // throws an error "iDontExist is not defined"
       };
       const App = function() {};
-      const HandleError = jest.fn().mockImplementation(() => true);
+      const HandleError = jest.fn();
       const AfterError = jest.fn();
       
       await run(
@@ -225,34 +225,22 @@ describe('Given the ActML library', () => {
       );
       expect(spy).toBeCalledWith(42);
     });
-    it('should stop the current execution (by default) only in the current children branch', async () => {
-      const Problem = function() {
-        return iDontExist; // throws an error "iDontExist is not defined"
+    it('should continue the execution if the error is handled', async () => {
+      const Problem = () => iDontExist();
+      const CatchError = () => {};
+      const Foo = function*() {
+        return 'foo';
       };
-      const App = function() {};
-      const Wrapper = function() {};
-      const Dummy = () => 42;
-      const HandleErrorA = jest.fn();
-      const AfterErrorA = jest.fn();
-      const B = jest.fn();
-      const C = jest.fn();
-      
-      await run(
-        <App scope='answer'>
-          <Wrapper onError={ <HandleErrorA><Dummy exports='answer' /></ HandleErrorA> }>
-            <Problem />
-            <AfterErrorA />
-          </Wrapper>
-          <Wrapper>
-            <B />
-            <C $answer/>
-          </Wrapper>
-        </App>
-      );
-      expect(HandleErrorA).toBeCalled();
-      expect(AfterErrorA).not.toBeCalled();
-      expect(B).toBeCalled();
-      expect(C).toBeCalledWith(expect.objectContaining({ answer: 42 }));
+      const Bar = function*() {
+        return (
+          <Problem onError={<CatchError />}>
+            <Foo exports="foo" />
+          </Problem>
+        );
+      };
+      const result = await run(<A><Bar /></A>);
+
+      expect(result.foo).toEqual('foo');
     });
     it('should handle the error of the children', async () => {
       const Problem = function() {
@@ -271,7 +259,7 @@ describe('Given the ActML library', () => {
       );
 
       expect(Z).toBeCalled();
-      expect(B).not.toBeCalled();
+      expect(B).toBeCalled();
       expect(Handler).toBeCalled();
     });
   });

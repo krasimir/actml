@@ -122,7 +122,7 @@ function processChildren(context, done) {
     return flow(children.map(child => {
       if (!isItAnElement(child)) return (context, childDone) => childDone();
       return (context, childDone) => child.run(element, childDone);
-    }), done)
+    }), done, context)
   }
   done();
 }
@@ -143,12 +143,10 @@ function execute(context, done) {
 }
 export default function processor(element, done) {
   const context = { element };
-  const { props, debug } = element;
 
-  try {
     flow(
       [
-        debug ? debuggerIn : NOOP,
+        element.debug ? debuggerIn : NOOP,
         normalizeProps,
         defineChildrenProp,
         execute,
@@ -158,19 +156,11 @@ export default function processor(element, done) {
           }
           done();
         },
-        debug ? debuggerOut : NOOP,
+        element.debug ? debuggerOut : NOOP,
       ],
       () => done(context.result),
       context
     );
-  } catch(error) {
-    if (props && props.onError) {
-      props.onError.mergeToProps({ error });
-      props.onError.run(element, done);
-    } else {
-      throw error;
-    }
-  }
 
   return context.result;
 }
