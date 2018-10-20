@@ -1,14 +1,8 @@
-import deburger from './deburger';
+import { debuggerIn, debuggerOut } from './deburger';
 import { isItAnElement } from './utils';
 import { A } from './';
-
-const flow = function (workers, done, context = {}) {
-  if (workers.length === 0) {
-    done();
-  } else {
-    (workers.shift())(context, () => flow(workers, done, context));
-  }
-}
+import flow from './flow';
+import { NOOP } from './flow';
 
 function normalizeProps(context, done) {
   const { element } = context;
@@ -146,11 +140,12 @@ function execute(context, done) {
 }
 export default function processor(element, done) {
   const context = { element };
-  const { props } = element;
+  const { props, debug } = element;
 
   try {
     flow(
       [
+        debug ? debuggerIn : NOOP,
         normalizeProps,
         defineChildrenProp,
         execute,
@@ -159,7 +154,8 @@ export default function processor(element, done) {
             return flow([ processResult, resolveExports, processChildren ], done, context);
           }
           done();
-        }
+        },
+        debug ? debuggerOut : NOOP,
       ],
       () => done(context.result),
       context

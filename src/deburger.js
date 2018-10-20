@@ -1,22 +1,20 @@
-export default (element, type) => {
-  const { props, scope, result } = element;
+export function debuggerIn(context, done) {
+  const { element, normalizedProps } = context;
 
-  switch(type) {
-    case 'IN':
-      if (console.group) {
-        console.group(`<${ element.name }>`);
-        console.log({ props });
-      } else {
-        console.log(`<${ element.name }>`, { props });
-      }
-      break;
-    case 'OUT':
-      console.log(`</${ element.name }>`, { scope, result });
-      if (console.groupEnd) {
-        console.groupEnd();  
-      }
-      break;
-    default:
-      console.log(`<${ element.name }>(${ type })`);
+  if (console.group) {
+    console.group(`<${ element.name }>`);
+    console.log({ props: normalizedProps });
+  } else {
+    console.log(`<${ element.name }>`, { props });
   }
+  done();
+}
+export function debuggerOut(context, done) {
+  const { element, result } = context;
+
+  console.log(`</${ element.name }>`, { scope: element.scope, result });
+  if (console.groupEnd) {
+    console.groupEnd();  
+  }
+  done();
 }

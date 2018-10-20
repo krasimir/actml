@@ -1,7 +1,6 @@
 /** @jsx A */
 import { A, run } from '..';
-import deburger from '../deburger';
-import { formatElement } from '../deburger';
+import { debuggerIn, debuggerOut } from '../deburger';
 
 jest.mock('../deburger');
 
@@ -12,11 +11,19 @@ describe('Given the Debugger utility', () => {
     });
     it('should print out logs', async () => {
       const logs = [];
-      deburger.mockImplementation((element, type) => {
+      debuggerIn.mockImplementation((context, done) => {
         logs.push({
-          name: element.name,
-          type
-        })
+          name: context.element.name,
+          type: 'IN'
+        });
+        done();
+      });
+      debuggerOut.mockImplementation((context, done) => {
+        logs.push({
+          name: context.element.name,
+          type: 'OUT'
+        });
+        done();
       });
       const Z = function Z() {};
       const B = function B() { return 42; };
@@ -78,11 +85,19 @@ describe('Given the Debugger utility', () => {
     });
     it('should display function names of functions passed via context', async () => {
       const logs = [];
-      deburger.mockImplementation((element, type) => {
+      debuggerIn.mockImplementation((context, done) => {
         logs.push({
-          name: element.name,
-          type
-        })
+          name: context.element.name,
+          type: 'IN'
+        });
+        done();
+      });
+      debuggerOut.mockImplementation((context, done) => {
+        logs.push({
+          name: context.element.name,
+          type: 'OUT'
+        });
+        done();
       });
       const context = {
         getData: () => {
