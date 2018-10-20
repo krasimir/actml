@@ -66,7 +66,10 @@ function processResult(context, done) {
   if (result) {
     // another ActML element
     if (isItAnElement(result)) {
-      return result.run(element, done);
+      return result.run(element, r => {
+        context.result = r;
+        done();
+      });
     } else if (typeof result.next === 'function') {
       // generator
       const gen = result;

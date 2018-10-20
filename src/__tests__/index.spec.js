@@ -50,6 +50,15 @@ describe('Given the ActML library', () => {
       expect(Foo).toBeCalled();
       expect(Bar).toBeCalledWith(expect.objectContaining({ answer: 42 }));
     });
+    it('should get the result of the returned element as a result of the currently executed element', async () => {
+      const Z = () => 'foo';
+      const Foo = () => <Z />;
+      const Bar = () => <Foo />;
+
+      const result = await run(<A><Bar exports='bar'/></A>);
+
+      expect(result.bar).toEqual('foo');
+    });
     it('should return the result of the function even if it is async', async () => {
       const Func = () => fakeAsync('foo', 42);
 
