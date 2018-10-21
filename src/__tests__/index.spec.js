@@ -276,9 +276,19 @@ describe('Given the ActML library', () => {
       expect(result.foo).toEqual('foo');
     });
     it('should handle the error of the children', async () => {
-      const Problem = function() {
+      const Problem = function * () {
         return iDontExist; // throws an error "iDontExist is not defined"
       };
+      function * WithProblem() {
+        return (
+          <A>
+            <Problem />
+          </A>
+        )
+      }
+      function Wrapper() {
+        return <A><WithProblem /></A>;
+      }
       const Z = jest.fn();
       const B = jest.fn();
       const Handler = jest.fn();
@@ -286,7 +296,7 @@ describe('Given the ActML library', () => {
       await run(
         <A onError={ <Handler /> }>
           <Z />
-          <Problem/>
+          <Wrapper />
           <B />
         </A>
       );

@@ -146,9 +146,9 @@ export default function processor(element, done) {
 
   flow(
     [
-      element.debug ? debuggerIn : NOOP,
       element.func.before ? element.func.before : NOOP,
       normalizeProps,
+      element.debug ? debuggerIn : NOOP,
       defineChildrenProp,
       execute,
       (context, done) => {
