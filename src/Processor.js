@@ -144,23 +144,25 @@ function execute(context, done) {
 export default function processor(element, done) {
   const context = { element };
 
-    flow(
-      [
-        element.debug ? debuggerIn : NOOP,
-        normalizeProps,
-        defineChildrenProp,
-        execute,
-        (context, done) => {
-          if (context.childrenProp.process) {
-            return flow([ processResult, resolveExports, processChildren ], done, context);
-          }
-          done();
-        },
-        element.debug ? debuggerOut : NOOP,
-      ],
-      () => done(context.result),
-      context
-    );
+  flow(
+    [
+      element.debug ? debuggerIn : NOOP,
+      element.func.before ? element.func.before : NOOP,
+      normalizeProps,
+      defineChildrenProp,
+      execute,
+      (context, done) => {
+        if (context.childrenProp.process) {
+          return flow([ processResult, resolveExports, processChildren ], done, context);
+        }
+        done();
+      },
+      element.func.after ? element.func.after : NOOP,
+      element.debug ? debuggerOut : NOOP,
+    ],
+    () => done(context.result),
+    context
+  );
 
   return context.result;
 }

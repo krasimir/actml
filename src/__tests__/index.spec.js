@@ -67,6 +67,23 @@ describe('Given the ActML library', () => {
       expect(answer).toBe('foo');
     });
   });
+  describe('when using the `before` and `after` hooks', () => {
+    it('should run the hooks before and after the other workers', async () => {
+      const M = function ({ value }) {
+        return value;
+      }
+      M.before = (context, done) => {
+        context.element.props = { value: 42 }
+        done();
+      }
+      M.after = (context, done) => {
+        context.result = context.result * 2;
+        done();
+      }
+
+      expect(await run(<M />)).toEqual(84);
+    });
+  });
   describe('when using the wrapper <A />', () => {
     it('should work just fine :)', async () => {
       const F = jest.fn().mockImplementation(() => 42);
@@ -77,7 +94,7 @@ describe('Given the ActML library', () => {
       expect(F).toBeCalled();
       expect(M).toBeCalledWith(expect.objectContaining({ answer: 42 }));
     });
-    it('should should scope everything by default', async () => {
+    it('should scope everything by default', async () => {
       const F = jest.fn().mockImplementation(() => 42);
       const M = jest.fn();
 
@@ -94,6 +111,22 @@ describe('Given the ActML library', () => {
       );
 
       expect(M).toBeCalledWith(expect.objectContaining({ foo: 42, bar: 42 }));
+    });
+    it('should return that bit of the scope which is passed to the `result` prop', async () => {
+      const F = jest.fn().mockImplementation(() => 42);
+      const D = jest.fn().mockImplementation(({ foo }) => foo * 2);
+      const M = function () {
+        return (
+          <A result='bar'>
+            <F exports='foo' />
+            <D exports='bar' $foo/>
+          </A>
+        );
+      };
+
+      const result = await run(<M />);
+
+      expect(result).toEqual(84);
     });
   });
   describe('when having nested functions', () => {
