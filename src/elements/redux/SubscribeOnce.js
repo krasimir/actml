@@ -1,8 +1,6 @@
 import Integration from './Integration';
 
 function SubscribeOnce({ children, type }) {
-  const { exports } = this.props;
-
   if (type) {
     const removeListener = Integration.addListener(action => {
       if (action.type === type) {

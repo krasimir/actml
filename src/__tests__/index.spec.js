@@ -345,16 +345,16 @@ describe('Given the ActML library', () => {
 
       expect(Z).toBeCalledWith(expect.objectContaining({ value: 42 }));
     });
-    it('should still work even if we pass a generator', async () => {
+    it.only('should still work even if we pass a generator', async () => {
       const Z = jest.fn();
       const B = () => fakeAsync(1, 20);
       const Logic = function({ children }) {
         return children(42);
       }
 
-      const { result } = await run(
+      const { res } = await run(
         <A>
-          <Logic exports='result'>
+          <Logic exports='res'>
             {
               function * (answer) {
                 yield <Z answer={ answer } />;
@@ -367,19 +367,45 @@ describe('Given the ActML library', () => {
       );
 
       expect(Z).toBeCalledWith(expect.objectContaining({ answer: 42 }));
-      expect(result).toBe('foo')
+      expect(res).toBe('foo');
     });
-    it('should not process the children if some of them is not ActML element', async () => {
+    it('should not process the children if we wrap them in brackets', async () => {
       const Z = jest.fn();
       const Logic = async function() {}
 
-      await run(
+      run(
         <Logic value={ false }>
           (<Z />)
         </Logic>
       );
 
+      await fakeAsync(null, 20);
+
       expect(Z).not.toBeCalled();
+    });
+    it('should not finalize the parent if the children are not fired', async () => {
+      const Z = jest.fn().mockImplementation(function ({ answer }) {
+        return fakeAsync('foo ' + answer, 20);
+      });
+      const Logic = function({ children }) {
+        children('a');
+        children('b');
+        children('c');
+      }
+
+      const result = await run(
+        <A result='bar'>
+          <Logic exports='answer'>
+            (<Z exports='bar' $answer/>)
+          </Logic>
+        </A>
+      );
+
+      expect(result).toEqual('foo a');
+      expect(Z).toBeCalledTimes(3);
+      expect(Z).toBeCalledWith(expect.objectContaining({ answer: 'a' }));
+      expect(Z).toBeCalledWith(expect.objectContaining({ answer: 'b' }));
+      expect(Z).toBeCalledWith(expect.objectContaining({ answer: 'c' }));
     });
     it('should allow us to process the children many times when they are ActML elements', async () => {
       const Logic = async function ({ children }) {

@@ -44,6 +44,7 @@ function defineChildrenProp(context, done) {
   }
   // FACC
   if (children.length === 1 && !isItAnElement(children[0]) && typeof children[0] === 'function') {
+    childrenProp.process = false;
     childrenProp.value = (...params) => {
       if (params.length === 0) params = [ undefined ];
       return A(children[0].bind(null, ...params), null).run(element, () => {});
