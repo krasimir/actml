@@ -39,17 +39,14 @@ describe('Given the Redux integration', () => {
               }
             }
           </Subscribe>
-          <Subscribe type='ANSWER' exports={ ({ value }) => ({ answer: value }) }>
+          <Subscribe type='ANSWER' exports={ action => action && ({ value: action.value }) }>
             (<N $answer/>)
           </Subscribe>
+          <Action type='ANSWER' value={ 100 }/>
+          <Action type='ANOTHER_ANSWER' />
+          <Action type='ANSWER' value={ 200 }/>
         </A>
       );
-
-      store.dispatch({ type: 'ANSWER', value: 100 });
-      store.dispatch({ type: 'ANOTHER_ANSWER' });
-      store.dispatch({ type: 'ANSWER', value: 200 });
-
-      await delay();
 
       expect(Z).toHaveBeenCalledTimes(2);
       expect(Z).toBeCalledWith(expect.objectContaining({ value: 200 }));

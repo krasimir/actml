@@ -6,7 +6,7 @@ A.after = function (context, done) {
 
   if (props && props.result) {
     if (!scope.hasOwnProperty(props.result)) {
-      throw new Error(`You are trying to return "${ props.result }" as a result of an <A> element. However no one is exporting it.`);
+      throw new Error(`You are trying to return "${ props.result }" as a result of an <A> element. However no one down the chain is exporting it.`);
     }
     context.result = scope[props.result];
   }

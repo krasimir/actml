@@ -6,7 +6,7 @@ import createRootElement from './elements/createRootElement';
 
 function create(func, props, ...children) {
   return func === create ?
-    Element(AElement, { ...props, scope: '*' }, children) :
+    Element(AElement, { scope: '*', ...props }, children) :
     Element(func, props, children);
 }
 

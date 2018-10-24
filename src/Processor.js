@@ -38,23 +38,19 @@ function normalizeProps(context, done) {
 function defineChildrenProp(context, done) {
   const { element } = context;
   const { children } = element;
-  const childrenProp = {
-    value: children.length === 1 ? children[0] : children,
-    process: true
-  }
+  let childrenProp = null;
+
   // FACC
   if (children.length === 1 && !isItAnElement(children[0]) && typeof children[0] === 'function') {
-    childrenProp.process = false;
-    childrenProp.value = (...params) => {
+    childrenProp = (...params) => {
       if (params.length === 0) params = [ undefined ];
-      return A(children[0].bind(null, ...params), null).run(element, () => {});
+      return new Promise(childrenDone => A(children[0].bind(null, ...params), null).run(element, childrenDone));
     }
   // if an array of Elements pass a function
   } else if (children.length >= 3 && children[0] === '(' && children[children.length-1] === ')') {
-    childrenProp.process = false;
-    childrenProp.value = (newResult) => {
+    childrenProp = (newResult) => {
       context.result = newResult;
-      flow([ processResult, resolveExports, processChildren ], done, context);
+      return new Promise(childrenDone => flow([ processResult, resolveExports, processChildren ], childrenDone, context));
     }
   }
 
@@ -71,8 +67,20 @@ function processResult(context, done) {
         context.result = r;
         done();
       });
+    // promise
+    } else if (result && result.then) {
+      return result.then(asyncResult => {
+        if (isItAnElement(asyncResult)) {
+          return asyncResult.run(element, r => {
+            context.result = r;
+            done();
+          });
+        }
+        context.result = asyncResult;
+        done();
+      });
+    // generator
     } else if (typeof result.next === 'function') {
-      // generator
       const gen = result;
       let genRes = { value: undefined, done: false };
       let processGenerator = function () {
@@ -102,12 +110,14 @@ function resolveExports(context, done) {
     if (typeof props.exports === 'function') {
       const exportedProps = props.exports(result);
 
-      Object
-        .keys(exportedProps)
-        .forEach(key => {
-          scope[key] = exportedProps[key];
-          element.dispatch(key, exportedProps[key]);
-        });
+      if (exportedProps) {
+        Object
+          .keys(exportedProps)
+          .forEach(key => {
+            scope[key] = exportedProps[key];
+            element.dispatch(key, exportedProps[key]);
+          });
+      }
     } else {
       scope[props.exports] = result;
       element.dispatch(props.exports, result);
@@ -123,42 +133,48 @@ function processChildren(context, done) {
     return flow(children.map(child => {
       if (!isItAnElement(child)) return (context, childDone) => childDone();
       return (context, childDone) => child.run(element, childDone);
-    }), done, context)
+    }), done, context);
   }
   done();
 }
 function execute(context, done) {
-  const { element } = context;
+  const { element, childrenProp } = context;
+  const defaultChildrenProp = element.children.length === 1 ? element.children[0] : element.children;
   
   context.result = element.func.call(element, {
     ...context.normalizedProps,
-    children: context.childrenProp.value
+    children: childrenProp || defaultChildrenProp
   });
-  if (context.result && context.result.then) {
-    return context.result.then(asyncResult => {
-      context.result = asyncResult;
-      done();
-    });
-  }
   done();
+}
+function beforeHook(context, done) {
+  if (context.element.func.before) {
+    context.element.func.before(context, done);
+  } else {
+    done();
+  }
+}
+function afterHook(context, done) {
+  if (context.element.func.after) {
+    context.element.func.after(context, done);
+  } else {
+    done();
+  }
 }
 export default function processor(element, done) {
   const context = { element };
 
   flow(
     [
-      element.func.before ? element.func.before : NOOP,
+      beforeHook,
       normalizeProps,
       element.debug ? debuggerIn : NOOP,
       defineChildrenProp,
       execute,
-      (context, done) => {
-        if (context.childrenProp.process) {
-          return flow([ processResult, resolveExports, processChildren ], done, context);
-        }
-        done();
-      },
-      element.func.after ? element.func.after : NOOP,
+      processResult,
+      resolveExports,
+      (context, done) => context.childrenProp ? done() : processChildren(context, done),
+      afterHook,
       element.debug ? debuggerOut : NOOP,
     ],
     () => done(context.result),

@@ -50,20 +50,21 @@ describe('Given the ActML library', () => {
     });
   });
   describe('when we have concurrent activities happening and a chance for collisions', () => {
-    it.only('should not produce bugs related to overwriting `result` or `scope` properties of the element', async () => {
+    it('should not produce bugs related to overwriting `result` or `scope` properties of the element', async () => {
       const Wrapper = async function ({ children }) {
         await children({ value: 10 });
         await children({ value: 20 });
+        return 100;
       }
-      const B = jest.fn();
+      const B = jest.fn().mockImplementation(({ answer }) => answer);
       const Z = async function ({ answer }) {
         return <B answer={ answer.value } />;
       }
 
-      await run(
+      const res = await run(
         <A>
           <Wrapper exports='answer'>
-            (<Z $answer/>)
+            (<Z $answer exports='finalAnswer'/>)
           </Wrapper>
         </A>
       );
@@ -71,6 +72,7 @@ describe('Given the ActML library', () => {
       expect(B).toBeCalledTimes(2);
       expect(B).toBeCalledWith(expect.objectContaining({ answer: 10 }));
       expect(B).toBeCalledWith(expect.objectContaining({ answer: 20 }));
+      expect(res).toEqual(expect.objectContaining({ finalAnswer: 20, answer: 100 }));
     });
   });
 });

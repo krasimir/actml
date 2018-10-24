@@ -345,7 +345,7 @@ describe('Given the ActML library', () => {
 
       expect(Z).toBeCalledWith(expect.objectContaining({ value: 42 }));
     });
-    it.only('should still work even if we pass a generator', async () => {
+    it('should still work even if we pass a generator', async () => {
       const Z = jest.fn();
       const B = () => fakeAsync(1, 20);
       const Logic = function({ children }) {
@@ -383,9 +383,67 @@ describe('Given the ActML library', () => {
 
       expect(Z).not.toBeCalled();
     });
-    it('should not finalize the parent if the children are not fired', async () => {
+    it('should handle async FACC child', async () => {
+      const Z = async function ({ answer }) {
+        await fakeAsync(null, 20);
+        return answer * 2;
+      };
+      const B = async function ({ doubledAnswer }) {
+        await fakeAsync(null, 20);
+        return doubledAnswer / 10;
+      }
+      const Logic = async function({ children }) {
+        await children(42);
+        await children(10);
+      }
+
+      const finalAnswer = await run(
+        <A result='finalAnswer'>
+          <Logic>
+            {
+              answer => (
+                <A scope='doubledAnswer'>
+                  <Z answer={ answer } exports='doubledAnswer'/>
+                  <B $doubledAnswer exports='finalAnswer'/>
+                </A>
+              )
+            }
+          </Logic>
+        </A>
+      );
+
+      expect(finalAnswer).toBe(2);
+    });
+    it('should handle async manual children', async () => {
+      const Z = async function ({ answer }) {
+        await fakeAsync(null, 20);
+        return answer * 2;
+      };
+      const B = async function ({ doubledAnswer }) {
+        await fakeAsync(null, 20);
+        return doubledAnswer / 10;
+      }
+      const Logic = async function({ children }) {
+        await children(42);
+        await children(10);
+      }
+
+      const finalAnswer = await run(
+        <A result='finalAnswer'>
+          <Logic exports='answer'>
+            (
+              <Z $answer exports='doubledAnswer'/>
+              <B $doubledAnswer exports='finalAnswer'/>
+            )
+          </Logic>
+        </A>
+      );
+
+      expect(finalAnswer).toBe(2);
+    });
+    it('should finalize the parent only if its function is fully executed', async () => {
       const Z = jest.fn().mockImplementation(function ({ answer }) {
-        return fakeAsync('foo ' + answer, 20);
+        return 'foo ' + answer;
       });
       const Logic = function({ children }) {
         children('a');
@@ -401,7 +459,7 @@ describe('Given the ActML library', () => {
         </A>
       );
 
-      expect(result).toEqual('foo a');
+      expect(result).toEqual('foo c');
       expect(Z).toBeCalledTimes(3);
       expect(Z).toBeCalledWith(expect.objectContaining({ answer: 'a' }));
       expect(Z).toBeCalledWith(expect.objectContaining({ answer: 'b' }));
