@@ -1,18 +1,17 @@
 import processor from './processor';
+import { defineChildrenProp } from './processor';
 import { getFuncName, getId } from './utils';
 
 export default function Element(func, props, children) {
   const scopedVars = props && props.scope ? props.scope.split(/, ?/) : [];
-
-  return {
+  const element = {
     __actml: true,
     id: getId(),
     func,
-    props,
     children,
     name: getFuncName(func),
+    props: undefined,
     scope: {},
-    result: undefined,
     context: undefined,
     parent: undefined,
     debug: false,
@@ -61,4 +60,11 @@ export default function Element(func, props, children) {
       return processor(this, done);
     }
   }
+
+  element.props = {
+    children: defineChildrenProp(element),
+    ...props
+  }
+
+  return element;
 }

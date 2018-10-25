@@ -3,9 +3,12 @@ import { isItAnElement } from './utils';
 import { A } from './';
 import flow from './flow';
 import { NOOP } from './flow';
+import ChildrenWrapper from './elements/ChildrenWrapper';
 
-function normalizeProps(context, done) {
-  const { element } = context;
+const WRONG_PARAMS_ERROR = 'The "children" prop expects an object (key-value pairs) as first argument and a callback as second argument.';
+
+function normalizeProps(execContext, done) {
+  const { element } = execContext;
   const { props, name } = element;
   let normalizedProps = { ...props };
 
@@ -32,39 +35,17 @@ function normalizeProps(context, done) {
     }
   });
 
-  context.normalizedProps = normalizedProps;
+  execContext.normalizedProps = normalizedProps;
   done();
 }
-function defineChildrenProp(context, done) {
-  const { element } = context;
-  const { children } = element;
-  let childrenProp = null;
-
-  // FACC
-  if (children.length === 1 && !isItAnElement(children[0]) && typeof children[0] === 'function') {
-    childrenProp = (...params) => {
-      if (params.length === 0) params = [ undefined ];
-      return new Promise(childrenDone => A(children[0].bind(null, ...params), null).run(element, childrenDone));
-    }
-  // if an array of Elements pass a function
-  } else if (children.length >= 3 && children[0] === '(' && children[children.length-1] === ')') {
-    childrenProp = (newResult) => {
-      context.result = newResult;
-      return new Promise(childrenDone => flow([ processResult, resolveExports, processChildren ], childrenDone, context));
-    }
-  }
-
-  context.childrenProp = childrenProp;
-  done();
-}
-function processResult(context, done) {
-  const { element, result } = context;
+function processResult(execContext, done) {
+  const { element, result } = execContext;
 
   if (result) {
     // another ActML element
     if (isItAnElement(result)) {
       return result.run(element, r => {
-        context.result = r;
+        execContext.result = r;
         done();
       });
     // promise
@@ -72,11 +53,11 @@ function processResult(context, done) {
       return result.then(asyncResult => {
         if (isItAnElement(asyncResult)) {
           return asyncResult.run(element, r => {
-            context.result = r;
+            execContext.result = r;
             done();
           });
         }
-        context.result = asyncResult;
+        execContext.result = asyncResult;
         done();
       });
     // generator
@@ -85,7 +66,7 @@ function processResult(context, done) {
       let genRes = { value: undefined, done: false };
       let processGenerator = function () {
         if (genRes.done) {
-          context.result = genRes.value;
+          execContext.result = genRes.value;
           return done();
         }
         genRes = gen.next(genRes.value);
@@ -97,13 +78,13 @@ function processResult(context, done) {
         }
         processGenerator();
       }
-      return processGenerator(gen);
+      return processGenerator();
     }
   }
   done();
 }
-function resolveExports(context, done) {
-  const { element, result } = context;
+function resolveExports(execContext, done) {
+  const { element, result } = execContext;
   const { props, scope } = element;
 
   if (props && props.exports) {
@@ -125,61 +106,81 @@ function resolveExports(context, done) {
   }
   done();
 }
-function processChildren(context, done) {
-  const { element } = context;
+function processChildren(execContext, done) {
+  const { element } = execContext;
   const children = element.children;
 
   if (children && Array.isArray(children) && children.length > 0) {
     return flow(children.map(child => {
-      if (!isItAnElement(child)) return (context, childDone) => childDone();
-      return (context, childDone) => child.run(element, childDone);
-    }), done, context);
+      if (!isItAnElement(child)) return (execContext, childDone) => childDone();
+      return (execContext, childDone) => child.run(element, childDone);
+    }), done, execContext);
   }
   done();
 }
-function execute(context, done) {
-  const { element, childrenProp } = context;
-  const defaultChildrenProp = element.children.length === 1 ? element.children[0] : element.children;
+function execute(execContext, done) {
+  const { element } = execContext;
   
-  context.result = element.func.call(element, {
-    ...context.normalizedProps,
-    children: childrenProp || defaultChildrenProp
-  });
+  execContext.result = element.func.call(element, execContext.normalizedProps);
   done();
 }
-function beforeHook(context, done) {
-  if (context.element.func.before) {
-    context.element.func.before(context, done);
+function beforeHook(execContext, done) {
+  if (execContext.element.func.before) {
+    execContext.element.func.before(execContext, done);
   } else {
     done();
   }
 }
-function afterHook(context, done) {
-  if (context.element.func.after) {
-    context.element.func.after(context, done);
+function afterHook(execContext, done) {
+  if (execContext.element.func.after) {
+    execContext.element.func.after(execContext, done);
   } else {
     done();
   }
 }
+
+export function defineChildrenProp(element) {
+  const { children } = element;
+
+  // FACC
+  if (children.length === 1 && !isItAnElement(children[0]) && typeof children[0] === 'function') {
+    return (props, childrenDone) => {
+      if (typeof props !== 'object') {
+        throw new Error(WRONG_PARAMS_ERROR);
+      }
+      return A(children[0].bind(null, props), null).run(element, childrenDone || (() => {}))
+    }
+  // if an array of Elements pass a function
+  } else if (children.length >= 3 && children[0] === '(' && children[children.length-1] === ')') {
+    return (props, childrenDone) => {
+      if (typeof props !== 'object') {
+        throw new Error(WRONG_PARAMS_ERROR);
+      }
+      return A(ChildrenWrapper, props, ...children.slice(1, -1)).run(element, childrenDone || (() => {}));
+    };
+  }
+
+  return null;
+}
+
 export default function processor(element, done) {
-  const context = { element };
+  const execContext = { element };
 
   flow(
     [
       beforeHook,
       normalizeProps,
       element.debug ? debuggerIn : NOOP,
-      defineChildrenProp,
       execute,
       processResult,
       resolveExports,
-      (context, done) => context.childrenProp ? done() : processChildren(context, done),
+      (execContext, done) => execContext.normalizedProps.children ? done() : processChildren(execContext, done),
       afterHook,
       element.debug ? debuggerOut : NOOP,
     ],
-    () => done(context.result),
-    context
+    () => done(execContext.result),
+    execContext
   );
 
-  return context.result;
+  return execContext.result;
 }

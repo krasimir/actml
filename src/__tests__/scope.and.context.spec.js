@@ -4,39 +4,26 @@ import { A, run } from '..';
 const fakeAsync = (resolveWith, delay) => new Promise(done => {
   setTimeout(() => done(resolveWith), delay);
 });
-const delay = (what, delay) => new Promise(done => {
-  setTimeout(() => (what(), done()), delay);
-});
 
 describe('Given the ActML library', () => {
-  describe('when dealing with elements communication', () => {
-    it('should pass variables between elements by using the scope', async () => {
-      const print = jest.fn();
+  describe('when using the scope api and the context', () => {
+    it('should pass variables between elements', async () => {
       const Z = jest.fn();
-      const GetToken = async () => fakeAsync('XXX', 50);
-      const UseToken = ({ token }) => print(token);
-      const T = () => {};
+      const CreatToken = () => 'xxx';
+      const UseToken = ({ token }) => Z(token);
 
       await run(
-        <A>
-          <T>
-            <T>
-              <GetToken exports='token'>
-                <Z $token />
-              </GetToken>
-            </T>
-          </T>
+        <CreatToken exports='token'>
           <UseToken $token />
-        </A>
+        </CreatToken>
       );
-      expect(Z).toBeCalledWith(expect.objectContaining({ token: 'XXX' }));
-      expect(print).toBeCalledWith('XXX');
+      expect(Z).toBeCalledWith('xxx');
     });
     it('should disable the variable bubbling if there is scoping', async () => {
       const Z = jest.fn();
       const B = jest.fn();
       const C = jest.fn().mockImplementation(() => 'foo');
-      const D = jest.fn();
+      const D = function D() {};
       const E = jest.fn();
 
       return run(
@@ -51,7 +38,7 @@ describe('Given the ActML library', () => {
         </A>
       ).catch(error => {
         expect(E).toBeCalledWith(expect.objectContaining({ faf: 'foo' }));
-        expect(error.message).toBe('Undefined variable \"faf\" requested by <unknown>.');
+        expect(error.message).toBe('Undefined variable \"faf\" requested by <D>.');
       });
     });
     it('should support comma separated scoped variables', async () => {
@@ -76,7 +63,7 @@ describe('Given the ActML library', () => {
     it('should provide an API for scoping everything', async () => {
       const B = jest.fn();
       const Z = jest.fn();
-      const M = jest.fn();
+      const M = function M() {};
       const C = jest.fn().mockImplementation(() => 42);
       const D = jest.fn();
 
@@ -91,7 +78,7 @@ describe('Given the ActML library', () => {
         </B>
       ).catch(error => {
         expect(D).toBeCalledWith(expect.objectContaining({ foo: 42, bar: 42 }));
-        expect(error.message).toBe("Undefined variable \"foo\" requested by <unknown>.");
+        expect(error.message).toBe("Undefined variable \"foo\" requested by <M>.");
       });
     });
     it('should allow renaming of a prop', async () => {
@@ -124,7 +111,7 @@ describe('Given the ActML library', () => {
 
       expect(C).toBeCalledWith(expect.objectContaining({ foo: 'bar' }));
     });
-    it('should be able the use the context as DI container', async () => {
+    it('should be able to use the context as DI container', async () => {
       const context = {
         getPosts: jest.fn().mockImplementation(() => 'bar')
       };
@@ -151,11 +138,10 @@ describe('Given the ActML library', () => {
       });
 
       await run(
-        <A scope='num'>
-          <Z exports={ transform } />
+        <Z exports={ transform }>
           <B $u />
           <C $l />
-        </A>
+        </Z>
       );
 
       expect(B).toBeCalledWith(expect.objectContaining({ u: 'HELLO WORLD' }));
@@ -166,10 +152,9 @@ describe('Given the ActML library', () => {
       const B = jest.fn();
 
       await run(
-        <A scope='num'>
-          <Z exports='num' />
+        <Z exports='num'>
           <B $num={ n => ({ a: n, b: n})} />
-        </A>
+        </Z>
       );
 
       expect(B).toBeCalledWith(expect.objectContaining({ a: 55, b: 55 }));
@@ -177,7 +162,7 @@ describe('Given the ActML library', () => {
     it('should scope variables to only parent by default', async () => {
       const Foo = () => 100;
       const Bar = () => fakeAsync(200, 10);
-      const Delay = () => fakeAsync(undefined, 20);
+      const Delay = () => fakeAsync(null, 20);
       const Z1 = jest.fn();
       const Z2 = jest.fn();
 
@@ -193,10 +178,31 @@ describe('Given the ActML library', () => {
         </A>
       );
 
-      await delay(() => {
-        expect(Z1).toBeCalledWith(expect.objectContaining({ answer: 200 }));
-        expect(Z2).toBeCalledWith(expect.objectContaining({ answer: 100 }));
-      }, 50);
+      expect(Z1).toBeCalledWith(expect.objectContaining({ answer: 200 }));
+      expect(Z2).toBeCalledWith(expect.objectContaining({ answer: 100 }));
     });
   });
+  describe('when using generators', () => {
+    it('should be able to use the scope api', async () => {
+      const Z = jest.fn();
+      const B = jest.fn().mockImplementation(() => fakeAsync(42, 10));
+      const C = jest.fn().mockImplementation(answer => `the answer is ${ answer }`);
+      const E = jest.fn().mockImplementation(function({ message, answer }) {
+        return { message, answer, contextData: this.context };
+      });
+      const Func = function * () {
+        yield <Z foo='bar' />;
+        const answer = yield <B bar='foo' exports='answer' />;
+        const message = yield C(answer);
+        return <E $answer message={ message } />;
+      }
+
+      await run(<Func scope='answer'/>);
+
+      expect(Z).toBeCalledWith(expect.objectContaining({ foo: 'bar' }));
+      expect(B).toBeCalledWith(expect.objectContaining(({ bar: 'foo', exports: 'answer' })));
+      expect(C).toBeCalledWith(42);
+      expect(E).toBeCalledWith(expect.objectContaining({ answer: 42, message: 'the answer is 42' }));
+    });
+  })
 });
