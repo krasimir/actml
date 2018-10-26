@@ -1,8 +1,8 @@
 import * as ReduxMethods from './elements/redux';
-import Element from './Element';
-import { isItAnElement } from './utils';
+import Element from './elements/Element';
 import AElement from './elements/A';
 import createRootElement from './elements/createRootElement';
+import { isItAnElement } from './utils';
 
 function create(func, props, ...children) {
   return func === create ?
@@ -17,7 +17,7 @@ function run(element, context = {}) {
     } else {
       throw new Error('`run` should be called with an ActML element. You are passing:', element);
     }
-  });  
+  });
 }
 
 const Redux = { ...ReduxMethods };

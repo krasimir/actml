@@ -1,6 +1,6 @@
-import processor from './processor';
-import { defineChildrenProp } from './processor';
-import { getFuncName, getId } from './utils';
+import processor from '../processor';
+import defineChildrenProp from '../processor/defineChildrenProp';
+import { getFuncName, getId } from '../utils';
 
 export default function Element(func, props, children) {
   const scopedVars = props && props.scope ? props.scope.split(/, ?/) : [];
@@ -13,7 +13,7 @@ export default function Element(func, props, children) {
     props: undefined,
     scope: {},
     context: undefined,
-    parent: undefined,
+    parent: undefined, 
     debug: false,
 
     mergeToProps(additionalProps) {
