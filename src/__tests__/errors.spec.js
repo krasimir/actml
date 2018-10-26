@@ -4,7 +4,7 @@ import { A, run } from '..';
 describe('Given the ActML library', () => {
   describe('when there is an error', () => {
     it('should swallow the error by default', async () => {
-      const Problem = function() {
+      const Problem = function () {
         return iDontExist; // throws an error "iDontExist is not defined"
       };
       const Z = jest.fn();
@@ -24,13 +24,13 @@ describe('Given the ActML library', () => {
       expect(Handler).toBeCalled();
     });
     it('should continue processing the siblings', async () => {
-      const Problem = function() {
+      const Problem = function () {
         return iDontExist; // throws an error "iDontExist is not defined"
       };
-      const App = function() {};
+      const App = function () {};
       const HandleError = jest.fn();
       const AfterError = jest.fn();
-      
+
       await run(
         <App exports='answer'>
           <Problem onError={ <HandleError /> } />
@@ -41,13 +41,13 @@ describe('Given the ActML library', () => {
       expect(AfterError).toBeCalled();
     });
     it('should fire the onError handler with the given error', async () => {
-      const Problem = function() {
+      const Problem = function () {
         return iDontExist; // throws an error "iDontExist is not defined"
       };
-      const App = function() {};
+      const App = function () {};
       const spy = jest.fn();
       const HandleError = ({ error }) => (spy(error.message), false);
-      
+
       await run(
         <App>
           <Problem onError={ <HandleError /> } />
@@ -56,11 +56,11 @@ describe('Given the ActML library', () => {
       expect(spy).toBeCalledWith('iDontExist is not defined');
     });
     it('should allow the handler to access scoped variables', async () => {
-      const Problem = function() {
+      const Problem = function () {
         return iDontExist; // throws an error "iDontExist is not defined"
       };
       const spy = jest.fn();
-      const App = function() { return 42 };
+      const App = function () { return 42 };
       const HandleError = ({ answer }) => (spy(answer), false);
       
       await run(
@@ -73,10 +73,10 @@ describe('Given the ActML library', () => {
     it('should continue the execution if the error is handled', async () => {
       const Problem = () => iDontExist();
       const CatchError = () => {};
-      const Foo = function*() {
+      const Foo = function * () {
         return 'foo';
       };
-      const Bar = function*() {
+      const Bar = function * () {
         return (
           <Problem onError={<CatchError />}>
             <Foo exports="foo" />
@@ -87,16 +87,17 @@ describe('Given the ActML library', () => {
 
       expect(result.foo).toEqual('foo');
     });
-    it('should handle the error of the children', async () => {
+    it.only('should handle the error of the children', async () => {
       const Problem = function * () {
         return iDontExist; // throws an error "iDontExist is not defined"
       };
+
       function * WithProblem() {
         return (
           <A>
             <Problem />
           </A>
-        )
+        );
       }
       function Wrapper() {
         return <A><WithProblem /></A>;
@@ -106,9 +107,9 @@ describe('Given the ActML library', () => {
       const Handler = jest.fn();
 
       await run(
-        <A onError={ <Handler /> }>
+        <A>
           <Z />
-          <Wrapper />
+          <Wrapper onError={ <Handler /> }/>
           <B />
         </A>
       );

@@ -7,10 +7,13 @@ export default function processChildren(execContext, done) {
   const children = element.children;
 
   if (children && Array.isArray(children) && children.length > 0) {
-    return flow(children.map(child => {
-      if (!isItAnElement(child)) return (execContext, childDone) => childDone();
-      return (execContext, childDone) => child.run(element, childDone);
-    }), done, execContext);
+    return flow()
+      .withContext(execContext)
+      .done(done)
+      .run(children.map(child => {
+        if (!isItAnElement(child)) return (execContext, childDone) => childDone();
+        return (execContext, childDone) => child.run(element, childDone);
+      }));
   }
   done();
 }

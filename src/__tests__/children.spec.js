@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /** @jsx A */
 import { A, run } from '..';
 
@@ -68,9 +69,9 @@ describe('Given the ActML library', () => {
     });
     it('should throw an error if we forgot to wrap the children in brackets', () => {
       const Z = jest.fn();
-      const Logic = function({ children }) {
+      const Logic = function ({ children }) {
         children(42);
-      }
+      };
 
       return run(
         <Logic exports='answer'>
@@ -196,10 +197,10 @@ describe('Given the ActML library', () => {
       const Z = async function () {
         await fakeAsync(null, 20);
         throw new Error('Ops!');
-      }
-      const Logic = async function({ children }) {
+      };
+      const Logic = async function ({ children }) {
         await children();
-      }
+      };
 
       return run(
         <Logic debug>

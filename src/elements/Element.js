@@ -4,6 +4,7 @@ import { getFuncName, getId } from '../utils';
 
 export default function Element(func, props, children) {
   const scopedVars = props && props.scope ? props.scope.split(/, ?/) : [];
+
   const element = {
     __actml: true,
     id: getId(),
@@ -13,7 +14,7 @@ export default function Element(func, props, children) {
     props: undefined,
     scope: {},
     context: undefined,
-    parent: undefined, 
+    parent: undefined,
     debug: false,
 
     mergeToProps(additionalProps) {
@@ -47,7 +48,7 @@ export default function Element(func, props, children) {
       if (this.props && typeof this.props.debug !== 'undefined') {
         this.debug = true;
       }
-        
+ 
       if (typeof func === 'string') {
         if (this.context[func]) {
           this.func = this.context[func];
@@ -59,12 +60,12 @@ export default function Element(func, props, children) {
 
       return processor(this, done);
     }
-  }
+  };
 
   element.props = {
     children: defineChildrenProp(element),
     ...props
-  }
+  };
 
   return element;
 }

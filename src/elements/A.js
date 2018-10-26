@@ -1,3 +1,5 @@
+/* eslint-disable max-len */
+
 export default function A() {
   return this.scope;
 }
@@ -11,4 +13,4 @@ A.after = function (context, done) {
     context.result = scope[props.result];
   }
   done();
-}
+};

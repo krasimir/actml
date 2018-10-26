@@ -1,42 +1,47 @@
+/* eslint-disable max-len */
+
+var ids = 100;
+
+export const getId = () => ids++;
+export const isItAnElement = element => element && element.__actml;
 export const getFuncName = function (func) {
   const result = /function\*?\s+([\w\$]+)\s*\(/.exec(func.toString());
 
   return result ? result[1] : 'unknown';
 };
-
-export const isItAnElement = element => element && element.__actml;
-
-var ids = 100;
-
-export const getId = () => ids++;
-
-function identifyTheError(error, sourceElement) {
-  if (error.toString().match(/children is not a function/)) {
-    return new Error(`You are trying to use "children" prop as a function in <${ sourceElement }> but it is not. Did you forget to wrap its children in round brackets. Like for example <${ sourceElement }>(<Child />)</${ sourceElement }>?`);
-  }
-  return error;
-}
-
-export function flow(workers, done, context) {
-  if (workers.length === 0) {
-    done();
-  } else {
-    try {
-      const worker = workers.shift();
-
-      worker(context, () => {
-        flow(workers, done, context);
-      });
-    } catch (error) {
-      const { props } = context.element;
-      const identifiedError = identifyTheError(error, context.element.name);
-
-      if (props && props.onError) {
-        props.onError.mergeToProps({ error: identifiedError });
-        props.onError.run(context.element, () => flow(workers, done, context));
+export function flow() {
+  const api = {
+    context: {},
+    errorHandler(error) {
+      throw error;
+    },
+    doneFunc() {},
+    withContext(c) {
+      this.context = c;
+      return this;
+    },
+    done(d) {
+      this.doneFunc = d;
+      return this;
+    },
+    withErrorHandler(e) {
+      this.errorHandler = e;
+      return this;
+    },
+    run(workers) {
+      if (workers.length === 0) {
+        this.doneFunc();
       } else {
-        throw error;
+        try {
+          const worker = workers.shift();
+
+          worker(this.context, () => flow().withContext(this.context).done(this.doneFunc).run(workers));
+        } catch (error) {
+          this.errorHandler(error, () => flow().withContext(this.context).done(this.doneFunc).run(workers));
+        }
       }
     }
-  }
-};
+  };
+
+  return api;
+}
