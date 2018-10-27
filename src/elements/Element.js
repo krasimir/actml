@@ -48,7 +48,7 @@ export default function Element(func, props, children) {
       if (this.props && typeof this.props.debug !== 'undefined') {
         this.debug = true;
       }
- 
+
       if (typeof func === 'string') {
         if (this.context[func]) {
           this.func = this.context[func];

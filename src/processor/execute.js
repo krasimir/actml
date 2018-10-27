@@ -24,6 +24,7 @@ export default function execute(execContext, done) {
         execContext.result = asyncResult;
         done();
       }).catch(error => {
+        console.log(error);
         throw error;
       });
     // generator
@@ -48,5 +49,6 @@ export default function execute(execContext, done) {
       return processGenerator();
     }
   }
+
   done();
 }

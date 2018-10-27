@@ -7,7 +7,7 @@ const fakeAsync = (resolveWith, delay) => new Promise(done => {
 
 describe('Given the ActML library', () => {
   describe('when using a function', () => {
-    it('should return the result of the function', async () => {
+    it.only('should return the result of the function', async () => {
       const Func = jest.fn().mockImplementation(() => 'foo');
 
       const result = await run(<Func />);
@@ -22,7 +22,7 @@ describe('Given the ActML library', () => {
 
       expect(Func).toBeCalledWith(expect.objectContaining({ foo: 10 }));
     });
-    it(`should continue processing elements if we return such as a result`, async () => {
+    it('should continue processing elements if we return such as a result', async () => {
       const Z = () => 'foo';
       const Foo = () => <Z />;
       const Bar = () => <Foo />;
@@ -41,8 +41,8 @@ describe('Given the ActML library', () => {
       expect(answer).toBe('foo');
     });
     it('should handle an async function as a result', async () => {
-      const Bar = async function () { return 42; }
-      const Foo = async function() { return <Bar />; };
+      const Bar = async function () { return 42; };
+      const Foo = async function () { return <Bar />; };
 
       expect(await run(<Foo />)).toBe(42);
     });
@@ -55,7 +55,7 @@ describe('Given the ActML library', () => {
         yield <B answer={ answer } />;
         yield <C answer={ answer * 2 } />;
         return answer * 3;
-      }
+      };
 
       const result = await run(<Func answer={ 42 }/>);
 
@@ -66,7 +66,7 @@ describe('Given the ActML library', () => {
     it('should work if we pass a generator as a result', async () => {
       const Z = function * () { return 42; };
       const B = function * () { return yield <Z />; };
-      const C = function * () { return <B />; }      
+      const C = function * () { return <B />; };
 
       const result = await run(<C />);
 

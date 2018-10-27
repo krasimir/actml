@@ -14,13 +14,7 @@ export default function defineChildrenProp(element) {
       if (typeof props !== 'undefined' && typeof props !== 'object') {
         throw new Error(WRONG_PARAMS_ERROR);
       }
-      return new Promise(childrenDone => {
-        try {
-          return A(children[0], props).run(element, childrenDone || (() => {}));
-        } catch (error) {
-          console.log(error);
-        }
-      });
+      return new Promise(childDone => A(children[0], props).run(element, childDone));
     };
   // an array of ActML elements
   } else if (children.length >= 3 && children[0] === '(' && children[ children.length - 1] === ')') {

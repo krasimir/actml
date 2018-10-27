@@ -117,22 +117,6 @@ describe('Given the ActML library', () => {
       expect(Z).toBeCalledWith(expect.objectContaining({ answer: 42 }));
       expect(B).toBeCalledWith(expect.objectContaining({ answer: 42 }));
     });
-    it('should be able to catch an error from the children', () => {
-      const Z = function Z(){};
-      const Logic = function({ children }) {
-        children({});
-      }
-
-      return run(
-        <Logic>
-          (
-            <Z $answer />
-          )
-        </Logic>
-      ).catch(error => {
-        expect(error.message).toBe('Undefined variable "answer" requested by <Z>.');
-      });
-    });
     it('should allow the FaCC pattern', async () => {
       const Z = ({ value }) => value * 2;
       const Logic = function({ children }) {
@@ -175,13 +159,13 @@ describe('Given the ActML library', () => {
       const Z = async function ({ answer }) {
         await fakeAsync(null, 20);
         return answer * 2;
-      }
-      const Logic = async function({ children }) {
+      };
+      const Logic = async function ({ children }) {
         const a = await children({ answer: 5 });
         const b = await children({ answer: 3 });
 
         return a + b;
-      }
+      };
 
       const finalAnswer = await run(
         <Logic>
@@ -192,25 +176,6 @@ describe('Given the ActML library', () => {
       );
 
       expect(finalAnswer).toBe(16);
-    });
-    it.skip('should not swallow the error from an async FaCC child', () => {
-      const Z = async function () {
-        await fakeAsync(null, 20);
-        throw new Error('Ops!');
-      };
-      const Logic = async function ({ children }) {
-        await children();
-      };
-
-      return run(
-        <Logic debug>
-          {
-            function facc() { return <Z />; }
-          }
-        </Logic>
-      ).catch(error => {
-        expect(error.message).toBe('Ops!ss ');
-      });
     });
     it.skip('should handle async manual children', async () => {
       const Z = async function ({ answer }) {

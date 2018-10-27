@@ -9,39 +9,21 @@ export const getFuncName = function (func) {
 
   return result ? result[1] : 'unknown';
 };
-export function flow() {
-  const api = {
-    context: {},
-    errorHandler(error) {
-      throw error;
-    },
-    doneFunc() {},
-    withContext(c) {
-      this.context = c;
-      return this;
-    },
-    done(d) {
-      this.doneFunc = d;
-      return this;
-    },
-    withErrorHandler(e) {
-      this.errorHandler = e;
-      return this;
-    },
-    run(workers) {
-      if (workers.length === 0) {
-        this.doneFunc();
-      } else {
-        try {
-          const worker = workers.shift();
-
-          worker(this.context, () => flow().withContext(this.context).done(this.doneFunc).run(workers));
-        } catch (error) {
-          this.errorHandler(error, () => flow().withContext(this.context).done(this.doneFunc).run(workers));
-        }
+export function flow(
+  workers,
+  context = {},
+  done = () => {},
+  errorHandler = (error) => { throw error; }
+  ) {
+  (function process(workers) {
+    if (workers.length === 0) {
+      done();
+    } else {
+      try {
+        (workers.shift())(context, () => process(workers));
+      } catch (error) {
+        errorHandler(error, () => process(workers));
       }
     }
-  };
-
-  return api;
+  })(workers);
 }

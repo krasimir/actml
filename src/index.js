@@ -3,6 +3,7 @@ import Element from './elements/Element';
 import AElement from './elements/A';
 import createRootElement from './elements/createRootElement';
 import { isItAnElement } from './utils';
+import { createProcessor } from './processor';
 
 function create(func, props, ...children) {
   return func === create ?
@@ -13,7 +14,9 @@ function create(func, props, ...children) {
 function run(element, context = {}) {
   return new Promise(done => {
     if (isItAnElement(element)) {
-      element.run(createRootElement(context), done);
+      const processor = createProcessor(done);
+
+      processor.add(element, createRootElement(context));
     } else {
       throw new Error('`run` should be called with an ActML element. You are passing:', element);
     }
