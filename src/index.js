@@ -14,9 +14,7 @@ function create(func, props, ...children) {
 function run(element, context = {}) {
   return new Promise(done => {
     if (isItAnElement(element)) {
-      const processor = createProcessor(done);
-
-      processor.add(element, createRootElement(context));
+      createProcessor(done).add(element, createRootElement(context));
     } else {
       throw new Error('`run` should be called with an ActML element. You are passing:', element);
     }

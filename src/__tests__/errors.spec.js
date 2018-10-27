@@ -7,7 +7,7 @@ const fakeAsync = (resolveWith, delay) => new Promise(done => {
 
 describe('Given the ActML library', () => {
   describe('when there is an error', () => {
-    it('should swallow the error by default', async () => {
+    it.only('should swallow the error by default', async () => {
       const Problem = function () {
         return iDontExist; // throws an error "iDontExist is not defined"
       };

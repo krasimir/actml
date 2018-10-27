@@ -98,12 +98,12 @@ describe('Given the ActML library', () => {
         expect(error.message).toBe('The "children" prop expects an object (key-value pairs) as first argument and a callback as second argument.');
       });
     });
-    it('should run the ActML elements and make some data available for them', async () => {
+    it.only('should run the ActML elements and make some data available for them', async () => {
       const Z = jest.fn();
       const B = jest.fn();
-      const Logic = function({ children }) {
+      const Logic = function ({ children }) {
         children({ answer: 42 });
-      }
+      };
 
       await run(
         <Logic>

@@ -7,7 +7,7 @@ const fakeAsync = (resolveWith, delay) => new Promise(done => {
 
 describe('Given the ActML library', () => {
   describe('when using a function', () => {
-    it.only('should return the result of the function', async () => {
+    it('should return the result of the function', async () => {
       const Func = jest.fn().mockImplementation(() => 'foo');
 
       const result = await run(<Func />);

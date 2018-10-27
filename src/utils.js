@@ -13,7 +13,7 @@ export function flow(
   workers,
   context = {},
   done = () => {},
-  errorHandler = (error) => { throw error; }
+  errorHandler = (error, notused) => { throw error; }
   ) {
   (function process(workers) {
     if (workers.length === 0) {

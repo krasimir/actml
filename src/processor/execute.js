@@ -2,53 +2,53 @@
 import { isItAnElement } from '../utils';
 
 export default function execute(execContext, done) {
-  const { element } = execContext;
+  const { element, processor } = execContext;
   const result = execContext.result = element.func.call(element, execContext.normalizedProps);
 
   if (result) {
     // another ActML element
     if (isItAnElement(result)) {
-      return result.run(element, r => {
+      processor.add(result, element, r => {
         execContext.result = r;
         done();
       });
     // promise
     } else if (result && result.then) {
-      return result.then(asyncResult => {
+      result.then(asyncResult => {
         if (isItAnElement(asyncResult)) {
-          return asyncResult.run(element, r => {
+          processor.add(asyncResult, element, r => {
             execContext.result = r;
             done();
           });
+        } else {
+          execContext.result = asyncResult;
+          done();
         }
-        execContext.result = asyncResult;
-        done();
-      }).catch(error => {
-        console.log(error);
-        throw error;
       });
     // generator
     } else if (typeof result.next === 'function') {
       const gen = result;
       let genRes = { value: undefined, done: false };
-      let processGenerator = function () {
+
+      (function processGenerator() {
         if (genRes.done) {
           execContext.result = genRes.value;
           return done();
         }
         genRes = gen.next(genRes.value);
         if (isItAnElement(genRes.value)) {
-          return genRes.value.run(element, newValue => {
+          processor.add(genRes.value, element, newValue => {
             genRes.value = newValue;
             processGenerator();
           });
+        } else {
+          processGenerator();
         }
-        processGenerator();
-      };
-
-      return processGenerator();
+      })();
+    } else {
+      done();
     }
+  } else {
+    done();
   }
-
-  done();
 }
