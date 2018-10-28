@@ -6,7 +6,7 @@ import afterHook from './afterHook';
 import normalizeProps from './normalizeProps';
 import execute from './execute';
 import resolveExports from './resolveExports';
-import processChildren from './processChildren';
+import attemptToProcessChildren from './attemptToProcessChildren';
 import defineChildrenProp from './defineChildrenProp';
 
 const DEBUG_ENABLED = false;
@@ -18,7 +18,7 @@ function identifyTheError(error, sourceElement) {
   return error;
 }
 
-class Processor {
+export default class Processor {
   constructor(done) {
     this.ids = 0;
     this.onFinish = done;
@@ -37,7 +37,7 @@ class Processor {
       `, ...reset);
     }
   }
-  elementProcessed(task, executionContext) {
+  elementProcessed(task) {
     const { id } = task;
 
     if (this.queue[id]) {
@@ -49,27 +49,39 @@ class Processor {
     this.debug('<-', task.element);
 
     if (task.done) {
-      task.done(executionContext.result);
+      task.done(task.result);
     }
 
     // exit if we don't have any more elements to process
     if (Object.keys(this.queue).length === 0) {
-      this.exit(null, executionContext.result);
+      this.exit(null, task.result);
     }
   }
-  createTask(element, parent, done) {
-    return { element, parent, id: this.ids++, done };
-  }
-  processElement(task) {
-    this.queue[task.id] = task;
+  createProcessorErrorHandler(element) {
+    return (error, continueFlow, stopFlow) => {
+      this.debug('!', element, error.message);
 
-    const { element, parent } = task;
-    const executionContext = {
+      const Handler = element.handleError(error);
+
+      if (Handler) {
+        this.add(Handler, element, continueFlow);
+      } else {
+        stopFlow(identifyTheError(error, element.name));
+      }
+    };
+  }
+  add(element, parent, done) {
+    const task = {
+      id: this.ids++,
       element: element.initialize(parent),
+      parent,
+      done,
       result: undefined,
       processor: this
     };
+    const onProcessingFinished = (error) => error ? this.exit(error) : this.elementProcessed(task, task);
 
+    this.queue[task.id] = task;
     this.debug('->', element);
 
     flow(
@@ -79,40 +91,12 @@ class Processor {
         defineChildrenProp,
         execute,
         resolveExports,
-        function atemptToProcessChildren(execContext, done, addNewWorker) {
-          if (!execContext.childrenProp) {
-            addNewWorker(processChildren);
-          }
-          done();
-        },
+        attemptToProcessChildren,
         afterHook
       ],
-      executionContext,
-      (error) => {
-        if (error) {
-          this.exit(error);
-        } else {
-          this.elementProcessed(task, executionContext);
-        }
-      },
-      (error, continueFlow, stopFlow) => {
-        this.debug('!', element, error.message);
-
-        const Handler = element.handleError(error);
-
-        if (Handler) {
-          this.add(Handler, element, continueFlow);
-        } else {
-          stopFlow(identifyTheError(error, element.name));
-        }
-      }
+      task,
+      onProcessingFinished,
+      this.createProcessorErrorHandler(element)
     );
   }
-  add(element, parent, done) {
-    this.processElement(this.createTask(element, parent, done));
-  }
-}
-
-export function createProcessor(done) {
-  return new Processor(done);
 }
