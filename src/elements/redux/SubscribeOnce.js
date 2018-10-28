@@ -4,7 +4,7 @@ function SubscribeOnce({ children, type }) {
   if (type) {
     const removeListener = Integration.addListener(action => {
       if (action.type === type) {
-        children(action);
+        children({ action });
         removeListener();
       }
     });

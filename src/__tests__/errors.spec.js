@@ -198,5 +198,27 @@ describe('Given the ActML library', () => {
         done();
       });
     });
+    it('should handle the error of the children even if some of them is a generator', async () => {
+      function B() {};
+      function C() {};
+      function D() {};
+      function Problem() {
+        return iDontExist; // throws an error "iDontExist is not defined"
+      };
+      function * Wrapper() {
+        yield <C />;
+        yield <Problem />;
+        return <D />;
+      }
+      const Handler = jest.fn();
+
+      await run(
+        <B onError={ <Handler /> }>
+          <Wrapper />
+        </B>
+      );
+
+      expect(Handler).toBeCalled();
+    }, 500);
   });
 });

@@ -4,7 +4,7 @@ async function Subscribe({ children, type }) {
   if (type) {
     Integration.addListener(action => {
       if (action.type === type) {
-        children(action);
+        children({ action });
       }
     });
   } else {

@@ -21,7 +21,9 @@
     "Mousetrap": true,
     "React": true,
     "io": true,
-    "jest": true
+    "jest": true,
+    "beforeEach": true,
+    "afterEach": true
   },
 
   "parser": "babel-eslint",

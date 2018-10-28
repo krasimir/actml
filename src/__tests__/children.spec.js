@@ -69,7 +69,7 @@ describe('Given the ActML library', () => {
     });
     it('should throw an error if we forgot to wrap the children in brackets', () => {
       const Z = jest.fn();
-      const Logic = function ({ children }) {
+      const Logic = function Logic({ children }) {
         children(42);
       };
 
@@ -177,7 +177,7 @@ describe('Given the ActML library', () => {
 
       expect(finalAnswer).toBe(16);
     });
-    it.skip('should handle async manual children', async () => {
+    it('should handle async manual children', async () => {
       const Z = async function ({ answer }) {
         await fakeAsync(null, 20);
         return answer * 2;
@@ -187,13 +187,13 @@ describe('Given the ActML library', () => {
         return doubledAnswer / 10;
       };
       const Logic = async function ({ children }) {
-        await children(42);
-        await children(10);
+        await children({ answer: 42 });
+        await children({ answer: 10 });
       };
 
       const finalAnswer = await run(
         <A result='finalAnswer'>
-          <Logic exports='answer'>
+          <Logic>
             (
               <Z $answer exports='doubledAnswer'/>
               <B $doubledAnswer exports='finalAnswer'/>
@@ -204,19 +204,19 @@ describe('Given the ActML library', () => {
 
       expect(finalAnswer).toBe(2);
     });
-    it.skip('should finalize the parent only if its function is fully executed', async () => {
+    it('should finalize the parent only if its function is fully executed', async () => {
       const Z = jest.fn().mockImplementation(function ({ answer }) {
         return 'foo ' + answer;
       });
-      const Logic = function({ children }) {
-        children('a');
-        children('b');
-        children('c');
-      }
+      const Logic = function ({ children }) {
+        children({ answer: 'a' });
+        children({ answer: 'b' });
+        children({ answer: 'c' });
+      };
 
       const result = await run(
         <A result='bar'>
-          <Logic exports='answer'>
+          <Logic>
             (<Z exports='bar' $answer/>)
           </Logic>
         </A>
@@ -228,20 +228,20 @@ describe('Given the ActML library', () => {
       expect(Z).toBeCalledWith(expect.objectContaining({ answer: 'b' }));
       expect(Z).toBeCalledWith(expect.objectContaining({ answer: 'c' }));
     });
-    it.skip('should allow us to process the children many times when they are ActML elements', async () => {
+    it('should allow us to process the children many times when they are ActML elements', async () => {
       const Logic = async function ({ children }) {
-        await children(42);
-        await children(100);
-      }
+        await children({ answer: 42 });
+        await children({ answer: 100 });
+      };
       const Z = jest.fn();
       const ZWrapper = function ZWrapper({ answer }) {
-        return <Z answer={ answer }/>
-      }
+        return <Z answer={ answer }/>;
+      };
       const B = jest.fn();
       const C = jest.fn();
 
       await run(
-        <Logic exports='answer'>(
+        <Logic>(
           <ZWrapper $answer/>
           <B $answer><C $answer/></B>
         )</Logic>
@@ -257,19 +257,19 @@ describe('Given the ActML library', () => {
       expect(B).toBeCalledWith(expect.objectContaining({ answer: 100 }));
       expect(C).toBeCalledWith(expect.objectContaining({ answer: 100 }));
     });
-    it.skip('should keep the context in the FACC', async () => {
+    it('should keep the context in the FACC', async () => {
       const Z = jest.fn();
-      const Logic = async function({ children }) {
-        await children(42);
-      }
+      const Logic = async function ({ children }) {
+        await children({ value: 42 });
+      };
       const context = {
         myService: ({ value }) => value * 2
-      }
+      };
 
       await run(
         <Logic>
           {
-            value => {
+            ({ value }) => {
               return <myService value={value} exports='answer'><Z $answer/></myService>;
             }
           }
@@ -279,7 +279,7 @@ describe('Given the ActML library', () => {
 
       expect(Z).toBeCalledWith(expect.objectContaining({ answer: 84 }));
     });
-    it.skip(`- should be possible to process the children many times
+    it(`- should be possible to process the children many times
         - and pass data to them`, async () => {
       const store = {
         subscribe(callback) {
@@ -287,9 +287,9 @@ describe('Given the ActML library', () => {
         }
       };
       const Func = async function ({ children }) {
-        await children('foo');
+        await children({ data: 'foo' });
         store.subscribe(async () => {
-          await children('bar');
+          await children({ data: 'bar' });
           await children();
         });
       };
@@ -301,7 +301,7 @@ describe('Given the ActML library', () => {
         <A>
           <Func>
             {
-              data => (
+              ({ data }) => (
                 <A>
                   <Z data={ data }/>
                   <B data={ data }/>

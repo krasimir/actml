@@ -103,7 +103,7 @@ class Processor {
         if (Handler) {
           this.add(Handler, element, continueFlow);
         } else {
-          stopFlow(identifyTheError(error));
+          stopFlow(identifyTheError(error, element.name));
         }
       }
     );
