@@ -1,5 +1,3 @@
-import processor from '../processor';
-import defineChildrenProp from '../processor/defineChildrenProp';
 import { getFuncName, getId } from '../utils';
 
 export default function Element(func, props, children) {
@@ -11,7 +9,7 @@ export default function Element(func, props, children) {
     func,
     children,
     name: getFuncName(func),
-    props: undefined,
+    props,
     scope: {},
     context: undefined,
     parent: undefined,
@@ -35,6 +33,13 @@ export default function Element(func, props, children) {
 
       if (scope.hasOwnProperty(key)) return scope[key];
       return parent.readFromScope(key, requester);
+    },
+    handleError(error) {
+      if (this.props && this.props.onError) {
+        this.props.onError.mergeToProps({ error });
+        return this.props.onError;
+      }
+      return this.parent.handleError(error);
     },
     initialize(parent) {
       if (!parent) {
@@ -60,11 +65,6 @@ export default function Element(func, props, children) {
 
       return this;
     }
-  };
-
-  element.props = {
-    children: defineChildrenProp(element),
-    ...props
   };
 
   return element;

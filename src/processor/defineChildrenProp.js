@@ -5,20 +5,22 @@ import ChildrenWrapper from '../elements/ChildrenWrapper';
 
 const WRONG_PARAMS_ERROR = 'The "children" prop expects an object (key-value pairs) as first argument and a callback as second argument.';
 
-export default function defineChildrenProp(element) {
-  const { children, processor } = element;
+export default function defineChildrenProp(execContext, done) {
+  const { element, processor } = execContext;
+  const { children } = element;
+  let childrenProp = null;
 
   // FACC
   if (children.length === 1 && !isItAnElement(children[0]) && typeof children[0] === 'function') {
-    return props => {
+    childrenProp = props => {
       if (typeof props !== 'undefined' && typeof props !== 'object') {
         throw new Error(WRONG_PARAMS_ERROR);
       }
-      return new Promise(childDone => A(children[0], props).run(element, childDone));
+      return new Promise(childDone => processor.add(A(children[0], props), element, childDone));
     };
   // an array of ActML elements
   } else if (children.length >= 3 && children[0] === '(' && children[ children.length - 1] === ')') {
-    return props => {
+    childrenProp = props => {
       if (typeof props !== 'undefined' && typeof props !== 'object') {
         throw new Error(WRONG_PARAMS_ERROR);
       }
@@ -28,5 +30,6 @@ export default function defineChildrenProp(element) {
     };
   }
 
-  return null;
+  execContext.childrenProp = childrenProp;
+  done();
 }

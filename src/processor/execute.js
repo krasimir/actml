@@ -3,7 +3,13 @@ import { isItAnElement } from '../utils';
 
 export default function execute(execContext, done) {
   const { element, processor } = execContext;
-  const result = execContext.result = element.func.call(element, execContext.normalizedProps);
+  const result = execContext.result = element.func.call(
+    element,
+    {
+      ...execContext.normalizedProps,
+      children: execContext.childrenProp
+    }
+  );
 
   if (result) {
     // another ActML element
@@ -24,7 +30,7 @@ export default function execute(execContext, done) {
           execContext.result = asyncResult;
           done();
         }
-      });
+      }).catch(error => done(error));
     // generator
     } else if (typeof result.next === 'function') {
       const gen = result;

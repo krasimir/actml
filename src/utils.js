@@ -2,6 +2,7 @@
 
 var ids = 100;
 
+export const NOOP = () => {};
 export const getId = () => ids++;
 export const isItAnElement = element => element && element.__actml;
 export const getFuncName = function (func) {
@@ -9,20 +10,25 @@ export const getFuncName = function (func) {
 
   return result ? result[1] : 'unknown';
 };
-export function flow(
-  workers,
-  context = {},
-  done = () => {},
-  errorHandler = (error, notused) => { throw error; }
-  ) {
+export function flow(workers, context = {}, done = NOOP, errorHandler = NOOP) {
   (function process(workers) {
     if (workers.length === 0) {
       done();
     } else {
       try {
-        (workers.shift())(context, () => process(workers));
+        (workers.shift())(
+          context,
+          error => {
+            if (error) {
+              errorHandler(error, () => process(workers), error => done(error));
+            } else {
+              process(workers);
+            }
+          },
+          newWorker => (workers = [ newWorker, ...workers ])
+        );
       } catch (error) {
-        errorHandler(error, () => process(workers));
+        errorHandler(error, () => process(workers), error => done(error));
       }
     }
   })(workers);

@@ -1,11 +1,12 @@
-export default function createRootElement(context) { 
+export default function createRootElement(context) {
   return {
     __actml: true,
     context,
     scope: {},
-    dispatch(){},
+    dispatch() {},
     readFromScope(key, requester) {
       let value = this.scope[key];
+
       if (typeof value !== 'undefined') return value;
 
       value = this.context[key];
@@ -13,6 +14,7 @@ export default function createRootElement(context) {
 
       requester = requester === '' ? 'unknown' : requester;
       throw new Error(`Undefined variable "${ key }" requested by <${ requester }>.`);
-    }
-  }
-}
+    },
+    handleError() {}
+  };
+};

@@ -18,7 +18,7 @@ describe('Given the ActML library', () => {
       expect(Func).toBeCalled();
       expect(Z).toBeCalled();
       expect(B).toBeCalled();
-    });
+    }, 100);
     it('should run the functions on every level', async () => {
       const Foo = jest.fn();
       const Bar = jest.fn();
@@ -98,7 +98,7 @@ describe('Given the ActML library', () => {
         expect(error.message).toBe('The "children" prop expects an object (key-value pairs) as first argument and a callback as second argument.');
       });
     });
-    it.only('should run the ActML elements and make some data available for them', async () => {
+    it('should run the ActML elements and make some data available for them', async () => {
       const Z = jest.fn();
       const B = jest.fn();
       const Logic = function ({ children }) {
@@ -119,9 +119,9 @@ describe('Given the ActML library', () => {
     });
     it('should allow the FaCC pattern', async () => {
       const Z = ({ value }) => value * 2;
-      const Logic = function({ children }) {
+      const Logic = function ({ children }) {
         return children({ value: 42 });
-      }
+      };
 
       expect(await run(
         <Logic>
@@ -185,11 +185,11 @@ describe('Given the ActML library', () => {
       const B = async function ({ doubledAnswer }) {
         await fakeAsync(null, 20);
         return doubledAnswer / 10;
-      }
-      const Logic = async function({ children }) {
+      };
+      const Logic = async function ({ children }) {
         await children(42);
         await children(10);
-      }
+      };
 
       const finalAnswer = await run(
         <A result='finalAnswer'>
@@ -285,14 +285,14 @@ describe('Given the ActML library', () => {
         subscribe(callback) {
           setTimeout(callback, 20);
         }
-      }
+      };
       const Func = async function ({ children }) {
         await children('foo');
         store.subscribe(async () => {
           await children('bar');
           await children();
         });
-      }
+      };
 
       const Z = jest.fn();
       const B = jest.fn();

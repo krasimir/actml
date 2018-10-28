@@ -12,9 +12,11 @@ function create(func, props, ...children) {
 }
 
 function run(element, context = {}) {
-  return new Promise(done => {
+  return new Promise((done, reject) => {
     if (isItAnElement(element)) {
-      createProcessor(done).add(element, createRootElement(context));
+      createProcessor(
+        (error, result) => error ? reject(error) : done(result)
+      ).add(element, createRootElement(context));
     } else {
       throw new Error('`run` should be called with an ActML element. You are passing:', element);
     }

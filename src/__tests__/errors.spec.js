@@ -7,7 +7,7 @@ const fakeAsync = (resolveWith, delay) => new Promise(done => {
 
 describe('Given the ActML library', () => {
   describe('when there is an error', () => {
-    it.only('should swallow the error by default', async () => {
+    it('should swallow the error by default', async () => {
       const Problem = function () {
         return iDontExist; // throws an error "iDontExist is not defined"
       };
@@ -36,7 +36,7 @@ describe('Given the ActML library', () => {
       const AfterError = jest.fn();
 
       await run(
-        <App exports='answer'>
+        <App>
           <Problem onError={ <HandleError /> } />
           <AfterError />
         </App>
@@ -66,7 +66,7 @@ describe('Given the ActML library', () => {
       const spy = jest.fn();
       const App = function () { return 42 };
       const HandleError = ({ answer }) => (spy(answer), false);
-      
+
       await run(
         <App exports='answer'>
           <Problem onError={ <HandleError $answer /> } />
@@ -92,19 +92,38 @@ describe('Given the ActML library', () => {
       expect(result.foo).toEqual('foo');
     });
     it('should handle the error of the children', async () => {
-      const Problem = function * () {
+      function Wrapper() {}
+      function Handler() {
+        return <HandlerLogic />;
+      };
+      const Problem = function () {
+        return iDontExist; // throws an error "iDontExist is not defined"
+      };
+      const HandlerLogic = jest.fn();
+
+      await run(
+        <Wrapper onError={ <Handler /> }>
+          <Problem />
+        </Wrapper>
+      );
+
+      expect(HandlerLogic).toBeCalled();
+    }, 500);
+    it('should handle the error of complex tree', async () => {
+      const Problem = function () {
         return iDontExist; // throws an error "iDontExist is not defined"
       };
 
-      function * WithProblem() {
+      function W() {};
+      function WithProblem() {
         return (
-          <A>
+          <W>
             <Problem />
-          </A>
+          </W>
         );
       }
       function Wrapper() {
-        return <A><WithProblem /></A>;
+        return <W><WithProblem /></W>;
       }
       const Z = jest.fn();
       const B = jest.fn();
@@ -121,14 +140,14 @@ describe('Given the ActML library', () => {
       expect(Z).toBeCalled();
       expect(B).toBeCalled();
       expect(Handler).toBeCalled();
-    });
-    it('should be able to catch an error from the children', () => {
+    }, 500);
+    it('should be able to catch an error from the children', done => {
       const Z = function Z() { throw new Error('Hello world'); };
       const Logic = function ({ children }) {
         children({});
       };
 
-      return run(
+      run(
         <Logic>
           (
             <Z />
@@ -136,9 +155,10 @@ describe('Given the ActML library', () => {
         </Logic>
       ).catch(error => {
         expect(error.message).toBe('Hello world');
+        done();
       });
-    });
-    it('should be able to catch an error from the children even if they are async functions', () => {
+    }, 100);
+    it('should be able to catch an error from the children even if they are async functions', done => {
       const Z = async function Z() {
         await fakeAsync(null, 20);
         throw new Error('Hello world');
@@ -147,7 +167,7 @@ describe('Given the ActML library', () => {
         children({});
       };
 
-      return run(
+      run(
         <Logic>
           (
             <Z />
@@ -155,9 +175,10 @@ describe('Given the ActML library', () => {
         </Logic>
       ).catch(error => {
         expect(error.message).toBe('Hello world');
+        done();
       });
-    });
-    it.only('should not swallow the error from an async FaCC child', async () => {
+    }, 100);
+    it('should not swallow the error from an async FaCC child', async done => {
       const Z = async function Z() {
         await fakeAsync(null, 20);
         throw new Error('Ops!');
@@ -166,18 +187,16 @@ describe('Given the ActML library', () => {
         await children();
       };
 
-      try {
-        await run(
-          <Logic>
-            {
-              function facc() { return <Z />; }
-            }
-          </Logic>
-        );
-      } catch (error) {
-        console.log('ERRROR', error.message);
-        expect(error.message).toBe('Ops!ss ');
-      };
+      run(
+        <Logic>
+          {
+            function facc() { return <Z />; }
+          }
+        </Logic>
+      ).catch(error => {
+        expect(error.message).toBe('Ops!');
+        done();
+      });
     });
   });
 });

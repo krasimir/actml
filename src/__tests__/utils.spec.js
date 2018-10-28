@@ -42,5 +42,30 @@ describe('Giving the utilities of ActML', () => {
         done();
       }, errorHandler);
     });
+    it('should allow dynamically added worker', done => {
+      const M = function M(context, d) {
+        context.data.push('M');
+        d();
+      };
+      const W1 = function W1(context, d) {
+        context.data.push('W1');
+        d();
+      };
+      const W2 = function W2(context, d, addWorker) {
+        context.data.push('W2');
+        addWorker(M);
+        d();
+      };
+      const W3 = function W3(context, d) {
+        context.data.push('W3');
+        d();
+      };
+      const context = { data: [] };
+
+      flow([ W1, W2, W3 ], context, () => {
+        expect(context.data).toStrictEqual([ 'W1', 'W2', 'M', 'W3' ]);
+        done();
+      });
+    });
   });
 });

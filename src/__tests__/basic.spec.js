@@ -73,4 +73,4 @@ describe('Given the ActML library', () => {
       expect(result).toBe(42);
     });
   });
-});
+}, 500);

@@ -7,6 +7,9 @@ import normalizeProps from './normalizeProps';
 import execute from './execute';
 import resolveExports from './resolveExports';
 import processChildren from './processChildren';
+import defineChildrenProp from './defineChildrenProp';
+
+const DEBUG_ENABLED = false;
 
 function identifyTheError(error, sourceElement) {
   if (error.toString().match(/children is not a function/)) {
@@ -15,77 +18,101 @@ function identifyTheError(error, sourceElement) {
   return error;
 }
 
-export function createProcessor(done) {
-  var ids = 0;
-  var running = false;
-  const onFinish = done;
-  const bucket = [];
-  const processing = {};
-  const processor = {
-    add(element, parent, done) {
-      bucket.push(createTask(element, parent, done));
-      if (!running) {
-        processElement(bucket.shift());
-      }
+class Processor {
+  constructor(done) {
+    this.ids = 0;
+    this.onFinish = done;
+    this.queue = {};
+  }
+  exit(error, result) {
+    this.debug(`(|) exit | error: ${ error ? 'yes' : 'no' }`);
+    this.queue = [];
+    this.onFinish(error, result);
+    this.onFinish = () => {};
+  }
+  debug(whatHappened, element, ...reset) {
+    if (DEBUG_ENABLED) {
+      console.log(`
+        ${ whatHappened } ${ element ? element.name : '' } | queue: ${ Object.keys(this.queue).length }
+      `, ...reset);
     }
-  };
-
-  const elementProcessed = function (task, executionContext) {
+  }
+  elementProcessed(task, executionContext) {
     const { id } = task;
 
-    if (processing[id]) {
-      // console.log(`Processor: removing ${ task.element.name } from processing`);
-      delete processing[id];
+    if (this.queue[id]) {
+      delete this.queue[id];
     } else {
-      throw new Error('The processor just finished processing an element but it is already removed from the list.');
+      throw new Error('The processor just finished queue an element but it is already removed from the list.');
     }
+
+    this.debug('<-', task.element);
 
     if (task.done) {
       task.done(executionContext.result);
     }
 
     // exit if we don't have any more elements to process
-    if (Object.keys(processing).length === 0 && bucket.length === 0) {
-      onFinish(executionContext.result);
+    if (Object.keys(this.queue).length === 0) {
+      this.exit(null, executionContext.result);
     }
-  };
-  const processElement = function (task) {
-    processing[task.id] = task;
+  }
+  createTask(element, parent, done) {
+    return { element, parent, id: this.ids++, done };
+  }
+  processElement(task) {
+    this.queue[task.id] = task;
 
     const { element, parent } = task;
     const executionContext = {
       element: element.initialize(parent),
       result: undefined,
-      processor
+      processor: this
     };
+
+    this.debug('->', element);
 
     flow(
       [
         beforeHook,
         normalizeProps,
+        defineChildrenProp,
         execute,
         resolveExports,
-        (execContext, done) => execContext.normalizedProps.children ? done() : processChildren(execContext, done),
+        function atemptToProcessChildren(execContext, done, addNewWorker) {
+          if (!execContext.childrenProp) {
+            addNewWorker(processChildren);
+          }
+          done();
+        },
         afterHook
       ],
       executionContext,
-      () => elementProcessed(task, executionContext),
-      (error, continueProcessing) => {
-        const { props } = element;
-        const identifiedError = identifyTheError(error, element.name);
-
-        if (props && props.onError) {
-          props.onError.mergeToProps({ error });
-          this.add(props.onError, element);
+      (error) => {
+        if (error) {
+          this.exit(error);
         } else {
-          throw identifiedError;
+          this.elementProcessed(task, executionContext);
+        }
+      },
+      (error, continueFlow, stopFlow) => {
+        this.debug('!', element, error.message);
+
+        const Handler = element.handleError(error);
+
+        if (Handler) {
+          this.add(Handler, element, continueFlow);
+        } else {
+          stopFlow(identifyTheError(error));
         }
       }
     );
-  };
-  const createTask = function (element, parent, done) {
-    return { element, parent, id: ids++, done };
-  };
+  }
+  add(element, parent, done) {
+    this.processElement(this.createTask(element, parent, done));
+  }
+}
 
-  return processor;
+export function createProcessor(done) {
+  return new Processor(done);
 }
