@@ -34,13 +34,13 @@ describe('Given the Redux integration', () => {
         <A>
           <Subscribe type='ANSWER'>
             {
-              ({ action }) => {
-                return <Z value={ action.value } />;
+              ({ value }) => {
+                return <Z value={ value } />;
               }
             }
           </Subscribe>
-          <Subscribe type='ANSWER' exports={ action => action && ({ value: action.value }) }>
-            (<N $action={ ({ value }) => ({ answer: value }) }/>)
+          <Subscribe type='ANSWER'>
+            (<N $value='answer'/>)
           </Subscribe>
         </A>
       );
@@ -72,14 +72,14 @@ describe('Given the Redux integration', () => {
           <SubscribeOnce type='FOO' />
           <SubscribeOnce type='ZAR'>
             {
-              ({ action }) => {
+              action => {
                 return <C { ...action } />;
               }
             }
           </SubscribeOnce>
           <SubscribeOnce type='ANSWER' exports='data'>
             {
-              ({ action }) => (
+              action => (
                 <A>
                   <Z value={ action.value } />
                   <Inspect>{ ({ numOfSubscribes }) => <B numOfSubscribes={ numOfSubscribes } /> }</Inspect>
