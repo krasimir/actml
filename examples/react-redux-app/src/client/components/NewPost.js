@@ -9,7 +9,7 @@ class NewPost extends React.Component {
     this.state = {
       title: '',
       text: ''
-    }
+    };
     this.onChangeTitle = this.onChangeTitle.bind(this);
     this.onChangeText = this.onChangeText.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
@@ -39,7 +39,7 @@ class NewPost extends React.Component {
           onChange={ this.onChangeText }/>
         <button onClick={ this.onSubmit }>save</button>
       </div>
-    )
+    );
   }
 }
 
@@ -48,4 +48,4 @@ export default connect(
   dispatch => ({
     submit: (title, text) => dispatch(addPost(title, text))
   })
-)(NewPost)
+)(NewPost);

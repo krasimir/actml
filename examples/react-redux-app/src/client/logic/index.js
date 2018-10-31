@@ -18,23 +18,23 @@ const FetchPosts = () => (
 
 export default function StartUp(context) {
   run(
-    <A debug>
-      <FetchPosts />    
+    <A>
+      <FetchPosts />
       <Subscribe type={ NEW_POST }>
         {
-          post => (
-            <A>
-              <addPost post={ post } />
+          ({ action }) => {
+            return (<A>
+              <addPost post={ action } />
               <FetchPosts />
-            </A>
-          )
-        }        
+            </A>);
+          }
+        }
       </Subscribe>
       <Subscribe type={ GET_DETAILS }>
         {
-          ({ id }) => (
+          ({ action }) => (
             <A>
-              <getPost exports='postWithDetails' id={ id }/>
+              <getPost exports='postWithDetails' id={ action.id }/>
               <Action type={ UPDATE_POST } $postWithDetails='data' />
             </A>
           )
@@ -42,9 +42,9 @@ export default function StartUp(context) {
       </Subscribe>
       <Subscribe type={ DELETE_POST }>
         {
-          ({ id }) => (
+          ({ action }) => (
             <A>
-              <deletePost id={ id } />
+              <deletePost id={ action.id } />
               <FetchPosts />
             </A>
           )
@@ -52,5 +52,5 @@ export default function StartUp(context) {
       </Subscribe>
     </A>,
     context
-  )
+  );
 }

@@ -1,13 +1,13 @@
 # &lt;ActML /> :rocket: <!-- omit in toc -->
 
-> You know what I really like in React - it teaches you how to build well encapsulated components that are also highly composable. The thing is that React and its JSX is for our UI. It is a view layer that renders stuff on the screen. I want something similar but for my business logic. Something that allows me to use the same patterns but helps me deal with the asynchronous nature of the front-end development. So, I did it. Meet **ActML** - like React but for your business logic. 
+> You know what I really like in [React](https://reactjs.org/) - it teaches you how to build well encapsulated components that are also highly composable. The thing is that React and its JSX is for our UI. It is a view layer that renders stuff on the screen. I wanted something similar but for my business logic. Something that allows me to use the same patterns but helps me deal with the asynchronous nature of the front-end development. So, I did it. Meet **ActML** - like React but for your business logic. 
 
 - [Concept](#concept)
 - [What you need to use ActML](#what-you-need-to-use-actml)
 - [What is an ActML element](#what-is-an-actml-element)
 - [Getting in and out of your function/element](#getting-in-and-out-of-your-functionelement)
 - [Scope API](#scope-api)
-  - [Understanding "exports" and "scope" props](#understanding-%22exports%22-and-%22scope%22-props)
+  - [Understanding "exports" and "scope" props](#understanding-exports-and-scope-props)
   - [Catching all the variables](#catching-all-the-variables)
   - [More advanced export and import](#more-advanced-export-and-import)
 - [Context API](#context-api)
@@ -30,28 +30,25 @@ run(<Greeting />).then(
 );
 ```
 
-What if we have more functions, they depend on each other and some of them are asynchronous:
+What if we have more functions, they depend on each other and one of them is asynchronous:
 
 ```js
-const Greeting = function({ name, children }) {
-  children(`Hey ${name}!`);
+const GetUserFirstName = async function() {
+  const result = await fetch('https://reqres.in/api/users/2');
+  return (await result.json()).data.first_name;
 };
-async function GetProfileName() {
-  const response = await fetch('https://reqres.in/api/users/2');
-  const { data: { first_name, last_name } } = await response.json();
-
-  return first_name + ' ' + last_name;
-}
-function Print({ message }) {
+const Greeting = function({ name }) {
+  return `Hello ${name}`;
+};
+const Print = function({ message }) {
   console.log(message);
-}
+};
 
 run(
   <A>
-    <GetProfileName exports="name" />
-    <Greeting $name>
-      { message => <Print message={message} /> }
-    </Greeting>
+    <GetUserFirstName exports="name" />
+    <Greeting $name exports="message" />
+    <Print $message />
   </A>
 );
 ```
@@ -59,14 +56,14 @@ run(
 Let's see step by step what ActML does:
 
 1. The `<A>` element is just a wrapper that comes with ActML module.
-2. `<GetProfileName>` is an asynchronous function so ActML waits till its promise is resolved. It also returns a result and has `exports` prop defined. That is a special prop which is saying "Export a variable with name `name` and make it available for other elements".
+2. `<GetUserFirstName>` is making a request to `https://reqres.in/api/users/2` and gets the first name of the user. It is an asynchronous function so ActML waits till its promise is resolved. When using it we say that it `exports` a variable called `name`.
 3. `<Greeting>` needs that `name` variable and uses the special dollar sign notation which to ActML processor means "Inject a variable with name `name` as a prop".
-4. `<Greeting>` also has a function as child and it sends its result there which in our case is the full message.
+4. `<Greeting>` also formats a message and returns it as a result.
 5. `<Print>` just gets the message and prints it out in the console.
 
-_Here is a working [Codesandbox](https://codesandbox.io/s/341xn5vrlq) of the code above._
+_Here is a working [Codesandbox](https://codesandbox.io/s/341xn5vrlq) of the code._
 
-So, that is the concept of ActML. It allows us to define in a declarative fashion our business logic. Same as our UI. There is nothing (almost) imperative. In fact all the code that we pass to the `run` function is nothing but definitions of _what_ should happen. It is not saying _how_. This is extremely powerful concept because it shifts the responsibility to another levels and makes the development a lot more easier and predictable. We use composition over raw implementation. If you like this way of thinking then ActML may be your way to deal with asynchronous logic.
+So, that is the concept of ActML. It allows us to define in a declarative fashion our business logic. Same as our UI. In fact all the code that we pass to the `run` function is nothing but definitions of _what_ should happen. It is not saying _how_. This is extremely powerful concept because it shifts the imperative code to another level and gives us more options for composition.
 
 ## What you need to use ActML
 
@@ -77,7 +74,7 @@ ActML uses React's JSX transpiler to convert markup to function calls. By defaul
 import { A } from 'actml';
 ```
 
-The first line is to say to the transpiler that we don't want `React.createElement()` but `A()`. The second line is there because otherwise you'll get `ReferenceError: A is not defined` error. And of course because the `A` function is defining the core unit of ActML - an ActML element.
+The first line is to say that we don't want `React.createElement()` but `A()`. The second line is there because otherwise you'll get `ReferenceError: A is not defined` error. And of course because the `A` function is defining the core unit of ActML - an ActML element.
 
 From a tools perspective you need some sort of [Babel](https://babeljs.io/docs/en/babel-preset-react) integration. There's a React+Redux+ActML example app [here](https://github.com/krasimir/actml/tree/master/examples/react-redux-app) that you can check.
 

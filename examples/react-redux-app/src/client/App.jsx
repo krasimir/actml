@@ -4,7 +4,6 @@ import { Provider } from 'react-redux';
 import createStore from './redux/store';
 import Header from './components/Header';
 import NewPost from './components/NewPost';
-import { run } from 'actml';
 import logic from './logic';
 import { getPosts, addPost, getPost, deletePost } from './services/posts';
 
