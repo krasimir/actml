@@ -13,7 +13,7 @@ const DEBUG_ENABLED = false;
 
 function identifyTheError(error, sourceElement) {
   if (error.toString().match(/children is not a function/)) {
-    return new Error(`You are trying to use "children" prop as a function in <${ sourceElement }> but it is not. Did you forget to wrap its children in round brackets. Like for example <${ sourceElement }>(<Child />)</${ sourceElement }>?`);
+    return new Error(`You are trying to use "children" prop as a function in <${ sourceElement }> but it is not. Did you forget to wrap its children into parentheses. Like for example <${ sourceElement }>(<Child />)</${ sourceElement }>?`);
   }
   return error;
 }

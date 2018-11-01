@@ -1,4 +1,4 @@
-# &lt;ActML /> :rocket: <!-- omit in toc -->
+![ActML](assets/logo.jpg)
 
 > You know what I really like in [React](https://reactjs.org/) - it teaches you how to build well encapsulated components that are also highly composable. The thing is that React and its JSX is for our UI. It is a view layer that renders stuff on the screen. I wanted something similar but for my business logic. Something that allows me to use the same patterns but helps me deal with the asynchronous nature of the front-end development. So, I did it. Meet **ActML** - like React but for your business logic. 
 
@@ -187,12 +187,14 @@ const App = () => {};
 const Zoo = ({ name }) => console.log('Zar: ' + name);
 const Bar = ({ name }) => console.log('Bar: ' + name);
 
-<App scope='name'>
-  <Foo exports='name'>
-    <Zoo $name />
-  </Foo>
-  <Bar $name />
-</App>
+run(
+  <App scope='name'>
+    <Foo exports='name'>
+      <Zoo $name />
+    </Foo>
+    <Bar $name />
+  </App>
+);
 ```
 
 Now the result of `<Foo>` is available for `<Bar>` element too. The value of `name` is consistent across the different scopes. Changing it in one place means that it is updated in the other ones too.
@@ -360,13 +362,111 @@ run(
 // outputs "Hello John"
 ```
 
-The result is the same but this time we are using an ActML as a child and not an JSX expression. The argument must be an object because it gets set as a scope of `<Foo>` (read more abou the scope API [here]).
+The result is the same but this time we are using an ActML as a child and not an JSX expression. The argument must be an object because it gets set as a scope of `<Foo>` (read more about the scope API [here](#scope-api)). That's how we may access the `Hello John` via the `$text` prop.
+
+You probably noticed that `<Print>` is wrapped into parentheses. This is to instruct the processor that the element (or elements) must *not* be processed. We will take care by calling `children`. If we forget to add parentheses we will get the following error:
+
+```
+You are trying to use "children" prop as a function in <Foo> but it is not.
+Did you forget to wrap its children into parentheses.
+Like for example <Foo>(<Child />)</Foo>?
+```
 
 ### The `exports` prop
 
+The `exports` prop defines a new entry in the scope of the element or in some of its parents (read about that in the [scope API section](#scope-api)).
+
+```js
+const Foo = function() {
+  return 42;
+}
+
+<Foo exports='answer' />
+```
+
+The scope of the `<Foo>` is equal to `{ answer: 42 }`.
+
+We may also pass a function and apply some transformation before storing the data in the scope. The function must return an object (key-value pairs).
+
+```js
+const Foo = () => 42;
+const Print = ({ bar }) => console.log(bar);
+
+run(
+  <Foo exports={value => ({ bar: value * 2 })}>
+    <Print $bar />
+  </Foo>
+);
+// outputs: 84
+```
+
 ### Dollar sign notation
 
+We already saw that on a couple of places. It is basically to say that we want a value which is available in the scope of the parent (or some of its parents) scope.
+
+```js
+const Foo = () => 42;
+const Print = ({ answer }) => console.log(answer);
+
+run(
+  <Foo exports="answer">
+    <Print $answer />
+  </Foo>
+);
+// outputs: 42
+```
+
+If we don't like the naming we may change it by providing a string as a value. For example:
+
+```js
+const Foo = () => 42;
+const Print = ({ banana }) => console.log(banana);
+
+run(
+  <Foo exports="answer">
+    <Print $answer="banana" />
+  </Foo>
+);
+// outputs: 42
+```
+
+We may also provide a function and produce whatever new prop (or props) we want:
+
+```js
+const Foo = () => 42;
+const Print = ({ a, b }) => console.log(`${ a }, ${ b }`);
+
+run(
+  <Foo exports="answer">
+    <Print $answer={ value => ({ a: value, b: value * 2 })} />
+  </Foo>
+);
+// outputs: 42, 84
+```
+
 ### The `scope` prop
+
+The `scope` prop is used to catch variables exported by other nested elements. This is to make some data available to a broader portion of the ActML tree.
+
+```js
+const Foo = () => 'Jon Snow';
+const App = () => {};
+const Zoo = ({ name }) => console.log('Zar: ' + name);
+const Bar = ({ name }) => console.log('Bar: ' + name);
+
+run(
+  <App scope='name'>
+    <Foo exports='name'>
+      <Zoo $name />
+    </Foo>
+    <Bar $name />
+  </App>
+);
+```
+
+Normally `$name` is not available for `<Bar>` because it is exported by a sibling `<Foo>`. However `<App>` is catching it and it makes it available for `<Bar>`.
+
+The `scope` prop accepts a single name or comma separated list. It also accepts `*` as a value which means catch everything. The build-in `<A>` element has this by default.
 
 ## Predefined elements
 
