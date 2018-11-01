@@ -5,14 +5,18 @@
 - [Concept](#concept)
 - [What you need to use ActML](#what-you-need-to-use-actml)
 - [What is an ActML element](#what-is-an-actml-element)
-- [Getting in and out of your function/element](#getting-in-and-out-of-your-functionelement)
 - [Scope API](#scope-api)
   - [Understanding "exports" and "scope" props](#understanding-exports-and-scope-props)
   - [Catching all the variables](#catching-all-the-variables)
   - [More advanced export and import](#more-advanced-export-and-import)
 - [Context API](#context-api)
+- [Reserved prop names](#reserved-prop-names)
+  - [The `children` prop](#the-children-prop)
+  - [The `exports` prop](#the-exports-prop)
+  - [Dollar sign notation](#dollar-sign-notation)
+  - [The `scope` prop](#the-scope-prop)
 - [Predefined elements](#predefined-elements)
-  - [Wrapper that scopes everything](#wrapper-that-scopes-everything)
+  - [`<A>`](#a)
 - [Error handling](#error-handling)
 - [Examples](#examples)
 
@@ -105,7 +109,7 @@ To be more specific the element may be three things:
 * An asynchronous function
 * A generator
 
-ActML processor assumes that every of the elements is asynchronous. It executes the functions from the outer to inner ones and from top to bottom. All the three types of elements may return another element. In the case of generator we may `yield` also another element. For example:
+the ActML processor executes the functions from the outer to inner ones and from top to bottom. All the three types of elements may return another element. In the case of generator we may `yield` also another element. For example:
 
 ```js
 function Print({ message }) {
@@ -132,42 +136,30 @@ run(<Logic />); // prints out: No beach!
 
 _[Codesandbox](https://codesandbox.io/s/o41140ro85) with the example._
 
-## Getting in and out of your function/element
-
-The input to your ActML element is the attributes that we pass to the tag or if we have to make a parallel with React - the `props`. For example:
-
-```js
-const Foo = function (props) {
-  console.log(`Hello ${ props.name }`);
-}
-
-run(<Foo name='John' />); // outputs "Hello John"
-```
-
-ActML does not process children which are not ActML elements. So, the first possible output is to pass a function as a child and call it via the `children prop. Or the so called [FACC (function as children pattern)](https://github.com/krasimir/react-in-patterns/blob/master/book/chapter-4/README.md#function-as-a-children-render-prop):
-
-```js
-const Foo = function ({ name, children }) {
-  children(`Hello ${ name }`);
-}
-
-run(
-  <Foo name='John'>
-    { message => console.log(message) }
-  </Foo>
-);
-// outputs again "Hello John"
-```
-
-Another way to pass data between elements is the Scope API.
-
 ## Scope API
 
 The scope API is a mechanism for transferring data between ActML elements.
 
 ### Understanding "exports" and "scope" props
 
-Using the FACC pattern everywhere is not very convenient. So there is a Scope API that can keep data and share it with other elements. Let's take the following example:
+In React there are couple of approaches to pass data between components. One of them is the [FaCC (function as child component)](https://github.com/krasimir/react-in-patterns/blob/master/book/chapter-4/README.md#function-as-a-children-render-prop) pattern. Let's focus on it and see how it looks like in ActML:
+
+```js
+const Foo = function ({ name, children }) {
+  children({ message: `Hello ${ name }` });
+}
+
+run(
+  <Foo name='John'>
+    {
+      ({ message }) => console.log(message)
+    }
+  </Foo>
+);
+// outputs "Hello John"
+```
+
+That's nice but we can't use FaCC everywhere. And we have to do that a lot because that's not React but our business logic. We will probably have dozen of functions that need to communicate between each other. So there is a Scope API that can keep data and share it with other elements. Let's take the following example:
 
 ```js
 const Foo = () => 'Jon Snow';
@@ -175,12 +167,14 @@ const App = () => {};
 const Zoo = ({ name }) => console.log('Zar: ' + name);
 const Bar = ({ name }) => console.log('Bar: ' + name);
 
-<App>
-  <Foo exports='name'>
-    <Zoo $name />
-  </Foo>
-  <Bar $name />
-</App>
+run(
+  <App>
+    <Foo exports='name'>
+      <Zoo $name />
+    </Foo>
+    <Bar $name />
+  </App>
+);
 ```
 
 Every ActML element has a `scope` object. It is really just a plain JavaScript object `{}` and every time when we use `exports` we are saving something there. For example the `scope` object of the `Foo` element is equal to `{ name: 'Jon Snow' }`. Together with creating the `name` variable in the `scope` of `Foo` we are also _sending_ an event to the parent `App` element. Then the `App` element should decide if it is interested in that variable or not. If yes then it keeps it in its scope. In the example above that is not happening so the `name` variable is only set in the scope of `<Foo>`. That is why in this latest example we will get `Zar: Jon Snow` followed by the error `Undefined variable "name" requested by <Bar>.`.
@@ -203,7 +197,7 @@ const Bar = ({ name }) => console.log('Bar: ' + name);
 
 Now the result of `<Foo>` is available for `<Bar>` element too. The value of `name` is consistent across the different scopes. Changing it in one place means that it is updated in the other ones too.
 
-Another important note here is that once a variable gets caught it doesn't bubble up. So if there are other elements as parents they will not receive it. 
+Another important note here is that once a variable gets caught it doesn't bubble up. If there are other elements as parents they will not receive it. 
 
 ### Catching all the variables
 
@@ -222,7 +216,7 @@ For convenience the element `<A>` has its `scope` property set to `*` by default
 
 ### More advanced export and import
 
-The `exports` prop may also accept a function. The function receives the result of the function and **must** return an object (key-value pairs). This approach is useful when we want to apply some transformation of the element's result without modifying the actual element. For example:
+The `exports` prop may also accept a function. The function receives the result of the element and **must** return an object (key-value pairs). This approach is useful when we want to apply some transformation of the element's result without modifying the actual element. For example:
 
 ```js
 const Foo = () => 'Jon Snow';
@@ -265,9 +259,9 @@ We can also pass a function and apply some transformation of the data before imp
 
 ## Context API
 
-Now when you know about the scope API we could make a parallel with the context API. The scope API is more like a local placeholder of information. While the context API is globally available and it is more about injecting elements.
+Now when you know about the scope API we could make a parallel with the context API. The scope API is more like a local placeholder of data. While the context API is globally available and it is more about injecting elements.
 
-The `run` function accepts a second argument which is the initial context. We can pass an object in the format of key-value pairs. For example:
+The `run` function accepts a second argument which is the custom context. We can pass an object in the format of key-value pairs. For example:
 
 ```js
 const Zoo = ({ message }) => console.log('The message is: ' + message);
@@ -313,11 +307,72 @@ A(GetMessage, null);
 
 In the second case there **must** be a function called `GetMessage` while in the first case there's just a string `getMessage` passed to ActML processor. This may looks weird but is really powerful API for delivering dependencies deep down your ActML tree. Imagine how you define your context once and then write your logic distributed between different files.
 
+## Reserved prop names
+
+The input to your ActML element is the attributes that we pass to the tag or if we have to make a parallel with React - the `props`. For example:
+
+```js
+const Foo = function (props) {
+  console.log(`Hello ${ props.name }`);
+}
+
+run(<Foo name='John' />); // outputs "Hello John"
+```
+
+There are couple of prop names that can not be used because they have a special meaning/function.
+
+### The `children` prop
+
+ActML does not process children which are not ActML elements. This means that we may pass just a regular JavaScript function and our ActML will still work. The thing is that this function will not be fired by the ActML processor. We must do that manually by calling the `children` prop:
+
+```js
+const Foo = function({ name, children }) {
+  children({ text: `Hello ${name}` });
+};
+
+run(
+  <Foo name="John">
+    {
+      ({ text }) => console.log(text)
+    }
+  </Foo>
+);
+// outputs "Hello John"
+```
+
+This is actually the so called [FACC (function as children pattern)](https://github.com/krasimir/react-in-patterns/blob/master/book/chapter-4/README.md#function-as-a-children-render-prop) which we know from writing React apps.
+
+The `children` used as a function accepts only an object (key-value pairs). And that's done for a reason. Let's explore the next example:
+
+```js
+const Foo = function({ name, children }) {
+  children({ text: `Hello ${name}` });
+};
+const Print = function({ text }) {
+  console.log(text);
+};
+
+run(
+  <Foo name="John">
+    (<Print $text />)
+  </Foo>
+);
+// outputs "Hello John"
+```
+
+The result is the same but this time we are using an ActML as a child and not an JSX expression. The argument must be an object because it gets set as a scope of `<Foo>` (read more abou the scope API [here]).
+
+### The `exports` prop
+
+### Dollar sign notation
+
+### The `scope` prop
+
 ## Predefined elements
 
 There are some predefined elements that come with ActML core package.
 
-### Wrapper that scopes everything
+### `<A>`
 
 The `<A>` element has the ability to scope everything. So if you need that functionality and you a wrapper this is a good element to use.
 
