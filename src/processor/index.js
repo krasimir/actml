@@ -63,7 +63,7 @@ export default class Processor {
 
       const Handler = element.handleError(error);
 
-      if (Handler) {
+      if (Handler && !element.isErrorHandler) {
         this.add(Handler, element, continueFlow);
       } else {
         stopFlow(identifyTheError(error, element.name));

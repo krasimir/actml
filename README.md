@@ -484,12 +484,11 @@ Because `run` returns a promise we can just `catch` the error at a _global_ leve
 const Problem = function() {
   return iDontExist; // throws an error "iDontExist is not defined"
 };
-const App = function() {};
 
 run(
-  <App>
+  <A>
     <Problem />
-  </App>
+  </A>
 ).catch(error => {
   console.log('Ops, an error: ', error.message);
   // Ops, an error:  iDontExist is not defined
@@ -502,63 +501,35 @@ That's all fine but it is not really practical. What we may want is to handle th
 const Problem = function() {
   return iDontExist;
 };
-const App = function() {};
-const HandleError = ({ error }) => console.log(error.message); // logs "iDontExist is not defined"
+const HandleError = ({ error }) => console.log('Ops!');
 
 run(
-  <App>
+  <A>
     <Problem onError={ <HandleError /> } />
-  </App>
+  </A>
 );
+// outputs: Ops!
 ```
 
-ActML stops the execution of the current logic. However, if our handler returns `true` it continues. For example:
+If we are handling the error the ActML processor assumes that we know what we are doing and does not stop the execution. For example:
 
 ```js
 const Problem = function() {
   return iDontExist;
 };
-const App = function() {};
-const HandleError = () => true;
-const AfterError = () => console.log('I am still here :)');
+const Foo = () => console.log('I am still here');
+const HandleError = ({ error }) => console.log('Ops!');
 
 run(
-  <App exports='answer'>
-    <Problem onError={ <HandleError /> } />
-    <AfterError />
-  </App>
+  <A>
+    <Problem onError={<HandleError />} />
+    <Foo />
+  </A>
 );
-// outputs "I am still here :)" even tho there's an error
+// outputs "Ops!" followed by "I am still here"
 ```
 
-And by stopping the execution we mean only the current branch. For example:
-
-```js
-const Problem = function() {
-  return iDontExist;
-};
-const App = function() {};
-const Wrapper = function() {};
-const HandleError = () => {};
-const Z = () => console.log('Z');
-const B = () => console.log('B');
-const C = () => console.log('C');
-
-await run(
-  <App exports='answer'>
-    <Wrapper onError={ <HandleError /> }>
-      <Problem/>
-      <Z />
-    </Wrapper>
-    <Wrapper>
-      <B />
-      <C />
-    </Wrapper>
-  </App>
-);
-```
-
-We will see `B` followed by `C` but not `Z` because there's an error at that level. Here is a [Codesandbox](https://codesandbox.io/s/qlpwp2nn06) with an example.
+And of course we may still stop the processing by throwing error from inside our handler.
 
 ## Examples
 

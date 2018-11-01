@@ -27,6 +27,23 @@ describe('Given the ActML library', () => {
       expect(B).toBeCalled();
       expect(Handler).toBeCalled();
     });
+    it('should stop the execution if we throw an error from within the error handler', done => {
+      const Problem = function () {
+        return iDontExist; // throws an error "iDontExist is not defined"
+      };
+      const Handler = function Handler() {
+        throw new Error('Ops!');
+      };
+
+      run(
+        <A>
+          <Problem onError={ <Handler /> }/>
+        </A>
+      ).catch(error => {
+        expect(error.message).toBe('Ops!');
+        done();
+      });
+    });
     it('should continue processing the siblings', async () => {
       const Problem = function () {
         return iDontExist; // throws an error "iDontExist is not defined"

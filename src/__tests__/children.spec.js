@@ -55,7 +55,7 @@ describe('Given the ActML library', () => {
   describe('when using the `children` prop', () => {
     it('should not process the children if we wrap them in rounded brackets', async () => {
       const Z = jest.fn();
-      const Logic = async function() {}
+      const Logic = async function () {};
 
       run(
         <Logic value={ false }>
@@ -78,15 +78,14 @@ describe('Given the ActML library', () => {
           <Z $answer />
         </Logic>
       ).catch((error) => {
-        expect(error.message).toBe('You are trying to use "children" prop as a function in <Logic> but it is not. Did you forget to wrap its children in round brackets. Like for example <Logic>(<Child />)</Logic>?');
+        expect(error.message).toBe('You are trying to use "children" prop as a function in <Logic> but it is not. Did you forget to wrap its children into parentheses. Like for example <Logic>(<Child />)</Logic>?');
       });
     });
     it('should throw an error if we pass non-object as an argument to the `children` prop', () => {
       const Z = jest.fn();
-      const B = jest.fn();
-      const Logic = function({ children }) {
+      const Logic = function ({ children }) {
         children('foo');
-      }
+      };
 
       return run(
         <Logic>
@@ -134,11 +133,11 @@ describe('Given the ActML library', () => {
       )).toBe(84);
     });
     it('should allow the FaCC pattern even if we pass a generator', async () => {
-      const Z = function Z({ answer }) { return answer * 2; }
-      const B = function B(){ return 4; }
+      const Z = function Z({ answer }) { return answer * 2; };
+      const B = function B() { return 4; };
       const Logic = function Logic({ children }) {
         return children({ answer: 2 });
-      }
+      };
 
       const res = await run(
         <Logic exports='res'>

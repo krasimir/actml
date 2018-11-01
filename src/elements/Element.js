@@ -14,6 +14,7 @@ export default function Element(func, props, children) {
     context: undefined,
     parent: undefined,
     debug: false,
+    isErrorHandler: false,
 
     mergeToProps(additionalProps) {
       this.props = Object.assign({}, this.props, additionalProps);
@@ -37,6 +38,7 @@ export default function Element(func, props, children) {
     handleError(error) {
       if (this.props && this.props.onError) {
         this.props.onError.mergeToProps({ error });
+        this.props.onError.isErrorHandler = true;
         return this.props.onError;
       }
       return this.parent.handleError(error);
