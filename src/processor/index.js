@@ -9,7 +9,7 @@ import resolveExports from './resolveExports';
 import attemptToProcessChildren from './attemptToProcessChildren';
 import defineChildrenProp from './defineChildrenProp';
 
-const DEBUG_ENABLED = false;
+const DEBUG_ENABLED = true;
 
 function identifyTheError(error, sourceElement) {
   if (error.toString().match(/children is not a function/)) {
@@ -28,13 +28,10 @@ export default class Processor {
     this.debug(`(|) exit | error: ${ error ? 'yes' : 'no' }`);
     this.queue = [];
     this.onFinish(error, result);
-    this.onFinish = () => {};
   }
   debug(whatHappened, element, ...reset) {
     if (DEBUG_ENABLED) {
-      console.log(`
-        ${ whatHappened } ${ element ? element.name : '' } | queue: ${ Object.keys(this.queue).length }
-      `, ...reset);
+      console.log(`${ whatHappened } ${ element ? element.name : '' } | queue: ${ Object.keys(this.queue).length }`, ...reset);
     }
   }
   elementProcessed(task) {
@@ -79,7 +76,9 @@ export default class Processor {
       result: undefined,
       processor: this
     };
-    const onProcessingFinished = (error) => error ? this.exit(error) : this.elementProcessed(task, task);
+    const onProcessingFinished = (error) => {
+      error ? this.exit(error) : this.elementProcessed(task, task);
+    };
 
     this.queue[task.id] = task;
     this.debug('->', element);

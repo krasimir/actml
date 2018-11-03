@@ -15,8 +15,10 @@ function run(element, context = {}) {
   return new Promise((done, reject) => {
     if (isItAnElement(element)) {
       (new Processor(
-        (error, result) => error ? reject(error) : done(result))
-      ).add(element, createRootElement(context));
+        (error, result) => {
+          error ? reject(error) : done(result);
+        }
+      )).add(element, createRootElement(context));
     } else {
       throw new Error('`run` should be called with an ActML element. You are passing:', element);
     }
