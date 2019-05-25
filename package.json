@@ -6,8 +6,8 @@
   "scripts": {
     "test": "BABEL_ENV=development ./node_modules/.bin/jest \"(.*)\\.spec\\.js\"",
     "test-watch": "BABEL_ENV=development ./node_modules/.bin/jest \"(.*)\\.spec\\.js\" --watch --verbose false",
-    "build": "./node_modules/.bin/babel ./src --out-dir ./lib --ignore spec.js",
-    "release": "yarn test && rm -rf ./lib/* && yarn build"
+    "build": "rm -rf ./lib/* && ./node_modules/.bin/babel ./src --out-dir ./lib --ignore spec.js",
+    "release": "yarn test && yarn build"
   },
   "repository": {
     "type": "git",
