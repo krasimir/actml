@@ -1,13 +1,17 @@
-const isActMLElement = (element) => {
+export const isActMLElement = (element) => {
   return element && element.__actML;
 };
 
 export default function (func, props, children) {
-  function run() {
+  async function run() {
     const result = func(props);
 
     if (children && children.length > 0) {
-      children.forEach(element => element.run());
+      for (let i = 0; i < children.length; i++) {
+        if (isActMLElement(children[i])) {
+          await children[i].run();
+        }
+      }
     }
 
     if (isActMLElement(result)) {
@@ -18,6 +22,7 @@ export default function (func, props, children) {
 
   return {
     __actML: true,
+    __children: children,
     run
   };
 };
