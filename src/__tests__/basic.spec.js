@@ -77,4 +77,22 @@ describe('Given the ActML library', () => {
       expect(value).toStrictEqual(['B', 'C', 'D']);
     });
   });
+  describe('and we have a generator as a result', () => {
+    describe('and we yield an ActML element', () => {
+      it('should run it', async () => {
+        const C = () => 42;
+        const D = ({ v }) => v * 2;
+        const E = jest.fn();
+        const B = function * () {
+          const v = yield <C />;
+          const result = yield <D v={ v }><E /></D>;
+
+          return result * 2;
+        };
+
+        expect(await run(<B />)).toEqual(168);
+        expect(E).toBeCalledTimes(1);
+      });
+    });
+  });
 });

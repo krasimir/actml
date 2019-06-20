@@ -2,7 +2,7 @@
   "name": "actml",
   "version": "0.16.0",
   "description": "Like jsx but for your business logic",
-  "main": "lib",
+  "main": "lib/index.js",
   "scripts": {
     "test": "BABEL_ENV=development ./node_modules/.bin/jest \"(.*)\\.spec\\.js\"",
     "test-watch": "BABEL_ENV=development ./node_modules/.bin/jest \"(.*)\\.spec\\.js\" --watch --verbose false",
