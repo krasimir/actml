@@ -1,10 +1,10 @@
 {
   "name": "actml",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Like jsx but for your business logic",
   "main": "lib/index.js",
   "scripts": {
-    "bundle": "browserify ./lib/index.js -o ./standalone/actml.js --standalone A && uglifyjs ./standalone/actml.js -o ./standalone/actml.min.js",
+    "bundle": "browserify ./lib/index.js -o ./standalone/actml.js --standalone actml && uglifyjs ./standalone/actml.js -o ./standalone/actml.min.js",
     "test": "BABEL_ENV=development ./node_modules/.bin/jest \"(.*)\\.spec\\.js\"",
     "test-watch": "BABEL_ENV=development ./node_modules/.bin/jest \"(.*)\\.spec\\.js\" --watch --verbose false",
     "build": "rm -rf ./lib/* && ./node_modules/.bin/babel ./src --out-dir ./lib --ignore spec.js",
