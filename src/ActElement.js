@@ -19,6 +19,16 @@ export default function (func, props, children) {
       result = genResult.value;
     }
 
+    // handling a promise
+    if (result && result.then) {
+      result = await result;
+    }
+
+    // handling another ActML element
+    if (isActMLElement(result)) {
+      result = await result.run();
+    }
+
     // handling children
     if (children && children.length > 0) {
       for (let i = 0; i < children.length; i++) {
@@ -28,9 +38,6 @@ export default function (func, props, children) {
       }
     }
 
-    if (isActMLElement(result)) {
-      return result.run();
-    }
     return result;
   }
 

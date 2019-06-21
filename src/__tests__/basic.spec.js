@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+/* eslint-disable react/prop-types, no-sequences */
 /** @jsx A */
 
 import { A, run } from '../';
@@ -93,6 +93,55 @@ describe('Given the ActML library', () => {
         expect(await run(<B />)).toEqual(168);
         expect(E).toBeCalledTimes(1);
       });
+    });
+  });
+  describe.each([
+    [
+      'sync func',
+      (values) => () => {
+        values.push('a');
+        return 42;
+      }
+    ],
+    [
+      'promise',
+      (values) => () => {
+        return new Promise(done => {
+          setTimeout(() => (values.push('a'), done()), 20);
+        });
+      }
+    ],
+    [
+      'generator',
+      (values) => {
+        const D = () => delay(20, () => values.push('a'));
+        const E = function * () {
+          yield <D />;
+        };
+
+        return E;
+      }
+    ],
+    [
+      'another ActML element',
+      (values) => {
+        const D = () => delay(20, () => values.push('a'));
+        const E = function () {
+          return <D />;
+        };
+
+        return E;
+      }
+    ]
+  ])('when running a %s', (_, createElement) => {
+    it('should always run the element and then its children', async () => {
+      const values = [];
+      const C = jest.fn().mockImplementation(() => values.push('b'));
+      const E = createElement(values);
+
+      await run(<E><C /></E>);
+
+      expect(values).toStrictEqual(['a', 'b']);
     });
   });
 });
