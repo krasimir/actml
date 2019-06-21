@@ -21,7 +21,7 @@ describe('Given the ActML library', () => {
         </E>
       );
 
-      expect(C).toBeCalledWith({ data: 42 });
+      expect(C).toBeCalledWith(expect.objectContaining({ data: 42 }));
     });
     it('should throw an error if the prop is not found', async () => {
       const Root = () => {};

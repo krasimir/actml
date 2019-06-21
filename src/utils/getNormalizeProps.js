@@ -9,7 +9,7 @@ const resolveProp = (prop, parent, errorMessage, stack) => {
   throw new Error(errorMessage + '\n\nStack:\n' + stack.map(n => `  <${ n }>`).join('\n'));
 };
 
-export default function normalizeProps(element) {
+export default function getNormalizeProps(element) {
   const { props, propNames, name: elementName } = element.meta;
 
   if (!props) {

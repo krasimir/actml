@@ -1,6 +1,6 @@
 /* eslint-disable no-use-before-define */
 
-import normalizeProps from './utils/normalizeProps';
+import getNormalizeProps from './utils/getNormalizeProps';
 import getMeta from './utils/getMeta';
 import useProps from './utils/useProps';
 import isActMLElement from './utils/isActMLElement';
@@ -13,10 +13,31 @@ export default function (func, props, children) {
     run
   };
 
+  async function callChildren() {
+    const result = [];
+
+    if (children && children.length > 0) {
+      for (let i = 0; i < children.length; i++) {
+        if (isActMLElement(children[i])) {
+          result.push(await children[i].run(element));
+        }
+      }
+    }
+
+    return result;
+  }
+
   async function run(parent) {
     element.parent = parent;
 
-    let result = func(normalizeProps(element));
+    let processChildrenAutomatically = true;
+    let result = func({
+      ...getNormalizeProps(element),
+      useChildren: () => {
+        processChildrenAutomatically = false;
+        return [ callChildren, children ];
+      }
+    });
     let genResult, toGenValue;
 
     // handling a promise
@@ -25,6 +46,7 @@ export default function (func, props, children) {
 
     // handling a generator
     } else if (result && typeof result.next === 'function') {
+
       genResult = result.next();
       while (!genResult.done) {
         if (isActMLElement(genResult.value)) {
@@ -46,12 +68,8 @@ export default function (func, props, children) {
       });
 
     // handling children
-    if (children && children.length > 0) {
-      for (let i = 0; i < children.length; i++) {
-        if (isActMLElement(children[i])) {
-          await children[i].run(element);
-        }
-      }
+    if (processChildrenAutomatically) {
+      await callChildren();
     }
 
     return result;
