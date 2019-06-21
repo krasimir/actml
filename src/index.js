@@ -1,4 +1,5 @@
-import ActElement, { isActMLElement } from './ActElement';
+import ActElement from './ActElement';
+import isActMLElement from './utils/isActMLElement';
 
 function create(func, props, ...children) {
   return ActElement(func, props, children);
