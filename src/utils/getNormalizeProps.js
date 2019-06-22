@@ -1,6 +1,6 @@
 const resolveProp = (prop, parent, errorMessage, stack) => {
-  if (prop in parent.scope) {
-    return parent.scope[prop];
+  if (prop in parent.exported) {
+    return parent.exported[prop];
   } else if (parent.parent) {
     stack.push(parent.meta.name);
     return resolveProp(prop, parent.parent, errorMessage, stack);

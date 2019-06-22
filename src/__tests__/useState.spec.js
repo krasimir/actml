@@ -5,10 +5,37 @@ import { A, run } from '../';
 const delay = (ms, func) => new Promise(resolve => setTimeout(() => resolve(func()), ms));
 
 describe('Given the ActML library', () => {
-  describe('and we use the scope API', () => {
+  describe('and we use the state API', () => {
+    it('should use the initial state', async () => {
+      function E({ useState }) {
+        const [ state ] = useState('foo');
+
+        expect(state).toBe('foo');
+      }
+
+      const C = jest.fn();
+
+      await run(<E exports='bar'><C $bar/></E>);
+      expect(C).toBeCalledWith(expect.objectContaining({ bar: 'foo' }));
+    });
+    it('should provide a way to update the state', async () => {
+      async function E({ useState }) {
+        const [ state, setState ] = useState('foo');
+
+        expect(state).toBe('foo');
+        await delay(20, () => setState('bar'));
+      };
+
+      const C = jest.fn();
+
+      await run(<E exports='bar'><C $bar/></E>);
+      expect(C).toBeCalledWith(expect.objectContaining({ bar: 'bar' }));
+    });
     it('should allow export and import', async () => {
-      function E() {
-        return delay(20, () => 42);
+      function E({ useState }) {
+        const [ _, setState ] = useState();
+
+        return delay(20, () => setState(42));
       }
       const B = () => {};
       const C = jest.fn();
@@ -58,6 +85,19 @@ Stack:
       await run(<E exports='user'><C $user/></E>);
 
       expect(C).toBeCalledWith(expect.objectContaining({ user: undefined }));
+    });
+    it('should throw an error if the state is not exported', async () => {
+      function E({ useState }) {
+        useState('foo');
+      }
+
+      const C = jest.fn();
+
+      try {
+        await run(<E><C $bar/></E>);
+      } catch (error) {
+        expect(error.message).toMatch('"bar" prop requested');
+      }
     });
   });
 });

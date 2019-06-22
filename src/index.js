@@ -12,8 +12,10 @@ function run(element) {
 }
 
 const A = create;
+const Fragment = () => {};
 
 export {
   A,
-  run
+  run,
+  Fragment
 };

@@ -252,7 +252,7 @@ function _asyncToGenerator(fn) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.run = exports.A = undefined;
+exports.Fragment = exports.run = exports.A = undefined;
 
 var _ActElement = require('./ActElement');
 
@@ -281,9 +281,11 @@ function run(element) {
 }
 
 var A = create;
+var Fragment = function Fragment() {};
 
 exports.A = A;
 exports.run = run;
+exports.Fragment = Fragment;
 
 },{"./ActElement":1,"./utils/isActMLElement":5}],3:[function(require,module,exports){
 'use strict';

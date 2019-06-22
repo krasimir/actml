@@ -5,11 +5,22 @@ const getFuncName = (func) => {
 
   return result ? result[ 1 ] : 'unknown';
 };
+const resolveExportsProp = (props, propNames) => {
+  if (!props) return null;
+
+  const found = propNames.find(p => p === 'exports');
+
+  if (!found) return null;
+  return props.exports;
+};
 
 export default function getMeta(func, props) {
+  const propNames = props ? Object.keys(props) : null;
+
   return {
     name: getFuncName(func),
     props,
-    propNames: props ? Object.keys(props) : null
+    propNames,
+    exportsKeyword: resolveExportsProp(props, propNames)
   };
 };

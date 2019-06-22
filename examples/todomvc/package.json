@@ -1,7 +1,7 @@
 {
   "private": true,
   "dependencies": {
-    "actml": "0.2.5",
+    "actml": "0.2.6",
     "todomvc-app-css": "^2.0.0",
     "todomvc-common": "^1.0.0"
   },
@@ -11,6 +11,7 @@
     "@babel/plugin-transform-runtime": "7.4.4",
     "@babel/preset-env": "7.4.4",
     "@babel/preset-react": "^7.0.0",
+    "@babel/runtime": "7.4.5",
     "babel-loader": "^8.0.4",
     "regenerator-runtime": "0.13.2",
     "terser-webpack-plugin": "1.2.3",

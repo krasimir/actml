@@ -2,14 +2,14 @@
 
 import getNormalizeProps from './utils/getNormalizeProps';
 import getMeta from './utils/getMeta';
-import useProps from './utils/useProps';
 import isActMLElement from './utils/isActMLElement';
 
 export default function (func, props, children) {
   const element = {
-    scope: {},
-    meta: getMeta(func, props),
     parent: null,
+    state: undefined,
+    exported: {},
+    meta: getMeta(func, props),
     run
   };
 
@@ -34,11 +34,24 @@ export default function (func, props, children) {
     let result = func({
       ...getNormalizeProps(element),
       ...additionalProps,
+      // hooks definitions
       useChildren: () => {
         processChildrenAutomatically = false;
         return [ callChildren, children ];
       },
-      useElement: () => [ element ]
+      useElement: () => [ element ],
+      useState: (initialState) => {
+        if (typeof initialState !== 'undefined') {
+          element.state = initialState;
+        }
+        return [
+          element.state,
+          newState => {
+            element.state = newState;
+            return newState;
+          }
+        ];
+      }
     });
     let genResult, toGenValue;
 
@@ -63,11 +76,10 @@ export default function (func, props, children) {
       result = await result.run(element);
     }
 
-    // exports
-    useProps(props)
-      .exists('exports', (exportsKeyword) => {
-        element.scope[exportsKeyword] = result;
-      });
+    // exporting state
+    if (element.meta.exportsKeyword) {
+      element.exported[element.meta.exportsKeyword] = element.state;
+    }
 
     // handling children
     if (processChildrenAutomatically) {
