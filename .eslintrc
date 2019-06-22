@@ -23,7 +23,8 @@
     "io": true,
     "jest": true,
     "beforeEach": true,
-    "afterEach": true
+    "afterEach": true,
+    "actml": true
   },
 
   "parser": "babel-eslint",

@@ -4,5 +4,22 @@
     "actml": "0.2.5",
     "todomvc-app-css": "^2.0.0",
     "todomvc-common": "^1.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "7.4.4",
+    "@babel/plugin-transform-regenerator": "7.4.4",
+    "@babel/plugin-transform-runtime": "7.4.4",
+    "@babel/preset-env": "7.4.4",
+    "@babel/preset-react": "^7.0.0",
+    "babel-loader": "^8.0.4",
+    "regenerator-runtime": "0.13.2",
+    "terser-webpack-plugin": "1.2.3",
+    "webpack": "^4.23.1",
+    "webpack-cli": "^3.1.2",
+    "webpack-dev-server": "^3.1.10"
+  },
+  "scripts": {
+    "dev": "webpack --config ./webpack.config.js --mode development",
+    "build": "webpack --config ./webpack.prod.js --mode production"
   }
 }

@@ -1,12 +1,11 @@
-# Framework Name • [TodoMVC](http://todomvc.com)
+# ActML • [TodoMVC](http://todomvc.com)
 
-> Official description of the framework (from its website)
-
+> ActML is a library that allows you to use React's JSX syntax for writing business logic.
 
 ## Resources
 
-- [Website]()
-- [Documentation]()
+- [Website](https://github.com/krasimir/actml)
+- [Documentation](https://github.com/krasimir/actml)
 - [Used by]()
 - [Blog]()
 - [FAQ]()
