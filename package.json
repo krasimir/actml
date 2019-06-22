@@ -1,6 +1,6 @@
 {
   "name": "actml",
-  "version": "0.2.3",
+  "version": "0.2.5",
   "description": "Like jsx but for your business logic",
   "main": "lib/index.js",
   "scripts": {
@@ -33,6 +33,7 @@
     "babel-plugin-transform-object-rest-spread": "6.26.0",
     "babel-preset-es2015": "6.24.1",
     "babel-preset-react": "6.24.1",
+    "babel-preset-stage-3": "6.24.1",
     "babelify": "8.0.0",
     "browserify": "14.5.0",
     "eslint": "4.18.2",
@@ -51,8 +52,5 @@
   },
   "jest": {
     "verbose": false
-  },
-  "dependencies": {
-    "babel-preset-stage-3": "6.24.1"
   }
 }

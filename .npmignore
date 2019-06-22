@@ -5,3 +5,7 @@ src
 .babelrc
 .npmignore
 .eslintrc
+.vscode
+NOTES
+*.log
+*.lock
