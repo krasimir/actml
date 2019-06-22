@@ -43,11 +43,21 @@ describe('Given the ActML library', () => {
         expect(error.message).toBe(`"foobar" prop requested by "C" can not be found.
 
 Stack:
-  <C>
-  <B>
+  <Root>
   <E>
-  <Root>`);
+  <B>
+  <C>`);
       }
+    });
+    it('should pass down undefined if that is the value of the scoped variable', async () => {
+      async function E() {
+        return await delay(100, () => {});
+      }
+      const C = jest.fn();
+
+      await run(<E exports='user'><C $user/></E>);
+
+      expect(C).toBeCalledWith(expect.objectContaining({ user: undefined }));
     });
   });
 });

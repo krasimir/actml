@@ -17,7 +17,7 @@ var _extends = Object.assign || function (target) {
 
 exports.default = function (func, props, children) {
   var callChildren = function () {
-    var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
+    var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(newPros) {
       var result, i;
       return regeneratorRuntime.wrap(function _callee$(_context) {
         while (1) {
@@ -45,7 +45,7 @@ exports.default = function (func, props, children) {
 
               _context.t0 = result;
               _context.next = 8;
-              return children[i].run(element);
+              return children[i].run(element, newPros);
 
             case 8:
               _context.t1 = _context.sent;
@@ -68,13 +68,14 @@ exports.default = function (func, props, children) {
       }, _callee, this);
     }));
 
-    return function callChildren() {
+    return function callChildren(_x) {
       return _ref.apply(this, arguments);
     };
   }();
 
   var run = function () {
     var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(parent) {
+      var additionalProps = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var processChildrenAutomatically, result, genResult, toGenValue;
       return regeneratorRuntime.wrap(function _callee2$(_context2) {
         while (1) {
@@ -83,10 +84,13 @@ exports.default = function (func, props, children) {
               element.parent = parent;
 
               processChildrenAutomatically = true;
-              result = func(_extends({}, (0, _getNormalizeProps2.default)(element), {
+              result = func(_extends({}, (0, _getNormalizeProps2.default)(element), additionalProps, {
                 useChildren: function useChildren() {
                   processChildrenAutomatically = false;
                   return [callChildren, children];
+                },
+                useElement: function useElement() {
+                  return [element];
                 }
               }));
               genResult = void 0, toGenValue = void 0;
@@ -183,7 +187,7 @@ exports.default = function (func, props, children) {
       }, _callee2, this);
     }));
 
-    return function run(_x) {
+    return function run(_x2) {
       return _ref2.apply(this, arguments);
     };
   }();
@@ -312,14 +316,14 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = getNormalizeProps;
 var resolveProp = function resolveProp(prop, parent, errorMessage, stack) {
-  if (parent.scope[prop]) {
+  if (prop in parent.scope) {
     return parent.scope[prop];
   } else if (parent.parent) {
     stack.push(parent.meta.name);
     return resolveProp(prop, parent.parent, errorMessage, stack);
   }
   stack.push(parent.meta.name);
-  throw new Error(errorMessage + '\n\nStack:\n' + stack.map(function (n) {
+  throw new Error(errorMessage + '\n\nStack:\n' + stack.reverse().map(function (n) {
     return '  <' + n + '>';
   }).join('\n'));
 };

@@ -13,13 +13,13 @@ export default function (func, props, children) {
     run
   };
 
-  async function callChildren() {
+  async function callChildren(newPros) {
     const result = [];
 
     if (children && children.length > 0) {
       for (let i = 0; i < children.length; i++) {
         if (isActMLElement(children[i])) {
-          result.push(await children[i].run(element));
+          result.push(await children[i].run(element, newPros));
         }
       }
     }
@@ -27,16 +27,18 @@ export default function (func, props, children) {
     return result;
   }
 
-  async function run(parent) {
+  async function run(parent, additionalProps = {}) {
     element.parent = parent;
 
     let processChildrenAutomatically = true;
     let result = func({
       ...getNormalizeProps(element),
+      ...additionalProps,
       useChildren: () => {
         processChildrenAutomatically = false;
         return [ callChildren, children ];
-      }
+      },
+      useElement: () => [ element ]
     });
     let genResult, toGenValue;
 

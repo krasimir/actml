@@ -1,12 +1,12 @@
 const resolveProp = (prop, parent, errorMessage, stack) => {
-  if (parent.scope[prop]) {
+  if (prop in parent.scope) {
     return parent.scope[prop];
   } else if (parent.parent) {
     stack.push(parent.meta.name);
     return resolveProp(prop, parent.parent, errorMessage, stack);
   }
   stack.push(parent.meta.name);
-  throw new Error(errorMessage + '\n\nStack:\n' + stack.map(n => `  <${ n }>`).join('\n'));
+  throw new Error(errorMessage + '\n\nStack:\n' + stack.reverse().map(n => `  <${ n }>`).join('\n'));
 };
 
 export default function getNormalizeProps(element) {
