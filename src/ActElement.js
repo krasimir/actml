@@ -1,17 +1,19 @@
 /* eslint-disable no-use-before-define */
 
-import getNormalizeProps from './utils/getNormalizeProps';
+import resolveBindings from './utils/resolveBindings';
 import getMeta from './utils/getMeta';
 import isActMLElement from './utils/isActMLElement';
+import { createState } from './utils/State';
 
-export default function (func, props, children) {
+export default function createElement(func, props, children) {
   const element = {
+    __actml: true,
     parent: null,
-    state: undefined,
     exported: {},
     meta: getMeta(func, props),
     run
   };
+  const state = createState(element);
 
   async function callChildren(newPros) {
     const result = [];
@@ -23,17 +25,25 @@ export default function (func, props, children) {
         }
       }
     }
-
     return result;
   }
+
+  function setExported() {
+    if (element.meta.exportsKeyword) {
+      element.exported[element.meta.exportsKeyword] = state.get();
+    }
+  }
+
+  state.subscribe(setExported);
 
   async function run(parent, additionalProps = {}) {
     element.parent = parent;
 
     let processChildrenAutomatically = true;
     let result = func({
-      ...getNormalizeProps(element),
+      ...props,
       ...additionalProps,
+      ...resolveBindings(element),
       // hooks definitions
       useChildren: () => {
         processChildrenAutomatically = false;
@@ -42,14 +52,11 @@ export default function (func, props, children) {
       useElement: () => [ element ],
       useState: (initialState) => {
         if (typeof initialState !== 'undefined') {
-          element.state = initialState;
+          state.set(initialState);
         }
         return [
-          element.state,
-          newState => {
-            element.state = newState;
-            return newState;
-          }
+          state.get(),
+          newState => state.set(newState)
         ];
       }
     });
@@ -77,9 +84,7 @@ export default function (func, props, children) {
     }
 
     // exporting state
-    if (element.meta.exportsKeyword) {
-      element.exported[element.meta.exportsKeyword] = element.state;
-    }
+    setExported();
 
     // handling children
     if (processChildrenAutomatically) {

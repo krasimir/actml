@@ -99,5 +99,31 @@ Stack:
         expect(error.message).toMatch('"bar" prop requested');
       }
     });
+    xit('should have our child re-run if the data is changed (binding)', async () => {
+      async function E({ useState }) {
+        let [ state, setState ] = useState(2);
+
+        await delay(20, () => (state = setState(state * 2)));
+        delay(10, () => (state = setState(state * 2)));
+        delay(30, () => (state = setState(state * 2)));
+        delay(20, () => (state = setState(state * 2)));
+      }
+
+      const C = jest.fn();
+
+      await run(
+        <E exports='foo'>
+          <C $foo/>
+        </E>
+      );
+
+      await delay(200, () => {});
+
+      expect(C).toBeCalledTimes(4);
+      // expect(C).toBeCalledWith(expect.objectContaining({ foo: 4 }));
+      // expect(C).toBeCalledWith(expect.objectContaining({ foo: 8 }));
+      // expect(C).toBeCalledWith(expect.objectContaining({ foo: 16 }));
+      // expect(C).toBeCalledWith(expect.objectContaining({ foo: 32 }));
+    });
   });
 });
