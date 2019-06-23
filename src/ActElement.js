@@ -5,6 +5,9 @@ import getMeta from './utils/getMeta';
 import isActMLElement from './utils/isActMLElement';
 import { createState } from './utils/State';
 import getId from './utils/uid';
+import createUseChildrenHook from './hooks/useChildren';
+import createUseElementHook from './hooks/useElement';
+import createUseStateHook from './hooks/useState';
 
 export default function createElement(func, props, children) {
   const element = {
@@ -15,19 +18,13 @@ export default function createElement(func, props, children) {
     requestBinding
   };
   const state = createState(element);
-
-  async function callChildren(newPros) {
-    const result = [];
-
-    if (children && children.length > 0) {
-      for (let i = 0; i < children.length; i++) {
-        if (isActMLElement(children[i])) {
-          result.push(await children[i].run(element, newPros));
-        }
-      }
-    }
-    return result;
-  }
+  const {
+    hook: useChildren,
+    callChildren,
+    processChildrenAutomatically
+  } = createUseChildrenHook(element, children);
+  const useElement = createUseElementHook(element);
+  const useState = createUseStateHook(state);
 
   function requestBinding(propName, dependent) {
     const { exportsKeyword } = element.meta;
@@ -40,27 +37,15 @@ export default function createElement(func, props, children) {
 
   async function run(parent, additionalProps = {}) {
     element.parent = parent;
+    processChildrenAutomatically.process = true;
 
-    let processChildrenAutomatically = true;
     let result = func({
       ...props,
       ...additionalProps,
       ...resolveBindings(element),
-      // hooks definitions
-      useChildren: () => {
-        processChildrenAutomatically = false;
-        return [ callChildren, children ];
-      },
-      useElement: () => [ element ],
-      useState: (initialState) => {
-        if (typeof initialState !== 'undefined') {
-          state.set(initialState);
-        }
-        return [
-          state.get(),
-          newState => state.set(newState)
-        ];
-      }
+      useChildren,
+      useElement,
+      useState
     });
     let genResult, toGenValue;
 
@@ -70,7 +55,6 @@ export default function createElement(func, props, children) {
 
     // handling a generator
     } else if (result && typeof result.next === 'function') {
-
       genResult = result.next();
       while (!genResult.done) {
         if (isActMLElement(genResult.value)) {
@@ -86,7 +70,7 @@ export default function createElement(func, props, children) {
     }
 
     // handling children
-    if (processChildrenAutomatically) {
+    if (processChildrenAutomatically.process) {
       await callChildren();
     }
 
