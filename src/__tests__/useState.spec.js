@@ -99,7 +99,7 @@ Stack:
         expect(error.message).toMatch('"bar" prop requested');
       }
     });
-    xit('should have our child re-run if the data is changed (binding)', async () => {
+    it('should have our child re-run if the data is changed (binding)', async () => {
       async function E({ useState }) {
         let [ state, setState ] = useState(2);
 

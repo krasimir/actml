@@ -1,17 +1,18 @@
-/* eslint-disable no-use-before-define */
+/* eslint-disable no-use-before-define, consistent-return */
 
 import resolveBindings from './utils/resolveBindings';
 import getMeta from './utils/getMeta';
 import isActMLElement from './utils/isActMLElement';
 import { createState } from './utils/State';
+import getId from './utils/uid';
 
 export default function createElement(func, props, children) {
   const element = {
-    __actml: true,
+    __actml: getId(),
     parent: null,
-    exported: {},
     meta: getMeta(func, props),
-    run
+    run,
+    requestBinding
   };
   const state = createState(element);
 
@@ -28,13 +29,14 @@ export default function createElement(func, props, children) {
     return result;
   }
 
-  function setExported() {
-    if (element.meta.exportsKeyword) {
-      element.exported[element.meta.exportsKeyword] = state.get();
+  function requestBinding(propName, dependent) {
+    const { exportsKeyword } = element.meta;
+
+    if (exportsKeyword && exportsKeyword === propName) {
+      state.subscribe(dependent);
+      return { value: state.get() };
     }
   }
-
-  state.subscribe(setExported);
 
   async function run(parent, additionalProps = {}) {
     element.parent = parent;
@@ -82,9 +84,6 @@ export default function createElement(func, props, children) {
     } else if (isActMLElement(result)) {
       result = await result.run(element);
     }
-
-    // exporting state
-    setExported();
 
     // handling children
     if (processChildrenAutomatically) {

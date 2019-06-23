@@ -1,3 +1,3 @@
 export default function isActMLElement(element) {
-  return element && element.__actml === true;
+  return element && element.__actml;
 };
