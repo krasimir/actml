@@ -57,7 +57,8 @@ describe('Given the ActML library', () => {
         }, 20);
         mock(numbers);
       };
-      const El = <E />;
+      const C = jest.fn();
+      const El = <E><C /></E>;
 
       await El.run();
       await delay(30);
@@ -65,6 +66,7 @@ describe('Given the ActML library', () => {
       expect(mock).toBeCalledTimes(2);
       expect(mock).toBeCalledWith(1);
       expect(mock).toBeCalledWith(2);
+      expect(C).toBeCalledTimes(2);
     });
   });
 });

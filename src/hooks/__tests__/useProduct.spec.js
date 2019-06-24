@@ -86,53 +86,5 @@ Stack:
         expect(error.message).toMatch('"bar" prop requested');
       }
     });
-    it('should have our child re-run if the data is changed (binding)', async () => {
-      var value = 2;
-
-      async function E({ useProduct }) {
-        let [ setValue ] = useProduct(value);
-
-        await delay(20, () => (value = setValue(value * 2)));
-        delay(10, () => (value = setValue(value * 2)));
-        delay(30, () => (value = setValue(value * 2)));
-        delay(20, () => (value = setValue(value * 2)));
-      }
-
-      const C = jest.fn();
-
-      await run(
-        <E exports='foo'>
-          <C $foo/>
-        </E>
-      );
-
-      await delay(200, () => {});
-
-      expect(C).toBeCalledTimes(4);
-      expect(C).toBeCalledWith(expect.objectContaining({ foo: 4 }));
-      expect(C).toBeCalledWith(expect.objectContaining({ foo: 8 }));
-      expect(C).toBeCalledWith(expect.objectContaining({ foo: 16 }));
-      expect(C).toBeCalledWith(expect.objectContaining({ foo: 32 }));
-    });
-    it('should subscribe the dependent only once', async () => {
-      var value = 1;
-      const E = ({ useProduct }) => {
-        useProduct(value);
-        value += 1;
-      };
-      const D = jest.fn();
-      const El = <E exports='foo'><D $foo/></E>;
-
-      await El.run();
-      await El.run();
-      await El.run();
-      await El.run();
-
-      expect(D).toBeCalledTimes(4);
-      expect(D).toBeCalledWith(expect.objectContaining({ foo: 1 }));
-      expect(D).toBeCalledWith(expect.objectContaining({ foo: 2 }));
-      expect(D).toBeCalledWith(expect.objectContaining({ foo: 3 }));
-      expect(D).toBeCalledWith(expect.objectContaining({ foo: 4 }));
-    });
   });
 });

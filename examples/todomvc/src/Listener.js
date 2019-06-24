@@ -5,6 +5,7 @@ import { A } from 'actml';
 import { Container } from './DOM';
 
 export default function * Listener({ usePubSub }) {
+  console.log('Listener');
   const [ subscribe, publish ] = usePubSub();
   const container = yield <Container />;
 

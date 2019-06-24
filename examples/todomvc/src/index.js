@@ -1,5 +1,5 @@
 /** @jsx A */
-import { A, run } from 'actml';
+import { A, run, Fragment } from 'actml';
 
 import Store from './Store';
 import Renderer from './Renderer';
@@ -7,10 +7,12 @@ import Listener from './Listener';
 
 function App() {
   return (
-    <Store exports='todos'>
+    <Fragment>
       <Listener />
-      <Renderer $todos />
-    </Store>
+      <Store exports='todos'>
+        <Renderer $todos />
+      </Store>
+    </Fragment>
   );
 };
 

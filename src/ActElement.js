@@ -36,7 +36,6 @@ export default function createElement(func, props, children) {
     const { exportsKeyword } = element.meta;
 
     if (exportsKeyword && exportsKeyword === propName) {
-      product.subscribe(dependent);
       return { value: product.get() };
     }
   }

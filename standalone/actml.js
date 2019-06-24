@@ -220,7 +220,6 @@ function createElement(func, props, children) {
     var exportsKeyword = element.meta.exportsKeyword;
 
     if (exportsKeyword && exportsKeyword === propName) {
-      product.subscribe(dependent);
       return { value: product.get() };
     }
   }
@@ -459,28 +458,19 @@ function createUseStateHook(element) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+/* eslint-disable no-return-assign */
+
 var createProduct = exports.createProduct = function createProduct(element) {
-  var subscribers = {};
   var state;
 
   return {
     set: function set(value) {
-      state = value;
-      Object.keys(subscribers).forEach(function (id) {
-        subscribers[id].run(element);
-      });
-      return value;
+      return state = value;
     },
     get: function get() {
       return state;
     },
-    subscribe: function subscribe(dependent) {
-      if (!(dependent.__actml in subscribers)) {
-        subscribers[dependent.__actml] = dependent;
-      }
-    },
     clear: function clear() {
-      subscribers = {};
       state = undefined;
     }
   };
