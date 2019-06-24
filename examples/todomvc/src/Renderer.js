@@ -4,12 +4,13 @@ import { A } from 'actml';
 import { FillContainer } from './DOM';
 
 export default function Renderer({ todos }) {
+  console.log('Renderer');
   return (
     <FillContainer>
       {
         todos.map((todo, i) => {
           return `
-            <li class='${ todo.completed }'>
+            <li class='${ todo.completed ? 'completed' : '' }'>
               <div class="view">
                 <input class="toggle" type="checkbox" data-index="${ i }" data-action="toggle">
                 <label>${ todo.label }</label>

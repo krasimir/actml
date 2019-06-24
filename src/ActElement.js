@@ -18,7 +18,8 @@ export default function createElement(func, props, children) {
     meta: getMeta(func, props),
     run,
     requestProduct,
-    isUsed: false
+    isUsed: false,
+    isRunning: false
   };
   const product = createProduct(element);
   const {
@@ -42,6 +43,7 @@ export default function createElement(func, props, children) {
 
   async function run(parent, additionalProps = {}) {
     element.parent = parent;
+    element.isRunning = true;
     processChildrenAutomatically.process = true;
 
     let result = func({
@@ -56,6 +58,7 @@ export default function createElement(func, props, children) {
     });
     let genResult, toGenValue;
 
+    element.isRunning = false;
     element.isUsed = true;
 
     // handling a promise

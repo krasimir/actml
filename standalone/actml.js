@@ -91,6 +91,7 @@ function createElement(func, props, children) {
           switch (_context.prev = _context.next) {
             case 0:
               element.parent = parent;
+              element.isRunning = true;
               processChildrenAutomatically.process = true;
 
               result = func(_extends({}, props, additionalProps, (0, _resolveBindings2.default)(element), {
@@ -102,85 +103,86 @@ function createElement(func, props, children) {
               }));
               genResult = void 0, toGenValue = void 0;
 
+              element.isRunning = false;
               element.isUsed = true;
 
               // handling a promise
 
               if (!(result && result.then)) {
-                _context.next = 11;
+                _context.next = 13;
                 break;
               }
 
-              _context.next = 8;
+              _context.next = 10;
               return result;
 
-            case 8:
+            case 10:
               result = _context.sent;
-              _context.next = 28;
+              _context.next = 30;
               break;
 
-            case 11:
+            case 13:
               if (!(result && typeof result.next === 'function')) {
-                _context.next = 24;
+                _context.next = 26;
                 break;
               }
 
               genResult = result.next();
 
-            case 13:
+            case 15:
               if (genResult.done) {
-                _context.next = 21;
+                _context.next = 23;
                 break;
               }
 
               if (!(0, _isActMLElement2.default)(genResult.value)) {
-                _context.next = 18;
+                _context.next = 20;
                 break;
               }
 
-              _context.next = 17;
+              _context.next = 19;
               return genResult.value.run(element);
 
-            case 17:
+            case 19:
               toGenValue = _context.sent;
 
-            case 18:
+            case 20:
               genResult = result.next(toGenValue);
-              _context.next = 13;
+              _context.next = 15;
               break;
 
-            case 21:
+            case 23:
               result = genResult.value;
 
               // handling another ActML element
-              _context.next = 28;
+              _context.next = 30;
               break;
 
-            case 24:
+            case 26:
               if (!(0, _isActMLElement2.default)(result)) {
-                _context.next = 28;
+                _context.next = 30;
                 break;
               }
 
-              _context.next = 27;
+              _context.next = 29;
               return result.run(element);
 
-            case 27:
+            case 29:
               result = _context.sent;
 
-            case 28:
+            case 30:
               if (!processChildrenAutomatically.process) {
-                _context.next = 31;
+                _context.next = 33;
                 break;
               }
 
-              _context.next = 31;
+              _context.next = 33;
               return callChildren();
 
-            case 31:
+            case 33:
               return _context.abrupt('return', result);
 
-            case 32:
+            case 34:
             case 'end':
               return _context.stop();
           }
@@ -199,7 +201,8 @@ function createElement(func, props, children) {
     meta: (0, _getMeta2.default)(func, props),
     run: run,
     requestProduct: requestProduct,
-    isUsed: false
+    isUsed: false,
+    isRunning: false
   };
   var product = (0, _Product.createProduct)(element);
 
@@ -355,10 +358,11 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = createUseProductHook;
 function createUseProductHook(product) {
   return function (initialValue) {
+    product.clear();
     if (typeof initialValue !== 'undefined') {
       product.set(initialValue);
     }
-    return [product.get(), function (newValue) {
+    return [function (newValue) {
       return product.set(newValue);
     }];
   };
@@ -373,14 +377,14 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = createUsePubSubHook;
 var subscribers = {};
 
-var _subscribe = function _subscribe(element, type, callback) {
+var subscribe = function subscribe(element, type, callback) {
   if (!subscribers[type]) subscribers[type] = {};
   if (!subscribers[type][element.__actml]) subscribers[type][element.__actml] = callback;
   return function () {
     delete subscribers[type][element.__actml];
   };
 };
-var _publish = function _publish(element, type, payload) {
+var publish = function publish(element, type, payload) {
   if (!subscribers[type]) return;
   Object.keys(subscribers[type]).forEach(function (id) {
     subscribers[type][id](payload, element);
@@ -389,26 +393,29 @@ var _publish = function _publish(element, type, payload) {
 
 function createUsePubSubHook(element) {
   return function () {
-    return {
-      subscribe: function subscribe() {
-        for (var _len = arguments.length, params = Array(_len), _key = 0; _key < _len; _key++) {
-          params[_key] = arguments[_key];
-        }
-
-        return _subscribe.apply(undefined, [element].concat(params));
-      },
-      publish: function publish() {
-        for (var _len2 = arguments.length, params = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-          params[_key2] = arguments[_key2];
-        }
-
-        return _publish.apply(undefined, [element].concat(params));
-      },
-      subscribers: subscribers,
-      clear: function clear() {
-        subscribers = {};
+    return [
+    // subscribe
+    function () {
+      for (var _len = arguments.length, params = Array(_len), _key = 0; _key < _len; _key++) {
+        params[_key] = arguments[_key];
       }
-    };
+
+      return subscribe.apply(undefined, [element].concat(params));
+    },
+    // publish
+    function () {
+      for (var _len2 = arguments.length, params = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        params[_key2] = arguments[_key2];
+      }
+
+      return publish.apply(undefined, [element].concat(params));
+    },
+    // clear
+    function () {
+      subscribers = {};
+    },
+    // list of all subscribers
+    subscribers];
   };
 }
 
@@ -437,7 +444,11 @@ function createUseStateHook(element) {
     }
 
     return [storage.states[index], function (newState) {
-      return storage.states[index] = newState;
+      storage.states[index] = newState;
+      if (!element.isRunning) {
+        element.run(element.parent);
+      }
+      return newState;
     }];
   };
 }
@@ -464,9 +475,13 @@ var createProduct = exports.createProduct = function createProduct(element) {
       return state;
     },
     subscribe: function subscribe(dependent) {
-      if (!subscribers[dependent.__actml]) {
+      if (!(dependent.__actml in subscribers)) {
         subscribers[dependent.__actml] = dependent;
       }
+    },
+    clear: function clear() {
+      subscribers = {};
+      state = undefined;
     }
   };
 };

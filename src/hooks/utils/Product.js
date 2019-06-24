@@ -1,5 +1,5 @@
 export const createProduct = (element) => {
-  const subscribers = {};
+  var subscribers = {};
   var state;
 
   return {
@@ -14,9 +14,13 @@ export const createProduct = (element) => {
       return state;
     },
     subscribe(dependent) {
-      if (!subscribers[dependent.__actml]) {
+      if (!(dependent.__actml in subscribers)) {
         subscribers[dependent.__actml] = dependent;
       }
+    },
+    clear() {
+      subscribers = {};
+      state = undefined;
     }
   };
 };

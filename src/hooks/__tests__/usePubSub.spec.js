@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /** @jsx A */
 
 import { A, run, Fragment } from '../../';
@@ -8,7 +9,7 @@ describe('Given the usePubSub hook', () => {
   describe('when we subscribe to an event', () => {
     beforeEach(() => {
       const C = ({ usePubSub }) => {
-        const { clear } = usePubSub();
+        const [ _, __, clear ] = usePubSub();
 
         clear();
       };
@@ -18,14 +19,14 @@ describe('Given the usePubSub hook', () => {
     it('should be possible to publish such one from another element', async () => {
       const mock = jest.fn();
       const Publisher = function ({ usePubSub }) {
-        const { publish } = usePubSub();
+        const [ subscribe, publish ] = usePubSub();
 
         setTimeout(() => {
           publish('foo', 42);
         }, 30);
       };
       const S = function ({ usePubSub }) {
-        const { subscribe } = usePubSub();
+        const [ subscribe ] = usePubSub();
 
         subscribe('foo', mock);
       };
@@ -49,13 +50,13 @@ describe('Given the usePubSub hook', () => {
       const mockS = jest.fn();
       const mockExecute = jest.fn();
       const E = function ({ usePubSub }) {
-        const { subscribe } = usePubSub();
+        const [ subscribe ] = usePubSub();
 
         mockExecute();
         subscribe('foo', mockS);
       };
       const P = function ({ usePubSub, useChildren }) {
-        const { publish } = usePubSub();
+        const [ subscribe, publish ] = usePubSub();
         const [ children ] = useChildren();
 
         children();
@@ -79,14 +80,14 @@ describe('Given the usePubSub hook', () => {
     it('should provide a way to unsubscribe', async () => {
       const mockS = jest.fn();
       const E = function ({ usePubSub }) {
-        const { subscribe } = usePubSub();
+        const [ subscribe ] = usePubSub();
 
         const unsubscribe = subscribe('foo', mockS);
 
         setTimeout(unsubscribe, 20);
       };
       const P = function ({ usePubSub }) {
-        const { subscribers } = usePubSub();
+        const [ _, __, ___, subscribers ] = usePubSub();
 
         expect(Object.keys(subscribers['foo'])).toHaveLength(1);
         setTimeout(() => {

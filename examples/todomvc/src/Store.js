@@ -1,4 +1,4 @@
-var todos = [
+var initialValue = [
   {
     label: 'First task',
     completed: false,
@@ -11,23 +11,20 @@ var todos = [
   }
 ];
 
-export function State() {
-  return todos;
+export default function Store({ useState, useProduct, usePubSub }) {
+  const [ todos, setTodos ] = useState(initialValue);
+  const [ setProduct ] = useProduct(todos);
+  const [ subscribe ] = usePubSub();
+
+  subscribe('toggle', (todoIndex) => {
+    setProduct(setTodos(todos.map((todo, index) => {
+      if (index === todoIndex) {
+        return {
+          ...todo,
+          completed: !todo.completed
+        };
+      }
+      return todo;
+    })));
+  });
 }
-
-export function Reducer({ action }) {
-  const { type, todoIndex } = action;
-
-  switch (type) {
-    case 'toggle':
-      todos = todos.map((todo, index) => {
-        if (index === todoIndex) {
-          return {
-            ...todo,
-            completed: !todo.completed
-          };
-        }
-        return todo;
-      });
-  }
-};

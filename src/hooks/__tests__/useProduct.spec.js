@@ -6,23 +6,10 @@ const delay = (ms, func) => new Promise(resolve => setTimeout(() => resolve(func
 
 describe('Given the ActML library', () => {
   describe('and we use the useProduct hook', () => {
-    it('should use the initial value', async () => {
-      function E({ useProduct }) {
-        const [ value ] = useProduct('foo');
-
-        expect(value).toBe('foo');
-      }
-
-      const C = jest.fn();
-
-      await run(<E exports='bar'><C $bar/></E>);
-      expect(C).toBeCalledWith(expect.objectContaining({ bar: 'foo' }));
-    });
     it('should provide a way to update the value', async () => {
       async function E({ useProduct }) {
-        const [ value, setValue ] = useProduct('foo');
+        const [ setValue ] = useProduct('foo');
 
-        expect(value).toBe('foo');
         await delay(20, () => setValue('bar'));
       };
 
@@ -33,7 +20,7 @@ describe('Given the ActML library', () => {
     });
     it('should allow export and import', async () => {
       function E({ useProduct }) {
-        const [ _, setValue ] = useProduct();
+        const [ setValue ] = useProduct();
 
         return delay(20, () => setValue(42));
       }
@@ -100,8 +87,10 @@ Stack:
       }
     });
     it('should have our child re-run if the data is changed (binding)', async () => {
+      var value = 2;
+
       async function E({ useProduct }) {
-        let [ value, setValue ] = useProduct(2);
+        let [ setValue ] = useProduct(value);
 
         await delay(20, () => (value = setValue(value * 2)));
         delay(10, () => (value = setValue(value * 2)));
@@ -124,6 +113,26 @@ Stack:
       expect(C).toBeCalledWith(expect.objectContaining({ foo: 8 }));
       expect(C).toBeCalledWith(expect.objectContaining({ foo: 16 }));
       expect(C).toBeCalledWith(expect.objectContaining({ foo: 32 }));
+    });
+    it('should subscribe the dependent only once', async () => {
+      var value = 1;
+      const E = ({ useProduct }) => {
+        useProduct(value);
+        value += 1;
+      };
+      const D = jest.fn();
+      const El = <E exports='foo'><D $foo/></E>;
+
+      await El.run();
+      await El.run();
+      await El.run();
+      await El.run();
+
+      expect(D).toBeCalledTimes(4);
+      expect(D).toBeCalledWith(expect.objectContaining({ foo: 1 }));
+      expect(D).toBeCalledWith(expect.objectContaining({ foo: 2 }));
+      expect(D).toBeCalledWith(expect.objectContaining({ foo: 3 }));
+      expect(D).toBeCalledWith(expect.objectContaining({ foo: 4 }));
     });
   });
 });

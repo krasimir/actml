@@ -2,6 +2,8 @@
 
 import { A } from '../../';
 
+const delay = (ms, func = () => {}) => new Promise(resolve => setTimeout(() => resolve(func()), ms));
+
 describe('Given the ActML library', () => {
   describe('when use the useState hook', () => {
     it('should allow us to preserve state across reruns', async () => {
@@ -44,6 +46,25 @@ describe('Given the ActML library', () => {
       expect(mock).toBeCalledWith(1, 'a');
       expect(mock).toBeCalledWith(2, 'aa');
       expect(mock).toBeCalledWith(3, 'aaa');
+    });
+    it('should re-run the function if we call setState', async () => {
+      const mock = jest.fn();
+      const E = ({ useState }) => {
+        const [ numbers, increment ] = useState(1);
+
+        setTimeout(() => {
+          increment(numbers + 1);
+        }, 20);
+        mock(numbers);
+      };
+      const El = <E />;
+
+      await El.run();
+      await delay(30);
+
+      expect(mock).toBeCalledTimes(2);
+      expect(mock).toBeCalledWith(1);
+      expect(mock).toBeCalledWith(2);
     });
   });
 });

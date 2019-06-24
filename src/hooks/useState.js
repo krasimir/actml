@@ -17,7 +17,13 @@ export default function createUseStateHook(element) {
 
     return [
       storage.states[index],
-      newState => (storage.states[index] = newState)
+      newState => {
+        storage.states[index] = newState;
+        if (!element.isRunning) {
+          element.run(element.parent);
+        }
+        return newState;
+      }
     ];
   };
 }
