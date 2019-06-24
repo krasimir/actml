@@ -1,7 +1,7 @@
 /* eslint-disable no-sequences */
 /** @jsx A */
 
-import { A, run } from '../';
+import { A, run } from '../../';
 
 const delay = (ms, func) => new Promise(resolve => setTimeout(() => resolve(func()), ms));
 

@@ -8,6 +8,7 @@ import getId from './utils/uid';
 import createUseChildrenHook from './hooks/useChildren';
 import createUseElementHook from './hooks/useElement';
 import createUseStateHook from './hooks/useState';
+import createUsePubSubHook from './hooks/usePubSub';
 
 export default function createElement(func, props, children) {
   const element = {
@@ -25,6 +26,7 @@ export default function createElement(func, props, children) {
   } = createUseChildrenHook(element, children);
   const useElement = createUseElementHook(element);
   const useState = createUseStateHook(state);
+  const usePubSub = createUsePubSubHook(element);
 
   function requestBinding(propName, dependent) {
     const { exportsKeyword } = element.meta;
@@ -45,7 +47,8 @@ export default function createElement(func, props, children) {
       ...resolveBindings(element),
       useChildren,
       useElement,
-      useState
+      useState,
+      usePubSub
     });
     let genResult, toGenValue;
 

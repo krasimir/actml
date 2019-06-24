@@ -1,6 +1,6 @@
 /** @jsx A */
 
-import { A, run } from '../';
+import { A, run } from '../../';
 
 describe('Given the ActML library', () => {
   describe('when use the useElement hook', () => {
