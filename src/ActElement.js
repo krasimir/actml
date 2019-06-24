@@ -9,6 +9,7 @@ import createUseChildrenHook from './hooks/useChildren';
 import createUseElementHook from './hooks/useElement';
 import createUseProductHook from './hooks/useProduct';
 import createUsePubSubHook from './hooks/usePubSub';
+import createUSeStateHook from './hooks/useState';
 
 export default function createElement(func, props, children) {
   const element = {
@@ -16,7 +17,8 @@ export default function createElement(func, props, children) {
     parent: null,
     meta: getMeta(func, props),
     run,
-    requestProduct
+    requestProduct,
+    isUsed: false
   };
   const product = createProduct(element);
   const {
@@ -27,6 +29,7 @@ export default function createElement(func, props, children) {
   const useElement = createUseElementHook(element);
   const useProduct = createUseProductHook(product);
   const usePubSub = createUsePubSubHook(element);
+  const useState = createUSeStateHook(element);
 
   function requestProduct(propName, dependent) {
     const { exportsKeyword } = element.meta;
@@ -48,9 +51,12 @@ export default function createElement(func, props, children) {
       useChildren,
       useElement,
       useProduct,
-      usePubSub
+      usePubSub,
+      useState
     });
     let genResult, toGenValue;
+
+    element.isUsed = true;
 
     // handling a promise
     if (result && result.then) {

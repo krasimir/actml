@@ -51,6 +51,10 @@ var _usePubSub = require('./hooks/usePubSub');
 
 var _usePubSub2 = _interopRequireDefault(_usePubSub);
 
+var _useState = require('./hooks/useState');
+
+var _useState2 = _interopRequireDefault(_useState);
+
 function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj };
 }
@@ -93,87 +97,90 @@ function createElement(func, props, children) {
                 useChildren: useChildren,
                 useElement: useElement,
                 useProduct: useProduct,
-                usePubSub: usePubSub
+                usePubSub: usePubSub,
+                useState: useState
               }));
               genResult = void 0, toGenValue = void 0;
+
+              element.isUsed = true;
 
               // handling a promise
 
               if (!(result && result.then)) {
-                _context.next = 10;
+                _context.next = 11;
                 break;
               }
 
-              _context.next = 7;
+              _context.next = 8;
               return result;
 
-            case 7:
+            case 8:
               result = _context.sent;
-              _context.next = 27;
+              _context.next = 28;
               break;
 
-            case 10:
+            case 11:
               if (!(result && typeof result.next === 'function')) {
-                _context.next = 23;
+                _context.next = 24;
                 break;
               }
 
               genResult = result.next();
 
-            case 12:
+            case 13:
               if (genResult.done) {
-                _context.next = 20;
+                _context.next = 21;
                 break;
               }
 
               if (!(0, _isActMLElement2.default)(genResult.value)) {
-                _context.next = 17;
+                _context.next = 18;
                 break;
               }
 
-              _context.next = 16;
+              _context.next = 17;
               return genResult.value.run(element);
 
-            case 16:
+            case 17:
               toGenValue = _context.sent;
 
-            case 17:
+            case 18:
               genResult = result.next(toGenValue);
-              _context.next = 12;
+              _context.next = 13;
               break;
 
-            case 20:
+            case 21:
               result = genResult.value;
 
               // handling another ActML element
-              _context.next = 27;
+              _context.next = 28;
               break;
 
-            case 23:
+            case 24:
               if (!(0, _isActMLElement2.default)(result)) {
-                _context.next = 27;
+                _context.next = 28;
                 break;
               }
 
-              _context.next = 26;
+              _context.next = 27;
               return result.run(element);
 
-            case 26:
+            case 27:
               result = _context.sent;
 
-            case 27:
+            case 28:
               if (!processChildrenAutomatically.process) {
-                _context.next = 30;
+                _context.next = 31;
                 break;
               }
 
-              _context.next = 30;
+              _context.next = 31;
               return callChildren();
 
-            case 30:
+            case 31:
               return _context.abrupt('return', result);
 
-            case 31:
+            case 32:
             case 'end':
               return _context.stop();
           }
@@ -191,7 +198,8 @@ function createElement(func, props, children) {
     parent: null,
     meta: (0, _getMeta2.default)(func, props),
     run: run,
-    requestProduct: requestProduct
+    requestProduct: requestProduct,
+    isUsed: false
   };
   var product = (0, _Product.createProduct)(element);
 
@@ -203,6 +211,7 @@ function createElement(func, props, children) {
   var useElement = (0, _useElement2.default)(element);
   var useProduct = (0, _useProduct2.default)(product);
   var usePubSub = (0, _usePubSub2.default)(element);
+  var useState = (0, _useState2.default)(element);
 
   function requestProduct(propName, dependent) {
     var exportsKeyword = element.meta.exportsKeyword;
@@ -216,7 +225,7 @@ function createElement(func, props, children) {
   return element;
 };
 
-},{"./hooks/useChildren":2,"./hooks/useElement":3,"./hooks/useProduct":4,"./hooks/usePubSub":5,"./hooks/utils/Product":6,"./utils/getMeta":8,"./utils/isActMLElement":9,"./utils/resolveBindings":10,"./utils/uid":11}],2:[function(require,module,exports){
+},{"./hooks/useChildren":2,"./hooks/useElement":3,"./hooks/useProduct":4,"./hooks/usePubSub":5,"./hooks/useState":6,"./hooks/utils/Product":7,"./utils/getMeta":9,"./utils/isActMLElement":10,"./utils/resolveBindings":11,"./utils/uid":12}],2:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -324,7 +333,7 @@ function createUseChildrenHook(element, children) {
   };
 };
 
-},{"../utils/isActMLElement":9}],3:[function(require,module,exports){
+},{"../utils/isActMLElement":10}],3:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -409,6 +418,36 @@ function createUsePubSubHook(element) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = createUseStateHook;
+function createUseStateHook(element) {
+  var storage = {
+    states: []
+  };
+  var consumer = 0;
+
+  return function (initialState) {
+    var index = void 0;
+
+    if (!element.isUsed) {
+      storage.states.push(initialState);
+      index = storage.states.length - 1;
+    } else {
+      index = consumer;
+      consumer = index < storage.states.length - 1 ? consumer + 1 : 0;
+    }
+
+    return [storage.states[index], function (newState) {
+      return storage.states[index] = newState;
+    }];
+  };
+}
+
+},{}],7:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 var createProduct = exports.createProduct = function createProduct(element) {
   var subscribers = {};
   var state;
@@ -432,7 +471,7 @@ var createProduct = exports.createProduct = function createProduct(element) {
   };
 };
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -473,7 +512,7 @@ exports.A = A;
 exports.run = run;
 exports.Fragment = Fragment;
 
-},{"./ActElement":1,"./utils/isActMLElement":9}],8:[function(require,module,exports){
+},{"./ActElement":1,"./utils/isActMLElement":10}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -508,7 +547,7 @@ function getMeta(func, props) {
   };
 };
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -519,7 +558,7 @@ function isActMLElement(element) {
   return element && element.__actml;
 };
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -560,7 +599,7 @@ function resolveBindings(element) {
   return boundData;
 };
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -573,5 +612,5 @@ function getId() {
   return 'a' + ++i;
 };
 
-},{}]},{},[7])(7)
+},{}]},{},[8])(8)
 });

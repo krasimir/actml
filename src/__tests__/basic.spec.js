@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types, no-sequences */
 /** @jsx A */
 
-import { A, run } from '../';
+import { A, run, Fragment } from '../';
 
 const delay = (ms, func) => new Promise(resolve => setTimeout(() => resolve(func()), ms));
 
@@ -55,6 +55,25 @@ describe('Given the ActML library', () => {
 
         expect(result).toEqual(30);
       });
+    });
+    it('should create different ActML elements even if we use the same function', async () => {
+      const ids = [];
+      const C = jest.fn().mockImplementation(({ useElement }) => {
+        const [ element ] = useElement();
+
+        ids.push(element.__actml);
+      });
+
+      await run(
+        <Fragment>
+          <C />
+          <C />
+        </Fragment>
+      );
+
+      expect(C).toBeCalledTimes(2);
+      expect(ids).toHaveLength(2);
+      expect(ids[0] !== ids[1]).toBeTruthy();
     });
   });
   describe('when we have children', () => {
