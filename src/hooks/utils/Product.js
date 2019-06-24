@@ -1,4 +1,4 @@
-export const createState = (element) => {
+export const createProduct = (element) => {
   const subscribers = {};
   var state;
 

@@ -5,12 +5,12 @@ import { A, run } from '../../';
 const delay = (ms, func) => new Promise(resolve => setTimeout(() => resolve(func()), ms));
 
 describe('Given the ActML library', () => {
-  describe('and we use the state API', () => {
-    it('should use the initial state', async () => {
-      function E({ useState }) {
-        const [ state ] = useState('foo');
+  describe('and we use the useProduct hook', () => {
+    it('should use the initial value', async () => {
+      function E({ useProduct }) {
+        const [ value ] = useProduct('foo');
 
-        expect(state).toBe('foo');
+        expect(value).toBe('foo');
       }
 
       const C = jest.fn();
@@ -18,12 +18,12 @@ describe('Given the ActML library', () => {
       await run(<E exports='bar'><C $bar/></E>);
       expect(C).toBeCalledWith(expect.objectContaining({ bar: 'foo' }));
     });
-    it('should provide a way to update the state', async () => {
-      async function E({ useState }) {
-        const [ state, setState ] = useState('foo');
+    it('should provide a way to update the value', async () => {
+      async function E({ useProduct }) {
+        const [ value, setValue ] = useProduct('foo');
 
-        expect(state).toBe('foo');
-        await delay(20, () => setState('bar'));
+        expect(value).toBe('foo');
+        await delay(20, () => setValue('bar'));
       };
 
       const C = jest.fn();
@@ -32,10 +32,10 @@ describe('Given the ActML library', () => {
       expect(C).toBeCalledWith(expect.objectContaining({ bar: 'bar' }));
     });
     it('should allow export and import', async () => {
-      function E({ useState }) {
-        const [ _, setState ] = useState();
+      function E({ useProduct }) {
+        const [ _, setValue ] = useProduct();
 
-        return delay(20, () => setState(42));
+        return delay(20, () => setValue(42));
       }
       const B = () => {};
       const C = jest.fn();
@@ -86,9 +86,9 @@ Stack:
 
       expect(C).toBeCalledWith(expect.objectContaining({ user: undefined }));
     });
-    it('should throw an error if the state is not exported', async () => {
-      function E({ useState }) {
-        useState('foo');
+    it('should throw an error if the value is not exported', async () => {
+      function E({ useProduct }) {
+        useProduct('foo');
       }
 
       const C = jest.fn();
@@ -100,13 +100,13 @@ Stack:
       }
     });
     it('should have our child re-run if the data is changed (binding)', async () => {
-      async function E({ useState }) {
-        let [ state, setState ] = useState(2);
+      async function E({ useProduct }) {
+        let [ value, setValue ] = useProduct(2);
 
-        await delay(20, () => (state = setState(state * 2)));
-        delay(10, () => (state = setState(state * 2)));
-        delay(30, () => (state = setState(state * 2)));
-        delay(20, () => (state = setState(state * 2)));
+        await delay(20, () => (value = setValue(value * 2)));
+        delay(10, () => (value = setValue(value * 2)));
+        delay(30, () => (value = setValue(value * 2)));
+        delay(20, () => (value = setValue(value * 2)));
       }
 
       const C = jest.fn();
@@ -120,10 +120,10 @@ Stack:
       await delay(200, () => {});
 
       expect(C).toBeCalledTimes(4);
-      // expect(C).toBeCalledWith(expect.objectContaining({ foo: 4 }));
-      // expect(C).toBeCalledWith(expect.objectContaining({ foo: 8 }));
-      // expect(C).toBeCalledWith(expect.objectContaining({ foo: 16 }));
-      // expect(C).toBeCalledWith(expect.objectContaining({ foo: 32 }));
+      expect(C).toBeCalledWith(expect.objectContaining({ foo: 4 }));
+      expect(C).toBeCalledWith(expect.objectContaining({ foo: 8 }));
+      expect(C).toBeCalledWith(expect.objectContaining({ foo: 16 }));
+      expect(C).toBeCalledWith(expect.objectContaining({ foo: 32 }));
     });
   });
 });

@@ -3,11 +3,11 @@
 import resolveBindings from './utils/resolveBindings';
 import getMeta from './utils/getMeta';
 import isActMLElement from './utils/isActMLElement';
-import { createState } from './utils/State';
+import { createProduct } from './hooks/utils/Product';
 import getId from './utils/uid';
 import createUseChildrenHook from './hooks/useChildren';
 import createUseElementHook from './hooks/useElement';
-import createUseStateHook from './hooks/useState';
+import createUseProductHook from './hooks/useProduct';
 import createUsePubSubHook from './hooks/usePubSub';
 
 export default function createElement(func, props, children) {
@@ -16,24 +16,24 @@ export default function createElement(func, props, children) {
     parent: null,
     meta: getMeta(func, props),
     run,
-    requestBinding
+    requestProduct
   };
-  const state = createState(element);
+  const product = createProduct(element);
   const {
     hook: useChildren,
     callChildren,
     processChildrenAutomatically
   } = createUseChildrenHook(element, children);
   const useElement = createUseElementHook(element);
-  const useState = createUseStateHook(state);
+  const useProduct = createUseProductHook(product);
   const usePubSub = createUsePubSubHook(element);
 
-  function requestBinding(propName, dependent) {
+  function requestProduct(propName, dependent) {
     const { exportsKeyword } = element.meta;
 
     if (exportsKeyword && exportsKeyword === propName) {
-      state.subscribe(dependent);
-      return { value: state.get() };
+      product.subscribe(dependent);
+      return { value: product.get() };
     }
   }
 
@@ -47,7 +47,7 @@ export default function createElement(func, props, children) {
       ...resolveBindings(element),
       useChildren,
       useElement,
-      useState,
+      useProduct,
       usePubSub
     });
     let genResult, toGenValue;

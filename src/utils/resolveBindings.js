@@ -1,6 +1,6 @@
 const resolveProp = (prop, element, parent, errorMessage, stack) => {
   if (parent) {
-    const binding = parent.requestBinding(prop, element);
+    const binding = parent.requestProduct(prop, element);
 
     if (binding) {
       return binding.value;
