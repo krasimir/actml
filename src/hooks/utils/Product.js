@@ -1,6 +1,6 @@
 /* eslint-disable no-return-assign */
 
-export const createProduct = (element) => {
+export const createProduct = () => {
   var state;
 
   return {
@@ -9,9 +9,6 @@ export const createProduct = (element) => {
     },
     get() {
       return state;
-    },
-    clear() {
-      state = undefined;
     }
   };
 };

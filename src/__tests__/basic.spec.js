@@ -61,7 +61,7 @@ describe('Given the ActML library', () => {
       const C = jest.fn().mockImplementation(({ useElement }) => {
         const [ element ] = useElement();
 
-        ids.push(element.__actml);
+        ids.push(element.id);
       });
 
       await run(

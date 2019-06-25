@@ -1,9 +1,9 @@
 const resolveProp = (prop, element, parent, errorMessage, stack) => {
   if (parent) {
-    const binding = parent.requestProduct(prop, element);
+    const productValue = parent.requestProduct(prop);
 
-    if (binding) {
-      return binding.value;
+    if (productValue) {
+      return productValue.value;
     } else if (parent.parent) {
       stack.push(parent.meta.name);
       return resolveProp(prop, element, parent.parent, errorMessage, stack);
@@ -16,16 +16,16 @@ const resolveProp = (prop, element, parent, errorMessage, stack) => {
   );
 };
 
-export default function resolveBindings(element) {
-  const { bindings, name: elementName } = element.meta;
-  const boundData = {};
+export default function resolveProduct(element) {
+  const { dependencies, name: elementName } = element.meta;
+  const data = {};
 
-  if (bindings.length === 0) {
+  if (dependencies.length === 0) {
     return {};
   }
 
-  bindings.forEach(propName => {
-    boundData[propName] = resolveProp(
+  dependencies.forEach(propName => {
+    data[propName] = resolveProp(
       propName,
       element,
       element.parent,
@@ -33,5 +33,5 @@ export default function resolveBindings(element) {
       [ elementName ]
     );
   });
-  return boundData;
+  return data;
 };

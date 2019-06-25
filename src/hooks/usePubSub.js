@@ -2,9 +2,9 @@ var subscribers = {};
 
 const subscribe = (element, type, callback) => {
   if (!subscribers[type]) subscribers[type] = {};
-  if (!subscribers[type][element.__actml]) subscribers[type][element.__actml] = callback;
+  subscribers[type][element.id] = callback;
   return () => {
-    delete subscribers[type][element.__actml];
+    delete subscribers[type][element.id];
   };
 };
 const publish = (element, type, payload) => {

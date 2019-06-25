@@ -1,5 +1,5 @@
 /** @jsx A */
-import { A, run, Fragment } from 'actml';
+import { A, run, Fragment } from '../../../src';
 
 import Store from './Store';
 import Renderer from './Renderer';

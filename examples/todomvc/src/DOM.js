@@ -2,7 +2,7 @@ const $ = (selector) => document.querySelector(selector);
 const container = $('.todo-list');
 
 export function FillContainer({ useChildren }) {
-  const [ _, content ] = useChildren();
+  const [ , content ] = useChildren();
 
   container.innerHTML = content.join('');
 }

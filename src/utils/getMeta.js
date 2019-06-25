@@ -8,12 +8,12 @@ const getFuncName = (func) => {
 
 export default function getMeta(func, props) {
   const propNames = props ? Object.keys(props) : [];
-  const bindings = [];
+  const dependencies = [];
   let exportsKeyword;
 
   propNames.forEach(propName => {
     if (propName.charAt(0) === '$') {
-      bindings.push(propName.substr(1, propName.length));
+      dependencies.push(propName.substr(1, propName.length));
     } else if (propName === 'exports') {
       exportsKeyword = props.exports;
     }
@@ -21,7 +21,7 @@ export default function getMeta(func, props) {
 
   return {
     name: getFuncName(func),
-    bindings,
+    dependencies,
     exportsKeyword
   };
 };

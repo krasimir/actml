@@ -1,6 +1,6 @@
 /* eslint-disable no-use-before-define, consistent-return */
 
-import resolveBindings from './utils/resolveBindings';
+import resolveProduct from './utils/resolveProduct';
 import getMeta from './utils/getMeta';
 import isActMLElement from './utils/isActMLElement';
 import { createProduct } from './hooks/utils/Product';
@@ -13,7 +13,8 @@ import createUSeStateHook from './hooks/useState';
 
 export default function createElement(func, props, children) {
   const element = {
-    __actml: getId(),
+    __actml: true,
+    id: getId(),
     parent: null,
     meta: getMeta(func, props),
     run,
@@ -32,7 +33,7 @@ export default function createElement(func, props, children) {
   const usePubSub = createUsePubSubHook(element);
   const useState = createUSeStateHook(element);
 
-  function requestProduct(propName, dependent) {
+  function requestProduct(propName) {
     const { exportsKeyword } = element.meta;
 
     if (exportsKeyword && exportsKeyword === propName) {
@@ -48,7 +49,7 @@ export default function createElement(func, props, children) {
     let result = func({
       ...props,
       ...additionalProps,
-      ...resolveBindings(element),
+      ...resolveProduct(element),
       useChildren,
       useElement,
       useProduct,

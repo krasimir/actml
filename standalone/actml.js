@@ -17,9 +17,9 @@ var _extends = Object.assign || function (target) {
 
 exports.default = createElement;
 
-var _resolveBindings = require('./utils/resolveBindings');
+var _resolveProduct = require('./utils/resolveProduct');
 
-var _resolveBindings2 = _interopRequireDefault(_resolveBindings);
+var _resolveProduct2 = _interopRequireDefault(_resolveProduct);
 
 var _getMeta = require('./utils/getMeta');
 
@@ -94,7 +94,7 @@ function createElement(func, props, children) {
               element.isRunning = true;
               processChildrenAutomatically.process = true;
 
-              result = func(_extends({}, props, additionalProps, (0, _resolveBindings2.default)(element), {
+              result = func(_extends({}, props, additionalProps, (0, _resolveProduct2.default)(element), {
                 useChildren: useChildren,
                 useElement: useElement,
                 useProduct: useProduct,
@@ -216,7 +216,7 @@ function createElement(func, props, children) {
   var usePubSub = (0, _usePubSub2.default)(element);
   var useState = (0, _useState2.default)(element);
 
-  function requestProduct(propName, dependent) {
+  function requestProduct(propName) {
     var exportsKeyword = element.meta.exportsKeyword;
 
     if (exportsKeyword && exportsKeyword === propName) {
@@ -227,7 +227,7 @@ function createElement(func, props, children) {
   return element;
 };
 
-},{"./hooks/useChildren":2,"./hooks/useElement":3,"./hooks/useProduct":4,"./hooks/usePubSub":5,"./hooks/useState":6,"./hooks/utils/Product":7,"./utils/getMeta":9,"./utils/isActMLElement":10,"./utils/resolveBindings":11,"./utils/uid":12}],2:[function(require,module,exports){
+},{"./hooks/useChildren":2,"./hooks/useElement":3,"./hooks/useProduct":4,"./hooks/usePubSub":5,"./hooks/useState":6,"./hooks/utils/Product":7,"./utils/getMeta":9,"./utils/isActMLElement":10,"./utils/resolveProduct":11,"./utils/uid":12}],2:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -357,7 +357,6 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = createUseProductHook;
 function createUseProductHook(product) {
   return function (initialValue) {
-    product.clear();
     if (typeof initialValue !== 'undefined') {
       product.set(initialValue);
     }
@@ -460,7 +459,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 /* eslint-disable no-return-assign */
 
-var createProduct = exports.createProduct = function createProduct(element) {
+var createProduct = exports.createProduct = function createProduct() {
   var state;
 
   return {
@@ -469,9 +468,6 @@ var createProduct = exports.createProduct = function createProduct(element) {
     },
     get: function get() {
       return state;
-    },
-    clear: function clear() {
-      state = undefined;
     }
   };
 };
@@ -534,12 +530,12 @@ var getFuncName = function getFuncName(func) {
 
 function getMeta(func, props) {
   var propNames = props ? Object.keys(props) : [];
-  var bindings = [];
+  var dependencies = [];
   var exportsKeyword = void 0;
 
   propNames.forEach(function (propName) {
     if (propName.charAt(0) === '$') {
-      bindings.push(propName.substr(1, propName.length));
+      dependencies.push(propName.substr(1, propName.length));
     } else if (propName === 'exports') {
       exportsKeyword = props.exports;
     }
@@ -547,7 +543,7 @@ function getMeta(func, props) {
 
   return {
     name: getFuncName(func),
-    bindings: bindings,
+    dependencies: dependencies,
     exportsKeyword: exportsKeyword
   };
 };
@@ -569,13 +565,13 @@ function isActMLElement(element) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = resolveBindings;
+exports.default = resolveProduct;
 var resolveProp = function resolveProp(prop, element, parent, errorMessage, stack) {
   if (parent) {
-    var binding = parent.requestProduct(prop, element);
+    var productValue = parent.requestProduct(prop);
 
-    if (binding) {
-      return binding.value;
+    if (productValue) {
+      return productValue.value;
     } else if (parent.parent) {
       stack.push(parent.meta.name);
       return resolveProp(prop, element, parent.parent, errorMessage, stack);
@@ -587,21 +583,21 @@ var resolveProp = function resolveProp(prop, element, parent, errorMessage, stac
   }).join('\n'));
 };
 
-function resolveBindings(element) {
+function resolveProduct(element) {
   var _element$meta = element.meta,
-      bindings = _element$meta.bindings,
+      dependencies = _element$meta.dependencies,
       elementName = _element$meta.name;
 
-  var boundData = {};
+  var data = {};
 
-  if (bindings.length === 0) {
+  if (dependencies.length === 0) {
     return {};
   }
 
-  bindings.forEach(function (propName) {
-    boundData[propName] = resolveProp(propName, element, element.parent, '"' + propName + '" prop requested by "' + elementName + '" can not be found.', [elementName]);
+  dependencies.forEach(function (propName) {
+    data[propName] = resolveProp(propName, element, element.parent, '"' + propName + '" prop requested by "' + elementName + '" can not be found.', [elementName]);
   });
-  return boundData;
+  return data;
 };
 
 },{}],12:[function(require,module,exports){
