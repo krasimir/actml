@@ -1,12 +1,39 @@
 /* eslint-disable react/prop-types, no-sequences */
 /** @jsx A */
 
-import { A, run, Fragment } from '../';
+import { A, run, Fragment, processor } from '../';
 
 const delay = (ms, func) => new Promise(resolve => setTimeout(() => resolve(func()), ms));
 
 describe('Given the ActML library', () => {
+  beforeEach(() => {
+    processor.system().reset();
+  });
   describe('when representing a function as an ActML element', () => {
+    it('should create new ActML', async () => {
+      const B = () => {};
+      const el1 = <B />;
+      const el2 = <B />;
+
+      expect(el1.id).not.toEqual(el2.id);
+    });
+    it.only('should re-run elements', async () => {
+      const B = () => {};
+      const C = () => {
+        return (
+          <Fragment>
+            <B />
+            <B />
+          </Fragment>
+        );
+      };
+      const el = <C />;
+
+      await run(el);
+      await run(el);
+
+      console.log(processor.system().elements);
+    });
     it('should run the function and return its result', async () => {
       const spy = jest.fn();
       const X = function ({ foo }) {
@@ -111,6 +138,19 @@ describe('Given the ActML library', () => {
 
         expect(await run(<B />)).toEqual(168);
         expect(E).toBeCalledTimes(1);
+      });
+    });
+    describe('and we return another ActML element', () => {
+      it('should run it', async () => {
+        const C = jest.fn().mockImplementation(() => 42);
+        const D = jest.fn();
+        const B = function * () {
+          return <C><D /></C>;
+        };
+
+        expect(await run(<B />)).toBe(42);
+        expect(C).toBeCalledTimes(1);
+        expect(D).toBeCalledTimes(1);
       });
     });
   });

@@ -15,11 +15,11 @@ const publish = (element, type, payload) => {
 };
 
 export default function createUsePubSubHook(element) {
-  return () => ([
+  return (scopedElement) => ([
     // subscribe
-    (...params) => subscribe(element, ...params),
+    (...params) => subscribe(scopedElement || element, ...params),
     // publish
-    (...params) => publish(element, ...params),
+    (...params) => publish(scopedElement || element, ...params),
     // clear
     () => {
       subscribers = {};

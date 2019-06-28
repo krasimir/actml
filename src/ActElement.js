@@ -1,27 +1,31 @@
 /* eslint-disable no-use-before-define, consistent-return */
 
 import resolveProduct from './utils/resolveProduct';
-import getMeta from './utils/getMeta';
+import { getFuncName, parseProps } from './utils/getMeta';
 import isActMLElement from './utils/isActMLElement';
 import { createProduct } from './hooks/utils/Product';
-import getId from './utils/uid';
 import createUseChildrenHook from './hooks/useChildren';
 import createUseElementHook from './hooks/useElement';
 import createUseProductHook from './hooks/useProduct';
 import createUsePubSubHook from './hooks/usePubSub';
-import createUSeStateHook from './hooks/useState';
+import createUseStateHook from './hooks/useState';
+import createUseElementsHook from './hooks/useElements';
 
-export default function createElement(func, props, children) {
+export default function createElement(id, func, props, children) {
   const element = {
     __actml: true,
-    id: getId(),
-    parent: null,
-    meta: getMeta(func, props),
-    run,
-    requestProduct,
-    isUsed: false,
-    isRunning: false
+    id,
+    name: getFuncName(func),
+    func,
+    children,
+    ...parseProps(props),
+    // parent: null,
+    // run,
+    // requestProduct,
+    // isUsed: false,
+    // isRunning: false
   };
+  /*
   const product = createProduct(element);
   const {
     hook: useChildren,
@@ -31,7 +35,7 @@ export default function createElement(func, props, children) {
   const useElement = createUseElementHook(element);
   const useProduct = createUseProductHook(product);
   const usePubSub = createUsePubSubHook(element);
-  const useState = createUSeStateHook(element);
+  const useState = createUseStateHook(element);
 
   function requestProduct(propName) {
     const { exportsKeyword } = element.meta;
@@ -54,7 +58,8 @@ export default function createElement(func, props, children) {
       useElement,
       useProduct,
       usePubSub,
-      useState
+      useState,
+      useElements: createUseElementsHook(element)
     });
     let genResult, toGenValue;
 
@@ -74,7 +79,11 @@ export default function createElement(func, props, children) {
         }
         genResult = result.next(toGenValue);
       }
-      result = genResult.value;
+      if (isActMLElement(genResult.value)) {
+        result = await genResult.value.run(element);
+      } else {
+        result = genResult.value;
+      }
 
     // handling another ActML element
     } else if (isActMLElement(result)) {
@@ -87,7 +96,7 @@ export default function createElement(func, props, children) {
     }
 
     return result;
-  }
+  }*/
 
   return element;
 };

@@ -58,5 +58,44 @@ describe('Given the ActML library', () => {
       expect(C).toBeCalledWith(expect.objectContaining({ x: 10 }));
       expect(C).toBeCalledWith(expect.objectContaining({ x: 20 }));
     });
+    describe('when the `children` is just a function', () => {
+      it('should run the function with the given value', async () => {
+        const E = async ({ useChildren, useElement }) => {
+          const [ children ] = useChildren();
+
+          children('foo');
+        };
+        const B = jest.fn();
+
+        await run(
+          <E>
+            { B }
+          </E>
+        );
+
+        expect(B).toBeCalledTimes(1);
+        expect(B).toBeCalledWith('foo');
+      });
+      describe('and when the function returns another ActML element', () => {
+        it('should run that element too', async () => {
+          const E = async ({ useChildren }) => {
+            const [ children ] = useChildren();
+
+            children('foo');
+          };
+          const C = jest.fn();
+          const B = jest.fn().mockImplementation((param) => <C param={ param }/>);
+
+          await run(
+            <E>
+              { B }
+            </E>
+          );
+
+          expect(C).toBeCalledTimes(1);
+          expect(C).toBeCalledWith(expect.objectContaining({ param: 'foo' }));
+        });
+      });
+    });
   });
 });
