@@ -7,6 +7,11 @@ function branch(element = null) {
     children: []
   };
 }
+function resetBranch(branch, element = null) {
+  branch.element = element;
+  branch.used = 1;
+  branch.children = [];
+}
 
 export default function Tree() {
   var root = branch();
@@ -33,6 +38,7 @@ export default function Tree() {
     };
   };
   function treeDiff(branch, element) {
+    // console.log((branch.element ? branch.element.name : '') + ' === ' + element.name);
     if (branch.element && element.name === branch.element.name) {
       return equal(branch.element.props, element.props);
     }
@@ -51,8 +57,7 @@ export default function Tree() {
         };
       }
       element.initialize(getId());
-      branch.element = element;
-      branch.children = [];
+      resetBranch(branch, element);
       return {
         element,
         createBranch: createNewBranch
