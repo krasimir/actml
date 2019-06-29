@@ -2,8 +2,7 @@
 /** @jsx A */
 
 import { A, run, Fragment, processor } from '../';
-
-const delay = (ms, func) => new Promise(resolve => setTimeout(() => resolve(func()), ms));
+import { printTree, exerciseTree, delay } from '../__helpers__/utils';
 
 describe('Given the ActML library', () => {
   beforeEach(() => {
@@ -33,10 +32,10 @@ describe('Given the ActML library', () => {
       await run(el);
       await run(el);
 
-      expect(processor.system().numOfElements()).toEqual(4);
+      expect(processor.system().tree.getNumOfElements()).toEqual(4);
       expect(mock).toBeCalledTimes(4);
     });
-    it.only('should re-use only elements that are not changed', async () => {
+    it('should re-use only elements that are not changed', async () => {
       let value = 0;
       const mock = jest.fn();
       const B = () => mock();
@@ -65,14 +64,27 @@ describe('Given the ActML library', () => {
       const el = <C />;
 
       await run(el);
-      console.log(processor.system().drawTree());
+      exerciseTree(processor, `
+        C(1)
+        Fragment(1)
+        Fragment(1)
+        B(1)
+        B(1)
+      `);
       await run(el);
-      console.log(processor.system().drawTree());
+      exerciseTree(processor, `
+        C(2)
+        Fragment(2)
+        Fragment(2)
+        B(2)
+        B(2)
+      `);
       await run(el);
-      console.log(processor.system().drawTree());
-
-      // expect(processor.system().numOfElements()).toEqual(4);
-      // expect(mock).toBeCalledTimes(4);
+      exerciseTree(processor, `
+        C(3)
+        Fragment(3)
+        B(1)
+      `);
     });
     it('should run the function and return its result', async () => {
       const spy = jest.fn();

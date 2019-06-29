@@ -1,15 +1,16 @@
 import ActElement from './ActElement';
 import isActMLElement from './utils/isActMLElement';
-import { createTree, processTree, drawTree, resetTree, getNumOfElements } from './Tree';
+import { createTree, processTree, diagnose, resetTree, getNumOfElements } from './Tree';
+import Tree from './Tree';
 import prepareProps from './utils/prepareProps';
 
 export default function createProcessor() {
-  var T = createTree();
+  var tree = Tree();
   const create = (func, props, children) => {
     return ActElement(func, props, children);
   };
-  const run = async (elementPrimitive, branch = T) => {
-    const { element, createBranch } = processTree(branch, elementPrimitive);
+  const run = async (elementPrimitive, branch = tree.get()) => {
+    const { element, createBranch } = tree.process(branch, elementPrimitive);
     let result = element.func(prepareProps(element));
     let genResult, toGenValue;
 
@@ -60,16 +61,9 @@ export default function createProcessor() {
     return result;
   };
   const system = () => ({
-    tree: T,
-    numOfElements() {
-      return getNumOfElements();
-    },
+    tree,
     reset() {
-      this.tree = T = createTree();
-      resetTree();
-    },
-    drawTree() {
-      return drawTree(this.tree);
+      tree.reset();
     }
   });
 
