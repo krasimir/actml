@@ -1,20 +1,16 @@
 import ActElement from './ActElement';
 import isActMLElement from './utils/isActMLElement';
+import { createTree, processTree, drawTree, resetTree, getNumOfElements } from './Tree';
+import prepareProps from './utils/prepareProps';
 
 export default function createProcessor() {
-  var ids = 0;
-
-  function getId() {
-    return 'a' + (++ids);
-  };
+  var T = createTree();
   const create = (func, props, children) => {
-    const el = ActElement(getId(), func, props, children);
-
-    console.log(el.name);
-    return el;
+    return ActElement(func, props, children);
   };
-  const run = async (element, parent = null) => {
-    let result = element.func(element.props);
+  const run = async (elementPrimitive, branch = T) => {
+    const { element, createBranch } = processTree(branch, elementPrimitive);
+    let result = element.func(prepareProps(element));
     let genResult, toGenValue;
 
     // handling a promise
@@ -26,29 +22,54 @@ export default function createProcessor() {
       genResult = result.next();
       while (!genResult.done) {
         if (isActMLElement(genResult.value)) {
-          toGenValue = await genResult.value.run(element);
+          toGenValue = await run(genResult.value, createBranch(branch));
         }
         genResult = result.next(toGenValue);
       }
       if (isActMLElement(genResult.value)) {
-        result = await genResult.value.run(element);
+        result = await run(genResult.value, createBranch(branch));
       } else {
         result = genResult.value;
       }
 
     // handling another ActML element
     } else if (isActMLElement(result)) {
-      result = await run(result, element);
+      result = await run(result, createBranch(branch));
     }
 
     // TODO! handling children
+    const childrenResult = [];
+    const { children } = element;
+
+    if (children && children.length > 0) {
+      for (let i = 0; i < children.length; i++) {
+        if (isActMLElement(children[i])) {
+          childrenResult.push(await run(children[i], createBranch(branch)));
+        } else if (typeof children[i] === 'function') {
+          const funcResult = await children[i]();
+
+          if (isActMLElement(funcResult)) {
+            childrenResult.push(await run(funcResult, createBranch(branch)));
+          } else {
+            childrenResult.push(funcResult);
+          }
+        }
+      }
+    }
 
     return result;
   };
   const system = () => ({
-    elements: ids,
-    reset: () => {
-      ids = 0;
+    tree: T,
+    numOfElements() {
+      return getNumOfElements();
+    },
+    reset() {
+      this.tree = T = createTree();
+      resetTree();
+    },
+    drawTree() {
+      return drawTree(this.tree);
     }
   });
 

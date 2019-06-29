@@ -1,7 +1,6 @@
 /* eslint-disable no-use-before-define, consistent-return */
 
 import resolveProduct from './utils/resolveProduct';
-import { getFuncName, parseProps } from './utils/getMeta';
 import isActMLElement from './utils/isActMLElement';
 import { createProduct } from './hooks/utils/Product';
 import createUseChildrenHook from './hooks/useChildren';
@@ -11,14 +10,27 @@ import createUsePubSubHook from './hooks/usePubSub';
 import createUseStateHook from './hooks/useState';
 import createUseElementsHook from './hooks/useElements';
 
-export default function createElement(id, func, props, children) {
+function getFuncName(func) {
+  if (func.name) return func.name;
+  let result = /^function\s+([\w\$]+)\s*\(/.exec(func.toString());
+
+  return result ? result[ 1 ] : 'unknown';
+};
+
+export default function createElement(func, props, children) {
   const element = {
     __actml: true,
-    id,
+    id: null,
+    props,
     name: getFuncName(func),
     func,
     children,
-    ...parseProps(props),
+    initialize: function (id) {
+      this.id = id;
+    },
+    toString() {
+      return this.name;
+    }
     // parent: null,
     // run,
     // requestProduct,

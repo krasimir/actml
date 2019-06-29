@@ -15,10 +15,11 @@ describe('Given the ActML library', () => {
       const el1 = <B />;
       const el2 = <B />;
 
-      expect(el1.id).not.toEqual(el2.id);
+      expect(el1).not.toEqual(el2);
     });
-    it.only('should re-run elements', async () => {
-      const B = () => {};
+    it('should re-run same elements if the tree is not changed', async () => {
+      const mock = jest.fn();
+      const B = () => mock();
       const C = () => {
         return (
           <Fragment>
@@ -32,7 +33,46 @@ describe('Given the ActML library', () => {
       await run(el);
       await run(el);
 
-      console.log(processor.system().elements);
+      expect(processor.system().numOfElements()).toEqual(4);
+      expect(mock).toBeCalledTimes(4);
+    });
+    it.only('should re-use only elements that are not changed', async () => {
+      let value = 0;
+      const mock = jest.fn();
+      const B = () => mock();
+      const C = () => {
+        value += 1;
+        return (
+          <Fragment>
+            {
+              () => {
+                if (value === 3) {
+                  return (
+                    <B />
+                  );
+                }
+                return (
+                  <Fragment>
+                    <B />
+                    <B />
+                  </Fragment>
+                );
+              }
+            }
+          </Fragment>
+        );
+      };
+      const el = <C />;
+
+      await run(el);
+      console.log(processor.system().drawTree());
+      await run(el);
+      console.log(processor.system().drawTree());
+      await run(el);
+      console.log(processor.system().drawTree());
+
+      // expect(processor.system().numOfElements()).toEqual(4);
+      // expect(mock).toBeCalledTimes(4);
     });
     it('should run the function and return its result', async () => {
       const spy = jest.fn();
