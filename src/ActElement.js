@@ -38,10 +38,11 @@ function getFuncName(func) {
 export default function createElement(func, props, children) {
   const element = {
     __actml: true,
+    __used: 0,
+    __running: false,
     id: null,
     props: parseProps(props),
     name: getFuncName(func),
-    func,
     children,
     initialize: function (id) {
       this.id = id;
@@ -54,6 +55,24 @@ export default function createElement(func, props, children) {
     },
     toString() {
       return this.name;
+    },
+    used() {
+      return this.__used;
+    },
+    isRunning() {
+      return this.__running;
+    },
+    async run(otherProps) {
+      this.__running = true;
+
+      const result = await func({
+        ...this.props,
+        ...otherProps
+      });
+
+      this.__used += 1;
+      this.__running = false;
+      return result;
     }
     // parent: null,
     // run,

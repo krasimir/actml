@@ -1,19 +1,47 @@
 /* eslint-disable no-use-before-define */
-import ActElement from './ActElement';
 import isActMLElement from './utils/isActMLElement';
 import Tree from './Tree';
-import enhanceProps from './utils/enhanceProps';
+import createUseElementHook from './hooks/useElement';
+import createUseChildrenHook from './hooks/useChildren';
+import createUseProductHook from './hooks/useProduct';
+import createUsePubSubHook from './hooks/usePubSub';
+import createUseStateHook from './hooks/useState';
+
+function initializeHooks(element, callChildren, stack, rerun) {
+  const useElement = createUseElementHook(element);
+  const {
+    hook: useChildren,
+    processChildrenAutomatically
+  } = createUseChildrenHook(element, callChildren);
+  const {
+    hook: useProduct,
+    resolvedProductProps
+  } = createUseProductHook(element, stack);
+  const usePubSub = createUsePubSubHook(element);
+  const useState = createUseStateHook(element, rerun);
+
+  return [
+    {
+      ...resolvedProductProps,
+      useChildren,
+      useElement,
+      useProduct,
+      usePubSub,
+      useState,
+      // useElements: createUseElementsHook(element)
+    },
+    processChildrenAutomatically
+  ];
+};
 
 export default function createProcessor() {
   var tree = Tree();
-  const create = (func, props, children) => {
-    return ActElement(func, props, children);
-  };
   const process = async (branch, stack = []) => {
     const { element } = branch;
-    const { props, processChildrenAutomatically } = enhanceProps(element, callChildren, stack);
-    const createChildBranch = tree.createChildBranchFactory(branch);
-    let result = element.func(props);
+    const [ createChildBranch, cleanUpTree ] = tree.createChildBranchFactory(branch);
+    const rerun = () => process(branch, stack);
+    const [ hooksProps, processChildrenAutomatically ] = initializeHooks(element, callChildren, stack, rerun);
+    let result = await element.run(hooksProps);
     let genResult, toGenValue;
 
     // updating the stack
@@ -43,7 +71,7 @@ export default function createProcessor() {
       result = await process(createChildBranch(result), stack);
     }
 
-    // TODO! handling children
+    // handling children
     async function callChildren(additionalProps) {
       const childrenResult = [];
       const { children } = element;
@@ -71,6 +99,8 @@ export default function createProcessor() {
       await callChildren();
     }
 
+    cleanUpTree();
+
     return result;
   };
   const run = (elementPrimitive) => process(tree.resolveRoot(elementPrimitive));
@@ -78,12 +108,13 @@ export default function createProcessor() {
     tree,
     reset() {
       tree.reset();
+      createUsePubSubHook.clear();
+      createUseStateHook.clear();
     }
   });
 
   return {
     run,
-    create,
     system
   };
 };

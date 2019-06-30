@@ -1,10 +1,11 @@
 import createProcessor from './Processor';
 import isActMLElement from './utils/isActMLElement';
+import ActElement from './ActElement';
 
 const processor = createProcessor();
 
 function create(func, props, ...children) {
-  return processor.create(func, props, children);
+  return ActElement(func, props, children);
 }
 function run(element) {
   if (!isActMLElement(element)) {

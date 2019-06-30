@@ -1,10 +1,12 @@
 /** @jsx A */
 
-import { A } from '../../';
-
-const delay = (ms, func = () => {}) => new Promise(resolve => setTimeout(() => resolve(func()), ms));
+import { A, run, processor } from '../../';
+import { delay } from '../../__helpers__/utils';
 
 describe('Given the ActML library', () => {
+  beforeEach(() => {
+    processor.system().reset();
+  });
   describe('when use the useState hook', () => {
     it('should allow us to preserve state across reruns', async () => {
       const mock = jest.fn();
@@ -15,11 +17,11 @@ describe('Given the ActML library', () => {
         // the state at this point is updated but not delivered
         mock(state);
       };
-      const El = <E />;
+      const el = <E />;
 
-      await El.run();
-      await El.run();
-      await El.run();
+      await run(el);
+      await run(el);
+      await run(el);
 
       expect(mock).toBeCalledTimes(3);
       expect(mock).toBeCalledWith(1);
@@ -36,11 +38,11 @@ describe('Given the ActML library', () => {
         addLetter(letters + 'a');
         mock(numbers, letters);
       };
-      const El = <E />;
+      const el = <E />;
 
-      await El.run();
-      await El.run();
-      await El.run();
+      await run(el);
+      await run(el);
+      await run(el);
 
       expect(mock).toBeCalledTimes(3);
       expect(mock).toBeCalledWith(1, 'a');
@@ -52,15 +54,17 @@ describe('Given the ActML library', () => {
       const E = ({ useState }) => {
         const [ numbers, increment ] = useState(1);
 
-        setTimeout(() => {
-          increment(numbers + 1);
-        }, 20);
+        if (numbers === 1) {
+          setTimeout(() => {
+            increment(numbers + 1);
+          }, 20);
+        }
         mock(numbers);
       };
       const C = jest.fn();
-      const El = <E><C /></E>;
+      const el = <E><C /></E>;
 
-      await El.run();
+      await run(el);
       await delay(30);
 
       expect(mock).toBeCalledTimes(2);

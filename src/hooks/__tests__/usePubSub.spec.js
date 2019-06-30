@@ -1,25 +1,18 @@
 /* eslint-disable no-unused-vars */
 /** @jsx A */
 
-import { A, run, Fragment } from '../../';
-
-const delay = (ms, func = () => {}) => new Promise(resolve => setTimeout(() => resolve(func()), ms));
+import { A, run, Fragment, processor } from '../../';
+import { delay, prettyTree } from '../../__helpers__/utils';
 
 describe('Given the usePubSub hook', () => {
+  beforeEach(() => {
+    processor.system().reset();
+  });
   describe('when we subscribe to an event', () => {
-    beforeEach(() => {
-      const C = ({ usePubSub }) => {
-        const [ _, __, clear ] = usePubSub();
-
-        clear();
-      };
-
-      run(<C />);
-    });
     it('should be possible to publish such one from another element', async () => {
       const mock = jest.fn();
       const Publisher = function ({ usePubSub }) {
-        const [ subscribe, publish ] = usePubSub();
+        const [ _, publish ] = usePubSub();
 
         setTimeout(() => {
           publish('foo', 42);
@@ -42,40 +35,9 @@ describe('Given the usePubSub hook', () => {
       expect(mock).toBeCalledWith(
         42,
         expect.objectContaining({
-          meta: expect.objectContaining({ name: 'Publisher' })
+          name: 'Publisher'
         })
       );
-    });
-    it('should subscribe only once', async () => {
-      const mockS = jest.fn();
-      const mockExecute = jest.fn();
-      const E = function ({ usePubSub }) {
-        const [ subscribe ] = usePubSub();
-
-        mockExecute();
-        subscribe('foo', mockS);
-      };
-      const P = function ({ usePubSub, useChildren }) {
-        const [ subscribe, publish ] = usePubSub();
-        const [ children ] = useChildren();
-
-        children();
-        children();
-        setTimeout(() => {
-          children();
-          publish('foo');
-        }, 20);
-      };
-
-      await run(
-        <P>
-          <E />
-        </P>
-      );
-      await delay(30);
-
-      expect(mockExecute).toBeCalledTimes(3);
-      expect(mockS).toBeCalledTimes(1);
     });
     it('should provide a way to unsubscribe', async () => {
       const mockS = jest.fn();
@@ -87,7 +49,7 @@ describe('Given the usePubSub hook', () => {
         setTimeout(unsubscribe, 20);
       };
       const P = function ({ usePubSub }) {
-        const [ _, __, ___, subscribers ] = usePubSub();
+        const [ _, __, subscribers ] = usePubSub();
 
         expect(Object.keys(subscribers['foo'])).toHaveLength(1);
         setTimeout(() => {

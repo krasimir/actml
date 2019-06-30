@@ -115,6 +115,70 @@ describe('Given the ActML library', () => {
       `);
       expect(processor.system().tree.getNumOfElements()).toBe(7);
     });
+    it('should clean up the tree after a change is found', async () => {
+      let i = 0;
+      const mock = jest.fn();
+      const B = () => mock();
+      const C = () => {
+        i += 1;
+        if (i === 3) {
+          return (
+            <Fragment>
+              <B />
+              <B i={ i }/>
+            </Fragment>
+          );
+        }
+        return (
+          <Fragment>
+            <B />
+            <B />
+            <B />
+          </Fragment>
+        );
+      };
+      const el = <C />;
+
+      await run(el);
+      await run(el);
+      await run(el);
+
+      exerciseTree(processor, `
+        C(3)
+        Fragment(3)
+        B(3)
+        B(1)
+      `);
+    });
+    it('should create multiple tree branches if children hook is fired multiple times', async () => {
+      const E = function () {};
+      const N = function () {};
+      const P = function * ({ useChildren }) {
+        const [ children ] = useChildren();
+
+        children();
+        yield <N />;
+        children();
+        setTimeout(() => {
+          children();
+        }, 20);
+      };
+
+      await run(
+        <P>
+          <E />
+        </P>
+      );
+      await delay(30);
+
+      exerciseTree(processor, `
+        P(1)
+        E(3)
+        N(1)
+        E(3)
+        E(3)
+      `);
+    });
     it('should run the function and return its result', async () => {
       const spy = jest.fn();
       const X = function ({ foo }) {

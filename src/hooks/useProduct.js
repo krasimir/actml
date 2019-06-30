@@ -37,7 +37,7 @@ function resolveProduct(element, stack) {
 
 export default function createUseProductHook(element, stack) {
   let product;
-  const resolvedProps = resolveProduct(element, stack);
+  const resolvedProductProps = resolveProduct(element, stack);
 
   element.requestProduct = (propName) => {
     if (element.props.exportsKeyword && element.props.exportsKeyword === propName) {
@@ -57,6 +57,6 @@ export default function createUseProductHook(element, stack) {
         }
       ];
     },
-    resolvedProps
+    resolvedProductProps
   };
 };

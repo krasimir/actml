@@ -1,29 +1,45 @@
-export default function createUseStateHook(element) {
-  const storage = {
-    states: []
-  };
-  let consumer = 0;
+/* eslint-disable no-return-assign */
+
+const Storage = {
+  elements: {},
+  get(element) {
+    if (this.elements[element.id]) {
+      return this.elements[element.id];
+    }
+    return this.elements[element.id] = { states: [], consumer: 0 };
+  }
+};
+
+export default function createUseStateHook(element, rerun) {
+  const storage = Storage.get(element);
 
   return (initialState) => {
     let index;
 
-    if (!element.isUsed) {
+    // first run
+    if (element.used() === 0) {
       storage.states.push(initialState);
       index = storage.states.length - 1;
+
+    // other runs
     } else {
-      index = consumer;
-      consumer = index < storage.states.length - 1 ? consumer + 1 : 0;
+      index = storage.consumer;
+      storage.consumer = index < storage.states.length - 1 ? storage.consumer + 1 : 0;
     }
 
     return [
       storage.states[index],
       newState => {
         storage.states[index] = newState;
-        if (!element.isRunning) {
-          element.run(element.parent);
+        if (!element.isRunning()) {
+          rerun();
         }
         return newState;
       }
     ];
   };
 }
+
+createUseStateHook.clear = () => {
+  Storage.elements = {};
+};

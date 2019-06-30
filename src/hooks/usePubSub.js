@@ -20,11 +20,11 @@ export default function createUsePubSubHook(element) {
     (...params) => subscribe(scopedElement || element, ...params),
     // publish
     (...params) => publish(scopedElement || element, ...params),
-    // clear
-    () => {
-      subscribers = {};
-    },
     // list of all subscribers
     subscribers
   ]);
 }
+
+createUsePubSubHook.clear = () => {
+  subscribers = {};
+};

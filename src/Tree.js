@@ -12,12 +12,10 @@ export default function Tree() {
     if (element) { element.initialize(getId()); }
     return {
       element,
-      used: 1,
       children: []
     };
   }
   function reUse(branch, newElement) {
-    branch.used += 1;
     branch.element.reUse(newElement);
     return branch;
   }
@@ -30,25 +28,35 @@ export default function Tree() {
 
   return {
     resolveRoot(element) {
-      if (treeDiff(root.element, element)) {
-        return reUse(root, element);
-      }
-      return root = createNewBranch(element);
+      // console.log(`------------> ${ element.name }`);
+      return root = treeDiff(root.element, element) ?
+        reUse(root, element) :
+        createNewBranch(element);
     },
     createChildBranchFactory(branch) {
       let i = 0;
 
-      return (newElement) => {
-        const childBranch = branch.children[i];
+      return [
+        (newElement) => {
+          const childBranch = branch.children[i];
 
-        if (childBranch && treeDiff(childBranch.element, newElement)) {
+          // console.log(`${ childBranch ? childBranch.element.name : '.' } === ${ newElement.name }`);
+          if (childBranch && treeDiff(childBranch.element, newElement)) {
+            i += 1;
+            return reUse(childBranch, newElement);
+          }
+          branch.children[i] = createNewBranch(newElement);
           i += 1;
-          return reUse(childBranch, newElement);
+          return branch.children[i - 1];
+        },
+        () => {
+          // If there're more branches in the tree then what was processed
+          if (i < branch.children.length) {
+            // console.log(`X! clean up ${ i } to ${ branch.children.length - i }`);
+            branch.children.splice(i, branch.children.length - i);
+          }
         }
-        branch.children[i] = createNewBranch(newElement);
-        i += 1;
-        return branch.children[i - 1];
-      };
+      ];
     },
     reset() {
       root = createNewBranch();
@@ -61,7 +69,7 @@ export default function Tree() {
       return (function loopOver(branch, ind = 0) {
         let arr = [];
 
-        arr.push({ ind, name: branch.element.name, used: branch.used });
+        arr.push({ ind, name: branch.element.name, used: branch.element.used(), id: branch.element.id });
         if (branch.children.length > 0) {
           branch.children.forEach(child => {
             arr.push(loopOver(child, ind + 1));
