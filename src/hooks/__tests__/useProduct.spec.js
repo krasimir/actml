@@ -1,10 +1,13 @@
 /** @jsx A */
 
-import { A, run } from '../../';
+import { A, run, processor } from '../../';
 
 const delay = (ms, func) => new Promise(resolve => setTimeout(() => resolve(func()), ms));
 
 describe('Given the ActML library', () => {
+  beforeEach(() => {
+    processor.system().reset();
+  });
   describe('and we use the useProduct hook', () => {
     it('should provide a way to update the value', async () => {
       async function E({ useProduct }) {

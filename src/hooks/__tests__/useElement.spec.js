@@ -8,7 +8,7 @@ describe('Given the ActML library', () => {
       const E = async ({ useElement }) => {
         const [ element ] = useElement();
 
-        return element.meta.name;
+        return element.name;
       };
 
       expect(await run(<E />)).toBe('E');

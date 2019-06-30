@@ -1,11 +1,14 @@
 /* eslint-disable no-sequences */
 /** @jsx A */
 
-import { A, run } from '../../';
+import { A, run, processor } from '../../';
 
 const delay = (ms, func) => new Promise(resolve => setTimeout(() => resolve(func()), ms));
 
 describe('Given the ActML library', () => {
+  beforeEach(() => {
+    processor.system().reset();
+  });
   describe('when use the useChildren hook', () => {
     it(`should
       - give us the power to run the children manually
@@ -17,7 +20,7 @@ describe('Given the ActML library', () => {
         const [ children, childrenList ] = useChildren();
         const result = await children();
 
-        return result.concat(childrenList.map(({ meta }) => meta.name));
+        return result.concat(childrenList.map(({ name }) => name));
       }
       const B = () => (mock(), 'b');
       const C = () => delay(40, () => (mock(), 'c'));
@@ -36,11 +39,9 @@ describe('Given the ActML library', () => {
     });
     it('should allow us to pass props when running the children', async () => {
       const E = async ({ useChildren, useElement }) => {
-        const [ children, childrenList ] = useChildren();
-        const [ element ] = useElement();
+        const [ children ] = useChildren();
 
         await children({ x: 10 });
-        await childrenList[1].run(element, { x: 20 });
       };
       const B = jest.fn();
       const C = jest.fn();
@@ -54,9 +55,8 @@ describe('Given the ActML library', () => {
 
       expect(B).toBeCalledTimes(1);
       expect(B).toBeCalledWith(expect.objectContaining({ x: 10 }));
-      expect(C).toBeCalledTimes(2);
+      expect(C).toBeCalledTimes(1);
       expect(C).toBeCalledWith(expect.objectContaining({ x: 10 }));
-      expect(C).toBeCalledWith(expect.objectContaining({ x: 20 }));
     });
     describe('when the `children` is just a function', () => {
       it('should run the function with the given value', async () => {

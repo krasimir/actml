@@ -1,14 +1,32 @@
 /* eslint-disable no-use-before-define, consistent-return */
 
-import resolveProduct from './utils/resolveProduct';
 import isActMLElement from './utils/isActMLElement';
-import { createProduct } from './hooks/utils/Product';
 import createUseChildrenHook from './hooks/useChildren';
 import createUseElementHook from './hooks/useElement';
 import createUseProductHook from './hooks/useProduct';
 import createUsePubSubHook from './hooks/usePubSub';
 import createUseStateHook from './hooks/useState';
 import createUseElementsHook from './hooks/useElements';
+
+function parseProps(props) {
+  const propNames = props ? Object.keys(props) : [];
+  const result = {
+    dependencies: [],
+    exportsKeyword: undefined
+  };
+
+  propNames.forEach(propName => {
+    if (propName.charAt(0) === '$') {
+      result.dependencies.push(propName.substr(1, propName.length));
+    } else if (propName === 'exports') {
+      result.exportsKeyword = props.exports;
+    } else {
+      result[propName] = props[propName];
+    }
+  });
+
+  return result;
+};
 
 function getFuncName(func) {
   if (func.name) return func.name;
@@ -21,12 +39,18 @@ export default function createElement(func, props, children) {
   const element = {
     __actml: true,
     id: null,
-    props,
+    props: parseProps(props),
     name: getFuncName(func),
     func,
     children,
     initialize: function (id) {
       this.id = id;
+    },
+    reUse: function (newElement) {
+      this.children = [ ...newElement.children ];
+    },
+    mergeProps(newProps) {
+      this.props = Object.assign({}, this.props, newProps);
     },
     toString() {
       return this.name;

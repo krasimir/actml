@@ -1,70 +1,57 @@
+/* eslint-disable no-use-before-define, no-return-assign, max-len */
 import equal from 'fast-deep-equal';
 
-function branch(element = null) {
-  return {
-    element,
-    used: 1,
-    children: []
-  };
-}
-function resetBranch(branch, element = null) {
-  branch.element = element;
-  branch.used = 1;
-  branch.children = [];
-}
-
 export default function Tree() {
-  var root = branch();
+  var root = createNewBranch();
   var ids = 0;
 
   function getId() {
     return 'a' + (++ids);
   };
-  function createNewBranch(branch) {
-    const newBranch = {};
-
-    branch.children.push(newBranch);
-    newBranch.used = 1;
-    return newBranch;
-  };
-  function useCurrentBranch(branch) {
-    const children = [ ...branch.children ];
-
-    branch.used += 1;
-    return (t) => {
-      const c = children.shift();
-
-      return c ? c : createNewBranch(t);
+  function createNewBranch(element = null) {
+    if (element) { element.initialize(getId()); }
+    return {
+      element,
+      used: 1,
+      children: []
     };
-  };
-  function treeDiff(branch, element) {
-    // console.log((branch.element ? branch.element.name : '') + ' === ' + element.name);
-    if (branch.element && element.name === branch.element.name) {
-      return equal(branch.element.props, element.props);
+  }
+  function reUse(branch, newElement) {
+    branch.used += 1;
+    branch.element.reUse(newElement);
+    return branch;
+  }
+  function treeDiff(oldElement, newElement) {
+    if (oldElement && oldElement.name === newElement.name) {
+      return equal(oldElement.props, newElement.props);
     }
     return false;
   }
 
   return {
-    get() {
-      return root;
-    },
-    process(branch, element) {
-      if (treeDiff(branch, element)) {
-        return {
-          element: branch.element,
-          createBranch: useCurrentBranch(branch)
-        };
+    resolveRoot(element) {
+      if (treeDiff(root.element, element)) {
+        return reUse(root, element);
       }
-      element.initialize(getId());
-      resetBranch(branch, element);
-      return {
-        element,
-        createBranch: createNewBranch
+      return root = createNewBranch(element);
+    },
+    createChildBranchFactory(branch) {
+      let i = 0;
+
+      return (newElement) => {
+        const childBranch = branch.children[i];
+
+        if (childBranch && treeDiff(childBranch.element, newElement)) {
+          i += 1;
+          return reUse(childBranch, newElement);
+        }
+        branch.children[i] = createNewBranch(newElement);
+        i += 1;
+        return branch.children[i - 1];
       };
     },
     reset() {
-      root = branch();
+      root = createNewBranch();
       ids = 0;
     },
     getNumOfElements() {

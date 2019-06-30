@@ -2,7 +2,7 @@
 /** @jsx A */
 
 import { A, run, Fragment, processor } from '../';
-import { printTree, exerciseTree, delay } from '../__helpers__/utils';
+import { exerciseTree, delay } from '../__helpers__/utils';
 
 describe('Given the ActML library', () => {
   beforeEach(() => {
@@ -85,6 +85,35 @@ describe('Given the ActML library', () => {
         Fragment(3)
         B(1)
       `);
+    });
+    it('should re-use elements in a list', async () => {
+      let i = 0;
+      const mock = jest.fn();
+      const B = () => mock();
+      const C = () => {
+        i += 1;
+        return (
+          <Fragment>
+            <B />
+            <B i={ i }/>
+            <B />
+          </Fragment>
+        );
+      };
+      const el = <C />;
+
+      await run(el);
+      await run(el);
+      await run(el);
+
+      exerciseTree(processor, `
+        C(3)
+        Fragment(3)
+        B(3)
+        B(1)
+        B(3)
+      `);
+      expect(processor.system().tree.getNumOfElements()).toBe(7);
     });
     it('should run the function and return its result', async () => {
       const spy = jest.fn();
