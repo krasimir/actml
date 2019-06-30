@@ -210,6 +210,10 @@ var _useState = require('./hooks/useState');
 
 var _useState2 = _interopRequireDefault(_useState);
 
+var _elements = require('./hooks/elements');
+
+var _elements2 = _interopRequireDefault(_elements);
+
 function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj };
 }
@@ -257,8 +261,10 @@ function initializeHooks(branch, callChildren, stack, rerun) {
     useElement: useElement,
     useProduct: useProduct,
     usePubSub: usePubSub,
-    useState: useState
-    // useElements: createUseElementsHook(element)
+    useState: useState,
+    useElements: function useElements() {
+      return (0, _elements2.default)(element);
+    }
   });
 };
 
@@ -507,7 +513,7 @@ function createProcessor() {
 };
 
 }).call(this,require('_process'))
-},{"./Tree":3,"./hooks/useChildren":4,"./hooks/useElement":5,"./hooks/useProduct":6,"./hooks/usePubSub":7,"./hooks/useState":8,"./utils/isActMLElement":10,"_process":12}],3:[function(require,module,exports){
+},{"./Tree":3,"./hooks/elements":6,"./hooks/useChildren":7,"./hooks/useElement":8,"./hooks/useProduct":9,"./hooks/usePubSub":10,"./hooks/useState":11,"./utils/isActMLElement":13,"_process":15}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -609,7 +615,134 @@ function Tree() {
 } /* eslint-disable no-use-before-define, no-return-assign, max-len */
 ;
 
-},{"fast-deep-equal":11}],4:[function(require,module,exports){
+},{"fast-deep-equal":14}],4:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _slicedToArray = function () {
+  function sliceIterator(arr, i) {
+    var _arr = [];var _n = true;var _d = false;var _e = undefined;try {
+      for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+        _arr.push(_s.value);if (i && _arr.length === i) break;
+      }
+    } catch (err) {
+      _d = true;_e = err;
+    } finally {
+      try {
+        if (!_n && _i["return"]) _i["return"]();
+      } finally {
+        if (_d) throw _e;
+      }
+    }return _arr;
+  }return function (arr, i) {
+    if (Array.isArray(arr)) {
+      return arr;
+    } else if (Symbol.iterator in Object(arr)) {
+      return sliceIterator(arr, i);
+    } else {
+      throw new TypeError("Invalid attempt to destructure non-iterable instance");
+    }
+  };
+}();
+
+exports.default = createPublishElement;
+function createPublishElement(hostElement) {
+  return function (_ref) {
+    var type = _ref.type,
+        payload = _ref.payload,
+        usePubSub = _ref.usePubSub;
+
+    var _usePubSub = usePubSub(hostElement),
+        _usePubSub2 = _slicedToArray(_usePubSub, 2),
+        publish = _usePubSub2[1];
+
+    publish(type, payload);
+  };
+}
+
+},{}],5:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _slicedToArray = function () {
+    function sliceIterator(arr, i) {
+        var _arr = [];var _n = true;var _d = false;var _e = undefined;try {
+            for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+                _arr.push(_s.value);if (i && _arr.length === i) break;
+            }
+        } catch (err) {
+            _d = true;_e = err;
+        } finally {
+            try {
+                if (!_n && _i["return"]) _i["return"]();
+            } finally {
+                if (_d) throw _e;
+            }
+        }return _arr;
+    }return function (arr, i) {
+        if (Array.isArray(arr)) {
+            return arr;
+        } else if (Symbol.iterator in Object(arr)) {
+            return sliceIterator(arr, i);
+        } else {
+            throw new TypeError("Invalid attempt to destructure non-iterable instance");
+        }
+    };
+}();
+
+exports.default = createSubscribeElement;
+function createSubscribeElement(hostElement) {
+    return function (_ref) {
+        var type = _ref.type,
+            useChildren = _ref.useChildren,
+            usePubSub = _ref.usePubSub;
+
+        var _useChildren = useChildren(),
+            _useChildren2 = _slicedToArray(_useChildren, 1),
+            children = _useChildren2[0];
+
+        var _usePubSub = usePubSub(hostElement),
+            _usePubSub2 = _slicedToArray(_usePubSub, 1),
+            subscribe = _usePubSub2[0];
+
+        subscribe(type, children);
+    };
+};
+
+},{}],6:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = createUseElementsHook;
+
+var _Publish = require('./Publish');
+
+var _Publish2 = _interopRequireDefault(_Publish);
+
+var _Subscribe = require('./Subscribe');
+
+var _Subscribe2 = _interopRequireDefault(_Subscribe);
+
+function _interopRequireDefault(obj) {
+  return obj && obj.__esModule ? obj : { default: obj };
+}
+
+function createUseElementsHook(element) {
+  return {
+    Publish: (0, _Publish2.default)(element),
+    Subscribe: (0, _Subscribe2.default)(element)
+  };
+}
+
+},{"./Publish":4,"./Subscribe":5}],7:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -624,7 +757,7 @@ var createUseChildrenHook = function createUseChildrenHook(element, callChildren
 
 exports.default = createUseChildrenHook;
 
-},{}],5:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -637,7 +770,7 @@ function createUseElementHook(element) {
   };
 }
 
-},{}],6:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -709,7 +842,7 @@ function createUseProductHook(element, stack) {
   }, resolvedProductProps];
 };
 
-},{}],7:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -760,7 +893,7 @@ createUsePubSubHook.clear = function () {
   subscribers = {};
 };
 
-},{}],8:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -810,7 +943,7 @@ createUseStateHook.clear = function () {
   Storage.elements = {};
 };
 
-},{}],9:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -858,7 +991,7 @@ exports.run = run;
 exports.Fragment = Fragment;
 exports.processor = processor;
 
-},{"./ActElement":1,"./Processor":2,"./utils/isActMLElement":10}],10:[function(require,module,exports){
+},{"./ActElement":1,"./Processor":2,"./utils/isActMLElement":13}],13:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -869,7 +1002,7 @@ function isActMLElement(element) {
   return element && element.__actml === true;
 };
 
-},{}],11:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 'use strict';
 
 var isArray = Array.isArray;
@@ -926,7 +1059,7 @@ module.exports = function equal(a, b) {
   return a!==a && b!==b;
 };
 
-},{}],12:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -1112,5 +1245,5 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}]},{},[9])(9)
+},{}]},{},[12])(12)
 });

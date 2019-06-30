@@ -6,6 +6,7 @@ import createUseChildrenHook from './hooks/useChildren';
 import createUseProductHook from './hooks/useProduct';
 import createUsePubSubHook from './hooks/usePubSub';
 import createUseStateHook from './hooks/useState';
+import createUseElementsHook from './hooks/elements';
 
 function initializeHooks(branch, callChildren, stack, rerun) {
   const { element } = branch;
@@ -22,7 +23,7 @@ function initializeHooks(branch, callChildren, stack, rerun) {
     useProduct,
     usePubSub,
     useState,
-    // useElements: createUseElementsHook(element)
+    useElements: () => createUseElementsHook(element)
   };
 };
 
