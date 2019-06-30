@@ -8,15 +8,9 @@ export default function Tree() {
   function getId() {
     return 'a' + (++ids);
   };
-  function createNewBranch(element = null) {
-    if (element) { element.initialize(getId()); }
-    return {
-      element,
-      children: []
-    };
-  }
-  function reUse(branch, newElement) {
-    branch.element.reUse(newElement);
+  function useSameBranch(branch, newElement) {
+    newElement.initialize(branch.element.id, branch.element.used());
+    branch.element = newElement;
     return branch;
   }
   function treeDiff(oldElement, newElement) {
@@ -25,38 +19,47 @@ export default function Tree() {
     }
     return false;
   }
+  function createNewBranch(element) {
+    if (element) { element.initialize(getId()); }
+    return {
+      element,
+      children: [],
+      cursor: 0,
+      initialize() {
+        this.cursor = 0;
+      },
+      addSubBranch(newElement) {
+        const subBranch = this.children[this.cursor];
+
+        // using the same branch
+        if (subBranch && treeDiff(subBranch.element, newElement)) {
+          this.cursor += 1;
+          return useSameBranch(subBranch, newElement);
+        }
+
+        // creating a new branch
+        const newSubBranch = createNewBranch(newElement);
+
+        this.children[this.cursor] = newSubBranch;
+        this.cursor += 1;
+        return newSubBranch;
+      },
+      cleanUp() {
+        // If there're more branches in the tree then what was processed
+        if (this.cursor < this.children.length) {
+          // console.log(`X! clean up ${ i } to ${ branch.children.length - i }`);
+          this.children.splice(this.cursor, this.children.length - this.cursor);
+        }
+      }
+    };
+  }
 
   return {
     resolveRoot(element) {
       // console.log(`------------> ${ element.name }`);
-      return root = treeDiff(root.element, element) ?
-        reUse(root, element) :
-        createNewBranch(element);
-    },
-    createChildBranchFactory(branch) {
-      let i = 0;
-
-      return [
-        (newElement) => {
-          const childBranch = branch.children[i];
-
-          // console.log(`${ childBranch ? childBranch.element.name : '.' } === ${ newElement.name }`);
-          if (childBranch && treeDiff(childBranch.element, newElement)) {
-            i += 1;
-            return reUse(childBranch, newElement);
-          }
-          branch.children[i] = createNewBranch(newElement);
-          i += 1;
-          return branch.children[i - 1];
-        },
-        () => {
-          // If there're more branches in the tree then what was processed
-          if (i < branch.children.length) {
-            // console.log(`X! clean up ${ i } to ${ branch.children.length - i }`);
-            branch.children.splice(i, branch.children.length - i);
-          }
-        }
-      ];
+      return root = (treeDiff(root.element, element) ?
+        useSameBranch(root, element) :
+        createNewBranch(element));
     },
     reset() {
       root = createNewBranch();

@@ -1,13 +1,3 @@
-/* eslint-disable no-use-before-define, consistent-return */
-
-import isActMLElement from './utils/isActMLElement';
-import createUseChildrenHook from './hooks/useChildren';
-import createUseElementHook from './hooks/useElement';
-import createUseProductHook from './hooks/useProduct';
-import createUsePubSubHook from './hooks/usePubSub';
-import createUseStateHook from './hooks/useState';
-import createUseElementsHook from './hooks/useElements';
-
 function parseProps(props) {
   const propNames = props ? Object.keys(props) : [];
   const result = {
@@ -35,123 +25,42 @@ function getFuncName(func) {
   return result ? result[ 1 ] : 'unknown';
 };
 
-export default function createElement(func, props, children) {
-  const element = {
-    __actml: true,
-    __used: 0,
-    __running: false,
-    id: null,
-    props: parseProps(props),
-    name: getFuncName(func),
-    children,
-    initialize: function (id) {
-      this.id = id;
-    },
-    reUse: function (newElement) {
-      this.children = [ ...newElement.children ];
-    },
-    mergeProps(newProps) {
-      this.props = Object.assign({}, this.props, newProps);
-    },
-    toString() {
-      return this.name;
-    },
-    used() {
-      return this.__used;
-    },
-    isRunning() {
-      return this.__running;
-    },
-    async run(otherProps) {
-      this.__running = true;
+const createElement = (func, props, children) => ({
+  __actml: true,
+  __used: 0,
+  __running: false,
+  id: null,
+  props: parseProps(props),
+  name: getFuncName(func),
+  children,
+  initialize: function (id, used = 0) {
+    this.id = id;
+    this.__used = used;
+  },
+  mergeProps(newProps) {
+    this.props = Object.assign({}, this.props, newProps);
+  },
+  toString() {
+    return this.name;
+  },
+  used() {
+    return this.__used;
+  },
+  isRunning() {
+    return this.__running;
+  },
+  async run(otherProps) {
+    this.__running = true;
 
-      const result = await func({
-        ...this.props,
-        ...otherProps
-      });
-
-      this.__used += 1;
-      this.__running = false;
-      return result;
-    }
-    // parent: null,
-    // run,
-    // requestProduct,
-    // isUsed: false,
-    // isRunning: false
-  };
-  /*
-  const product = createProduct(element);
-  const {
-    hook: useChildren,
-    callChildren,
-    processChildrenAutomatically
-  } = createUseChildrenHook(element, children);
-  const useElement = createUseElementHook(element);
-  const useProduct = createUseProductHook(product);
-  const usePubSub = createUsePubSubHook(element);
-  const useState = createUseStateHook(element);
-
-  function requestProduct(propName) {
-    const { exportsKeyword } = element.meta;
-
-    if (exportsKeyword && exportsKeyword === propName) {
-      return { value: product.get() };
-    }
-  }
-
-  async function run(parent, additionalProps = {}) {
-    element.parent = parent;
-    element.isRunning = true;
-    processChildrenAutomatically.process = true;
-
-    let result = func({
-      ...props,
-      ...additionalProps,
-      ...resolveProduct(element),
-      useChildren,
-      useElement,
-      useProduct,
-      usePubSub,
-      useState,
-      useElements: createUseElementsHook(element)
+    const result = await func({
+      ...this.props,
+      ...otherProps
     });
-    let genResult, toGenValue;
 
-    element.isRunning = false;
-    element.isUsed = true;
-
-    // handling a promise
-    if (result && result.then) {
-      result = await result;
-
-    // handling a generator
-    } else if (result && typeof result.next === 'function') {
-      genResult = result.next();
-      while (!genResult.done) {
-        if (isActMLElement(genResult.value)) {
-          toGenValue = await genResult.value.run(element);
-        }
-        genResult = result.next(toGenValue);
-      }
-      if (isActMLElement(genResult.value)) {
-        result = await genResult.value.run(element);
-      } else {
-        result = genResult.value;
-      }
-
-    // handling another ActML element
-    } else if (isActMLElement(result)) {
-      result = await result.run(element);
-    }
-
-    // handling children
-    if (processChildrenAutomatically.process) {
-      await callChildren();
-    }
-
+    this.__used += 1;
+    this.__running = false;
     return result;
-  }*/
+  }
+});
 
-  return element;
-};
+export default createElement;

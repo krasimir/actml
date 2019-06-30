@@ -173,10 +173,10 @@ describe('Given the ActML library', () => {
 
       exerciseTree(processor, `
         P(1)
-        E(3)
+        E(1)
         N(1)
-        E(3)
-        E(3)
+        E(1)
+        E(1)
       `);
     });
     it('should run the function and return its result', async () => {

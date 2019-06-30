@@ -37,15 +37,15 @@ function initializeHooks(element, callChildren, stack, rerun) {
 export default function createProcessor() {
   var tree = Tree();
   const process = async (branch, stack = []) => {
-    const { element } = branch;
-    const [ createChildBranch, cleanUpTree ] = tree.createChildBranchFactory(branch);
+    branch.initialize();
+
     const rerun = () => process(branch, stack);
-    const [ hooksProps, processChildrenAutomatically ] = initializeHooks(element, callChildren, stack, rerun);
-    let result = await element.run(hooksProps);
+    const [ hooksProps, processChildrenAutomatically ] = initializeHooks(branch.element, callChildren, stack, rerun);
+    let result = await branch.element.run(hooksProps);
     let genResult, toGenValue;
 
     // updating the stack
-    stack.push(element);
+    stack.push(branch.element);
 
     // handling a promise
     if (result && result.then) {
@@ -56,36 +56,36 @@ export default function createProcessor() {
       genResult = result.next();
       while (!genResult.done) {
         if (isActMLElement(genResult.value)) {
-          toGenValue = await process(createChildBranch(genResult.value), stack);
+          toGenValue = await process(branch.addSubBranch(genResult.value), stack);
         }
         genResult = result.next(toGenValue);
       }
       if (isActMLElement(genResult.value)) {
-        result = await process(createChildBranch(genResult.value), stack);
+        result = await process(branch.addSubBranch(genResult.value), stack);
       } else {
         result = genResult.value;
       }
 
     // handling another ActML element
     } else if (isActMLElement(result)) {
-      result = await process(createChildBranch(result), stack);
+      result = await process(branch.addSubBranch(result), stack);
     }
 
     // handling children
     async function callChildren(additionalProps) {
       const childrenResult = [];
-      const { children } = element;
+      const { children } = branch.element;
 
       if (children && children.length > 0) {
         for (let i = 0; i < children.length; i++) {
           if (isActMLElement(children[i])) {
             children[i].mergeProps(additionalProps);
-            childrenResult.push(await process(createChildBranch(children[i]), stack));
+            childrenResult.push(await process(branch.addSubBranch(children[i]), stack));
           } else if (typeof children[i] === 'function') {
             const funcResult = await children[i](additionalProps);
 
             if (isActMLElement(funcResult)) {
-              childrenResult.push(await process(createChildBranch(funcResult), stack));
+              childrenResult.push(await process(branch.addSubBranch(funcResult), stack));
             } else {
               childrenResult.push(funcResult);
             }
@@ -99,7 +99,7 @@ export default function createProcessor() {
       await callChildren();
     }
 
-    cleanUpTree();
+    branch.cleanUp();
 
     return result;
   };
