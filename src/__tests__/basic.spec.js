@@ -16,7 +16,7 @@ describe('Given the ActML library', () => {
 
       expect(el1).not.toEqual(el2);
     });
-    it('should re-run same elements if the tree is not changed', async () => {
+    it.only('should re-run same elements if the tree is not changed', async () => {
       const mock = jest.fn();
       const B = () => mock();
       const C = () => {

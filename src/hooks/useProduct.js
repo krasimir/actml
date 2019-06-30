@@ -46,8 +46,8 @@ export default function createUseProductHook(element, stack) {
     return null;
   };
 
-  return {
-    hook: (initialValue) => {
+  return [
+    (initialValue) => {
       if (typeof initialValue !== 'undefined') {
         product = initialValue;
       }
@@ -58,5 +58,5 @@ export default function createUseProductHook(element, stack) {
       ];
     },
     resolvedProductProps
-  };
+  ];
 };
