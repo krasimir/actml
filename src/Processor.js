@@ -1,36 +1,14 @@
 /* eslint-disable no-use-before-define */
 import isActMLElement from './utils/isActMLElement';
 import Tree from './Tree';
-import createUseElementHook from './hooks/useElement';
-import createUseChildrenHook from './hooks/useChildren';
-import createUseProductHook from './hooks/useProduct';
 import createUsePubSubHook from './hooks/usePubSub';
 import createUseStateHook from './hooks/useState';
-import createUseElementsHook from './hooks/elements';
-
-function initializeHooks(branch, callChildren, stack, rerun) {
-  const { element } = branch;
-  const useElement = createUseElementHook(element);
-  const useChildren = createUseChildrenHook(element, callChildren);
-  const [ useProduct, resolvedProductProps ] = createUseProductHook(element, stack);
-  const usePubSub = createUsePubSubHook(element);
-  const useState = createUseStateHook(element, () => process(branch, stack));
-
-  return {
-    ...resolvedProductProps,
-    useChildren,
-    useElement,
-    useProduct,
-    usePubSub,
-    useState,
-    useElements: () => createUseElementsHook(element)
-  };
-};
+import initializeHooks from './hooks';
 
 const process = async (branch, stack = []) => {
   branch.initialize();
 
-  const hooksProps = initializeHooks(branch, callChildren, stack);
+  const hooksProps = initializeHooks(branch, callChildren, stack, process);
   let result = await branch.element.run(hooksProps);
   let genResult, toGenValue;
 

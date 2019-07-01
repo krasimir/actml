@@ -4,7 +4,7 @@ import ActElement from './ActElement';
 
 const processor = createProcessor();
 
-function create(func, props, ...children) {
+function A(func, props, ...children) {
   return ActElement(func, props, children);
 }
 function run(element) {
@@ -13,8 +13,6 @@ function run(element) {
   }
   return processor.run(element);
 }
-
-const A = create;
 const Fragment = () => {};
 
 export {

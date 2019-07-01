@@ -29,7 +29,7 @@ export default function Tree() {
         this.cursor = 0;
       },
       addSubBranch(newElement) {
-        const subBranch = this.children[this.cursor];
+        const subBranch = this.children[ this.cursor ];
 
         // using the same branch
         if (subBranch && treeDiff(subBranch.element, newElement)) {
@@ -40,14 +40,13 @@ export default function Tree() {
         // creating a new branch
         const newSubBranch = createNewBranch(newElement);
 
-        this.children[this.cursor] = newSubBranch;
+        this.children[ this.cursor ] = newSubBranch;
         this.cursor += 1;
         return newSubBranch;
       },
       cleanUp() {
         // If there're more branches in the tree then what was processed
         if (this.cursor < this.children.length) {
-          // console.log(`X! clean up ${ i } to ${ branch.children.length - i }`);
           this.children.splice(this.cursor, this.children.length - this.cursor);
         }
       }
@@ -56,7 +55,6 @@ export default function Tree() {
 
   return {
     resolveRoot(element) {
-      // console.log(`------------> ${ element.name }`);
       return root = (treeDiff(root.element, element) ?
         useSameBranch(root, element) :
         createNewBranch(element));
