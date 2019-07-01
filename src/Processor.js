@@ -62,17 +62,17 @@ const process = async (branch, stack = []) => {
   }
 
   // handling children
-  async function callChildren(additionalProps) {
+  async function callChildren(...additionalProps) {
     const childrenResult = [];
     const { children } = branch.element;
 
     if (children && children.length > 0) {
       for (let i = 0; i < children.length; i++) {
         if (isActMLElement(children[i])) {
-          children[i].mergeProps(additionalProps);
+          children[i].mergeProps(...additionalProps);
           childrenResult.push(await process(branch.addSubBranch(children[i]), stack));
         } else if (typeof children[i] === 'function') {
-          const funcResult = await children[i](additionalProps);
+          const funcResult = await children[i](...additionalProps);
 
           if (isActMLElement(funcResult)) {
             childrenResult.push(await process(branch.addSubBranch(funcResult), stack));
