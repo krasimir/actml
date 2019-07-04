@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types, no-sequences */
 /** @jsx A */
 
-import { A, run, Fragment, processor } from '../';
+import { A, run, Fragment, processor, useChildren, useElement } from '../';
 import { exerciseTree, delay } from '../__helpers__/utils';
 
 describe('Given the ActML library', () => {
@@ -153,7 +153,7 @@ describe('Given the ActML library', () => {
     it('should create multiple tree branches if children hook is fired multiple times', async () => {
       const E = function () {};
       const N = function () {};
-      const P = function * ({ useChildren }) {
+      const P = function * () {
         const [ children ] = useChildren();
 
         children();
@@ -173,10 +173,9 @@ describe('Given the ActML library', () => {
 
       exerciseTree(processor, `
         P(1)
-        E(1)
+        E(2)
         N(1)
-        E(1)
-        E(1)
+        E(2)
       `);
     });
     it('should run the function and return its result', async () => {
@@ -230,8 +229,8 @@ describe('Given the ActML library', () => {
     });
     it('should create different ActML elements even if we use the same function', async () => {
       const ids = [];
-      const C = jest.fn().mockImplementation(({ useElement }) => {
-        const [ element ] = useElement();
+      const C = jest.fn().mockImplementation(() => {
+        const element = useElement();
 
         ids.push(element.id);
       });
@@ -346,6 +345,87 @@ describe('Given the ActML library', () => {
       await run(<E><C /></E>);
 
       expect(values).toStrictEqual(['a', 'b']);
+    });
+  });
+  describe('when we use the tree\'s lifecycle callbacks', () => {
+    it('should call enter and out callbacks', async () => {
+      const E = () => {
+        return <B><C /></B>;
+      };
+      const B = () => {};
+      const C = () => {};
+      const calls = [];
+      const enter = node => calls.push(`<${ node.element.name }>`);
+      const out = node => calls.push(`</${ node.element.name }>`);
+
+      processor.onNodeEnter(enter);
+      processor.onNodeOut(out);
+
+      await run(<E />);
+
+      expect(calls).toStrictEqual(['<E>', '<B>', '<C>', '</C>', '</B>', '</E>']);
+    });
+    it('should call the destroy callback when a node gets replaced', async () => {
+      let i = 0;
+      const B = () => {};
+      const C = () => {};
+      const E = () => {
+        i += 1;
+        return (
+          <Fragment>
+            { i === 1 ? <B /> : <C /> }
+          </Fragment>
+        );
+      };
+      const el = <E />;
+      const destroyCallback = jest.fn();
+
+      processor.onNodeRemove(destroyCallback);
+
+      await run(el);
+      await run(el);
+
+      expect(destroyCallback).toBeCalledWith(
+        expect.objectContaining({ element: expect.objectContaining({ name: 'B' })}
+      ));
+    });
+    it('should call the destroy callback when a node gets flushed out', async () => {
+      let i = 0;
+      const B = () => {};
+      const C = () => {};
+      const D = () => {};
+      const E = () => {
+        i += 1;
+        if (i === 1) {
+          return (
+            <Fragment>
+              <B />
+              <C />
+              <D />
+            </Fragment>
+          );
+        }
+        return (
+          <Fragment>
+            <B />
+          </Fragment>
+        );
+      };
+      const el = <E />;
+      const destroyCallback = jest.fn();
+
+      processor.onNodeRemove(destroyCallback);
+
+      await run(el);
+      await run(el);
+
+      expect(destroyCallback).toBeCalledTimes(2);
+      expect(destroyCallback).toBeCalledWith(
+        expect.objectContaining({ element: expect.objectContaining({ name: 'C' })}
+      ));
+      expect(destroyCallback).toBeCalledWith(
+        expect.objectContaining({ element: expect.objectContaining({ name: 'D' })}
+      ));
     });
   });
 });

@@ -1,3 +1,5 @@
+import isValidHookContext from './utils/isValidHookContext';
+
 var subscribers = {};
 
 const subscribe = (element, type, callback) => {
@@ -14,15 +16,18 @@ const publish = (element, type, payload) => {
   });
 };
 
-export default function createUsePubSubHook(element) {
-  return (scopedElement) => ([
-    // subscribe
-    (...params) => subscribe(scopedElement || element, ...params),
-    // publish
-    (...params) => publish(scopedElement || element, ...params),
-    // list of all subscribers
-    subscribers
-  ]);
+export default function createUsePubSubHook(processor) {
+  return (scopedElement) => {
+    isValidHookContext(processor);
+
+    const node = processor.node();
+
+    return {
+      subscribe: (...params) => subscribe(scopedElement || node.element, ...params),
+      publish: (...params) => publish(scopedElement || node.element, ...params),
+      subscribers
+    };
+  };
 }
 
 createUsePubSubHook.clear = () => {

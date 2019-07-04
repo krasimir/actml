@@ -1,18 +1,12 @@
 /* eslint-disable react/prop-types */
 /** @jsx A */
-import { A } from '../../../src';
+import { A, Fragment } from '../../../src';
+
+const ToDo = ({ label }) => ({ label, completed: false, editing: false });
 
 var initialValue = [
-  {
-    label: 'First task',
-    completed: false,
-    editing: false
-  },
-  {
-    label: 'Second task',
-    completed: false,
-    editing: false
-  }
+  ToDo({ label: 'First task' }),
+  ToDo({ label: 'Second task' })
 ];
 
 export default function Store({ useState, useProduct, useElements }) {
@@ -21,24 +15,34 @@ export default function Store({ useState, useProduct, useElements }) {
   const { Subscribe } = useElements();
 
   return (
-    <Subscribe type='toggle'>
-      {
-        todoIndex => {
-          console.log(todoIndex);
-          const newState = todos.map((todo, index) => {
-            if (index === todoIndex) {
-              return {
-                ...todo,
-                completed: !todo.completed
-              };
-            }
-            return todo;
-          });
+    <Fragment>
+      <Subscribe type='toggle'>
+        {
+          todoIndex => {
+            const newState = todos.map((todo, index) => {
+              if (index === todoIndex) {
+                return {
+                  ...todo,
+                  completed: !todo.completed
+                };
+              }
+              return todo;
+            });
 
-          setTodos(newState);
-          setProduct(newState);
+            setTodos(newState);
+            setProduct(newState);
+          }
         }
-      }
-    </Subscribe>
+      </Subscribe>
+      <Subscribe type='new'>
+        {
+          label => {
+            todos.push(ToDo({ label }));
+            setTodos(todos);
+            setProduct(todos);
+          }
+        }
+      </Subscribe>
+    </Fragment>
   );
 }

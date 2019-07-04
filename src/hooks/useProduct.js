@@ -1,6 +1,7 @@
 /* eslint-disable no-return-assign */
+import isValidHookContext from './utils/isValidHookContext';
 
-const resolveProp = (prop, stackIndex, stack, error) => {
+const resolveProduct = (prop, stackIndex, stack, error) => {
   if (stackIndex < 0) {
     throw error;
   }
@@ -10,53 +11,54 @@ const resolveProp = (prop, stackIndex, stack, error) => {
   if (product !== null) {
     return product.value;
   }
-  return resolveProp(prop, stackIndex - 1, stack, error);
+  return resolveProduct(prop, stackIndex - 1, stack, error);
 };
 
-function resolveProduct(element, stack) {
-  const { dependencies } = element.props;
-  const data = {};
+const createUseProductHook = (processor) => {
+  processor.onNodeEnter(node => {
+    const { element, stack } = node;
+    const { props } = element;
+    const propNames = props ? Object.keys(props) : [];
 
-  if (dependencies.length === 0) {
-    return {};
-  }
+    propNames.forEach(propName => {
+      if (propName.charAt(0) === '$') {
+        const keyword = propName.substr(1, propName.length);
+        const productValue = resolveProduct(
+          keyword,
+          0,
+          node.stack,
+          new Error(
+            `"${ keyword }" prop requested by "${ element.name }" can not be found.\n\nStack:\n` +
+            [ ...stack, element ].map(({ name }) => `  <${ name }>`).join('\n')
+          )
+        );
 
-  dependencies.forEach(propName => {
-    data[propName] = resolveProp(
-      propName,
-      stack.length - 1,
-      stack,
-      new Error(
-        `"${ propName }" prop requested by "${ element.name }" can not be found.\n\nStack:\n` +
-        [ ...stack, element ].map(({ name }) => `  <${ name }>`).join('\n')
-      )
-    );
-  });
-  return data;
-};
-
-export default function createUseProductHook(element, stack) {
-  let product;
-  const resolvedProductProps = resolveProduct(element, stack);
-
-  element.requestProduct = (propName) => {
-    if (element.props.exportsKeyword && element.props.exportsKeyword === propName) {
-      return { value: product };
-    }
-    return null;
-  };
-
-  return [
-    (initialValue) => {
-      if (typeof initialValue !== 'undefined') {
-        product = initialValue;
+        element.mergeProps({ [ keyword ]: productValue });
+      } else if (propName === 'exports') {
+        element.requestProduct = (keyword) => {
+          if (props && props.exports && props.exports === keyword) {
+            return { value: node.product };
+          }
+          return null;
+        };
       }
-      return [
-        newValue => {
-          product = newValue;
+    });
+  });
+
+  return () => {
+    isValidHookContext(processor);
+
+    const node = processor.node();
+
+    return [
+      (initialValue) => {
+        if (typeof initialValue !== 'undefined') {
+          node.product = initialValue;
         }
-      ];
-    },
-    resolvedProductProps
-  ];
+        return [ newValue => (node.product = newValue) ];
+      }
+    ];
+  };
 };
+
+export default createUseProductHook;

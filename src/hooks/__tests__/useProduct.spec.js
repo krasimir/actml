@@ -1,8 +1,7 @@
 /** @jsx A */
 
-import { A, run, processor } from '../../';
-
-const delay = (ms, func) => new Promise(resolve => setTimeout(() => resolve(func()), ms));
+import { A, run, processor, useProduct } from '../../';
+import { delay } from '../../__helpers__/utils';
 
 describe('Given the ActML library', () => {
   beforeEach(() => {
@@ -10,7 +9,7 @@ describe('Given the ActML library', () => {
   });
   describe('and we use the useProduct hook', () => {
     it('should provide a way to update the value', async () => {
-      async function E({ useProduct }) {
+      async function E() {
         const [ setValue ] = useProduct('foo');
 
         await delay(20, () => setValue('bar'));
@@ -19,10 +18,11 @@ describe('Given the ActML library', () => {
       const C = jest.fn();
 
       await run(<E exports='bar'><C $bar/></E>);
+      await delay(30);
       expect(C).toBeCalledWith(expect.objectContaining({ bar: 'bar' }));
     });
     it('should allow export and import', async () => {
-      function E({ useProduct }) {
+      function E() {
         const [ setValue ] = useProduct();
 
         return delay(20, () => setValue(42));
@@ -68,7 +68,7 @@ Stack:
     });
     it('should pass down undefined if that is the value of the scoped variable', async () => {
       async function E() {
-        return await delay(100, () => {});
+        return await delay(100, () => 'foo');
       }
       const C = jest.fn();
 
@@ -77,7 +77,7 @@ Stack:
       expect(C).toBeCalledWith(expect.objectContaining({ user: undefined }));
     });
     it('should throw an error if the value is not exported', async () => {
-      function E({ useProduct }) {
+      function E() {
         useProduct('foo');
       }
 

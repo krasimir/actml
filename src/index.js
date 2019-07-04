@@ -2,22 +2,42 @@ import createProcessor from './Processor';
 import isActMLElement from './utils/isActMLElement';
 import ActElement from './ActElement';
 
-const processor = createProcessor();
+import createUseChildrenHook from './hooks/useChildren';
+import createUseElementHook from './hooks/useElement';
+import createUseProductHook from './hooks/useProduct';
+import createUsePubSubHook from './hooks/usePubSub';
 
-function A(func, props, ...children) {
-  return ActElement(func, props, children);
-}
-function run(element) {
-  if (!isActMLElement(element)) {
-    throw new Error(`ActML element expected. Instead ${ element.toString() } passed.`);
+export function createUniverse() {
+  const processor = createProcessor();
+
+  function A(func, props, ...children) {
+    return ActElement(func, props, children);
   }
-  return processor.run(element);
-}
-const Fragment = () => {};
+  function run(element) {
+    if (!isActMLElement(element)) {
+      throw new Error(`ActML element expected. Instead ${ element.toString() } passed.`);
+    }
+    return processor.run(element);
+  }
+  const Fragment = () => {};
+  const useChildren = createUseChildrenHook(processor);
+  const useElement = createUseElementHook(processor);
+  const useProduct = createUseProductHook(processor);
+  const usePubSub = createUsePubSubHook(processor);
 
-export {
-  A,
-  run,
-  Fragment,
-  processor
-};
+  return {
+    A,
+    run,
+    Fragment,
+    processor,
+    useChildren,
+    useElement,
+    useProduct,
+    usePubSub
+  };
+}
+
+const universe = createUniverse();
+
+module.exports = universe;
+module.exports.createUniverse = createUniverse();

@@ -2,16 +2,19 @@
 import equal from 'fast-deep-equal';
 
 export default function Tree() {
-  var root = createNewBranch();
+  var onNodeEnter = [];
+  var onNodeOut = [];
+  var onNodeRemove = [];
+  var root = createNewNode();
   var ids = 0;
 
   function getId() {
     return 'a' + (++ids);
   };
-  function useSameBranch(branch, newElement) {
-    newElement.initialize(branch.element.id, branch.element.used());
-    branch.element = newElement;
-    return branch;
+  function useSameNode(node, newElement) {
+    newElement.initialize(node.element.id, node.element.used());
+    node.element = newElement;
+    return node;
   }
   function treeDiff(oldElement, newElement) {
     if (oldElement && oldElement.name === newElement.name) {
@@ -19,36 +22,46 @@ export default function Tree() {
     }
     return false;
   }
-  function createNewBranch(element) {
+  function createNewNode(element) {
     if (element) { element.initialize(getId()); }
     return {
       element,
       children: [],
+      stack: [],
       cursor: 0,
-      initialize() {
-        this.cursor = 0;
+      enter(stack) {
+        this.stack = stack;
+        onNodeEnter.forEach(c => c(this));
       },
-      addSubBranch(newElement) {
-        const subBranch = this.children[ this.cursor ];
-
-        // using the same branch
-        if (subBranch && treeDiff(subBranch.element, newElement)) {
-          this.cursor += 1;
-          return useSameBranch(subBranch, newElement);
-        }
-
-        // creating a new branch
-        const newSubBranch = createNewBranch(newElement);
-
-        this.children[ this.cursor ] = newSubBranch;
-        this.cursor += 1;
-        return newSubBranch;
-      },
-      cleanUp() {
-        // If there're more branches in the tree then what was processed
+      out() {
+        // If there're more nodes in the tree then what was processed
         if (this.cursor < this.children.length) {
-          this.children.splice(this.cursor, this.children.length - this.cursor);
+          this.children
+            .splice(this.cursor, this.children.length - this.cursor)
+            .forEach(removedNode => onNodeRemove.forEach(c => c(removedNode)));
         }
+        this.cursor = 0;
+        this.stack = [];
+        onNodeOut.forEach(c => c(this));
+      },
+      addChildNode(newElement) {
+        const childNode = this.children[ this.cursor ];
+
+        // using the same node
+        if (childNode && treeDiff(childNode.element, newElement)) {
+          this.cursor += 1;
+          return useSameNode(childNode, newElement);
+        }
+
+        // creating a new node
+        const newChildNode = createNewNode(newElement);
+
+        if (this.children[ this.cursor ]) {
+          onNodeRemove.forEach(c => c(this.children[ this.cursor ]));
+        }
+        this.children[ this.cursor ] = newChildNode;
+        this.cursor += 1;
+        return newChildNode;
       }
     };
   }
@@ -56,28 +69,37 @@ export default function Tree() {
   return {
     resolveRoot(element) {
       return root = (treeDiff(root.element, element) ?
-        useSameBranch(root, element) :
-        createNewBranch(element));
+        useSameNode(root, element) :
+        createNewNode(element));
     },
     reset() {
-      root = createNewBranch();
+      root = createNewNode();
       ids = 0;
     },
     getNumOfElements() {
       return ids;
     },
     diagnose() {
-      return (function loopOver(branch, ind = 0) {
+      return (function loopOver(node, ind = 0) {
         let arr = [];
 
-        arr.push({ ind, name: branch.element.name, used: branch.element.used(), id: branch.element.id });
-        if (branch.children.length > 0) {
-          branch.children.forEach(child => {
+        arr.push({ ind, name: node.element.name, used: node.element.used(), id: node.element.id });
+        if (node.children.length > 0) {
+          node.children.forEach(child => {
             arr.push(loopOver(child, ind + 1));
           });
         }
         return arr;
       })(root);
+    },
+    addNodeEnterCallback(callback) {
+      onNodeEnter.push(callback);
+    },
+    addNodeOutCallback(callback) {
+      onNodeOut.push(callback);
+    },
+    onNodeRemove(callback) {
+      onNodeRemove.push(callback);
     }
   };
 };

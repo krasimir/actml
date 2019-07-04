@@ -1,7 +1,7 @@
 /* eslint-disable no-sequences */
 /** @jsx A */
 
-import { A, run, processor } from '../../';
+import { A, run, processor, useChildren } from '../../';
 
 const delay = (ms, func) => new Promise(resolve => setTimeout(() => resolve(func()), ms));
 
@@ -16,7 +16,7 @@ describe('Given the ActML library', () => {
       - do not run the children automatically`, async () => {
       const mock = jest.fn();
 
-      async function E({ useChildren }) {
+      async function E() {
         const [ children, childrenList ] = useChildren();
         const result = await children();
 
@@ -38,7 +38,7 @@ describe('Given the ActML library', () => {
       expect(mock).toBeCalledTimes(3);
     });
     it('should allow us to pass props when running the children', async () => {
-      const E = async ({ useChildren, useElement }) => {
+      const E = async () => {
         const [ children ] = useChildren();
 
         await children({ x: 10 });
@@ -60,7 +60,7 @@ describe('Given the ActML library', () => {
     });
     describe('when the `children` is just a function', () => {
       it('should run the function with the given value', async () => {
-        const E = async ({ useChildren, useElement }) => {
+        const E = async () => {
           const [ children ] = useChildren();
 
           children('foo');
@@ -78,7 +78,7 @@ describe('Given the ActML library', () => {
       });
       describe('and when the function returns another ActML element', () => {
         it('should run that element too', async () => {
-          const E = async ({ useChildren }) => {
+          const E = async () => {
             const [ children ] = useChildren();
 
             children('foo');

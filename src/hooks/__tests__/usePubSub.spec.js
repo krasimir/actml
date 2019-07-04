@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 /** @jsx A */
 
-import { A, run, Fragment, processor } from '../../';
+import { A, run, Fragment, processor, usePubSub } from '../../';
 import { delay, prettyTree } from '../../__helpers__/utils';
 
 describe('Given the usePubSub hook', () => {
@@ -11,15 +11,15 @@ describe('Given the usePubSub hook', () => {
   describe('when we subscribe to an event', () => {
     it('should be possible to publish such one from another element', async () => {
       const mock = jest.fn();
-      const Publisher = function ({ usePubSub }) {
-        const [ _, publish ] = usePubSub();
+      const Publisher = function () {
+        const { publish } = usePubSub();
 
         setTimeout(() => {
           publish('foo', 42);
         }, 30);
       };
-      const S = function ({ usePubSub }) {
-        const [ subscribe ] = usePubSub();
+      const S = function () {
+        const { subscribe } = usePubSub();
 
         subscribe('foo', mock);
       };
@@ -41,15 +41,15 @@ describe('Given the usePubSub hook', () => {
     });
     it('should provide a way to unsubscribe', async () => {
       const mockS = jest.fn();
-      const E = function ({ usePubSub }) {
-        const [ subscribe ] = usePubSub();
+      const E = function () {
+        const { subscribe } = usePubSub();
 
         const unsubscribe = subscribe('foo', mockS);
 
         setTimeout(unsubscribe, 20);
       };
-      const P = function ({ usePubSub }) {
-        const [ _, __, subscribers ] = usePubSub();
+      const P = function () {
+        const { subscribers } = usePubSub();
 
         expect(Object.keys(subscribers['foo'])).toHaveLength(1);
         setTimeout(() => {
