@@ -65,5 +65,42 @@ describe('Given the usePubSub hook', () => {
       );
       await delay(40);
     });
+    it('should remove the subscriptions if the element is removed', async () => {
+      const mockS = jest.fn();
+      let i = 0;
+      const E = function () {
+        const { subscribe } = usePubSub();
+
+        subscribe('foo', () => {});
+      };
+      const P = function () {
+        i += 1;
+        if (i > 1) {
+          return null;
+        }
+        return <E />;
+      };
+      const Exp = () => {
+        const { subscribers } = usePubSub();
+
+        if (i === 1) {
+          expect(Object.keys(subscribers.foo)).toHaveLength(1);
+        } else {
+          expect(Object.keys(subscribers.foo)).toHaveLength(0);
+        }
+      };
+      const C = () => (
+        <Fragment>
+          <P />
+          <Exp />
+        </Fragment>
+      );
+
+      const el = <C />;
+
+      await run(el);
+      await run(el);
+
+    });
   });
 });

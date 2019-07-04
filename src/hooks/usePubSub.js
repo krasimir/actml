@@ -17,6 +17,13 @@ const publish = (element, type, payload) => {
 };
 
 export default function createUsePubSubHook(processor) {
+  processor.onNodeRemove(node => {
+    Object.keys(subscribers).forEach(type => {
+      if (subscribers[type][node.element.id]) {
+        delete subscribers[type][node.element.id];
+      }
+    });
+  });
   return (scopedElement) => {
     isValidHookContext(processor);
 
