@@ -1,4 +1,5 @@
 /* eslint-disable no-return-assign */
+import isValidHookContext from './utils/isValidHookContext';
 
 const Storage = {
   elements: {},
@@ -7,13 +8,23 @@ const Storage = {
       return this.elements[element.id];
     }
     return this.elements[element.id] = { states: [], consumer: 0 };
+  },
+  cleanUp(id) {
+    if (this.elements[id]) {
+      delete this.elements[id];
+    }
   }
 };
 
-export default function createUseStateHook(element, rerun) {
-  const storage = Storage.get(element);
-
+export default function createUseStateHook(processor) {
+  processor.onNodeRemove(node => Storage.cleanUp(node.element.id));
   return (initialState) => {
+    isValidHookContext(processor);
+
+    const node = processor.node();
+    const { element } = node;
+    const storage = Storage.get(element);
+
     let index;
 
     // first run
@@ -32,7 +43,7 @@ export default function createUseStateHook(element, rerun) {
       newState => {
         storage.states[index] = newState;
         if (!element.isRunning()) {
-          rerun();
+          node.rerun();
         }
         return newState;
       }

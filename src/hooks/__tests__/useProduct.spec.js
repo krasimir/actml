@@ -1,6 +1,6 @@
 /** @jsx A */
 
-import { A, run, processor, useProduct } from '../../';
+import { A, run, processor, useProduct, Fragment } from '../../';
 import { delay } from '../../__helpers__/utils';
 
 describe('Given the ActML library', () => {
@@ -17,7 +17,7 @@ describe('Given the ActML library', () => {
 
       const C = jest.fn();
 
-      await run(<E exports='bar'><C $bar/></E>);
+      await run(<Fragment><E exports='bar'><C $bar/></E></Fragment>);
       await delay(30);
       expect(C).toBeCalledWith(expect.objectContaining({ bar: 'bar' }));
     });

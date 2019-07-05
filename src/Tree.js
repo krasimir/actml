@@ -34,7 +34,7 @@ export default function Tree() {
         onNodeEnter.forEach(c => c(this));
       },
       out() {
-        // If there're more nodes in the tree then what was processed
+        // If there're more nodes in the tree than what was processed
         if (this.cursor < this.children.length) {
           this.children
             .splice(this.cursor, this.children.length - this.cursor)
@@ -81,15 +81,14 @@ export default function Tree() {
     },
     diagnose() {
       return (function loopOver(node, ind = 0) {
-        let arr = [];
-
-        arr.push({ ind, name: node.element.name, used: node.element.used(), id: node.element.id });
-        if (node.children.length > 0) {
-          node.children.forEach(child => {
-            arr.push(loopOver(child, ind + 1));
-          });
-        }
-        return arr;
+        // console.log(node.element.name, node.children.length);
+        return {
+          ind,
+          name: node.element.name,
+          used: node.element.used(),
+          id: node.element.id,
+          children: node.children.map(child => loopOver(child, ind + 1))
+        };
       })(root);
     },
     addNodeEnterCallback(callback) {

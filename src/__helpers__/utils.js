@@ -18,16 +18,19 @@ export const printTree = t => {
 };
 
 export const prettyTree = t => {
-  if (Array.isArray(t)) {
-    return t.map(prettyTree).join('\n');
+  let str = `${ t.name }(${ t.used })\n`;
+
+  if (t.children.length > 0) {
+    str += t.children.map(prettyTree).join('');
   }
-  return `${ t.name }(${ t.used })`;
+  return str;
 };
 
 export const exerciseTree = (processor, expected) => {
+  const filter = str => str.split('\n').map(s => s.trim()).filter(s => s !== '' && s !== ' ').join('\n');
   const result = prettyTree(processor.system().tree.diagnose());
-  const expectedStr = expected
-    .split('\n').map(s => s.trim()).filter(s => s !== '').join('\n');
 
-  expect(result).toEqual(expectedStr);
+  expect(filter(result)).toEqual(filter(expected));
 };
+
+export const getPrettyTree = processor => prettyTree(processor.system().tree.diagnose());

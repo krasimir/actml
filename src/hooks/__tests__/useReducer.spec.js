@@ -1,8 +1,8 @@
 /* eslint-disable no-unused-vars */
 /** @jsx A */
 
-import { A, run, Fragment, processor } from '../../';
-import { delay, prettyTree } from '../../__helpers__/utils';
+import { A, run, Fragment, processor, useReducer } from '../../';
+import { delay } from '../../__helpers__/utils';
 
 describe('Given the useReducer hook', () => {
   beforeEach(() => {
@@ -23,7 +23,7 @@ describe('Given the useReducer hook', () => {
             throw new Error();
         }
       }
-      const C = function ({ useReducer }) {
+      const C = function () {
         const [ state, dispatch ] = useReducer(reducer, initialState);
 
         mock(state);

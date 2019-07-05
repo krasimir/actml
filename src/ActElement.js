@@ -23,9 +23,6 @@ const createElement = (func, props, children) => ({
   mergeProps(newProps) {
     this.props = Object.assign({}, this.props, newProps);
   },
-  toString() {
-    return this.name;
-  },
   used() {
     return this.__used;
   },

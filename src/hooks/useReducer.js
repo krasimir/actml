@@ -1,7 +1,10 @@
-export default function createUseReducerHook(element, useState) {
+export default function createUseReducerHook(useState) {
   return (reducer, initialState) => {
-    return [
+    const [ data, setData ] = useState(initialState);
 
+    return [
+      data,
+      (action => setData(reducer(data, action)))
     ];
   };
 }

@@ -9,9 +9,11 @@ export default function createProcessor() {
   const tree = Tree();
   let currentNode = null;
 
-  const process = async (node, stack = []) => {
+  const processNode = async (node, stack) => {
     currentNode = node;
+    stack = [ ...stack, node.element ];
     node.enter(stack);
+    node.rerun = () => processNode(node, stack);
     node.callChildren = async (...additionalProps) => {
       const childrenResult = [];
       const { children } = node.element;
@@ -20,12 +22,12 @@ export default function createProcessor() {
         for (let i = 0; i < children.length; i++) {
           if (isActMLElement(children[i])) {
             children[i].mergeProps(...additionalProps);
-            childrenResult.push(await process(node.addChildNode(children[i]), stack));
+            childrenResult.push(await processNode(node.addChildNode(children[i]), stack));
           } else if (typeof children[i] === 'function') {
             const funcResult = await children[i](...additionalProps);
 
             if (isActMLElement(funcResult)) {
-              childrenResult.push(await process(node.addChildNode(funcResult), stack));
+              childrenResult.push(await processNode(node.addChildNode(funcResult), stack));
             } else {
               childrenResult.push(funcResult);
             }
@@ -36,13 +38,9 @@ export default function createProcessor() {
       return childrenResult;
     };
 
-    // const hooksProps = initializeHooks(branch, callChildren, stack, process);
-    // actual run of the ActML element
+    // actual call of the ActML element
     let result = await node.element.run();
     let genResult, toGenValue;
-
-    // updating the stack
-    stack.push(node.element);
 
     // handling a promise
     if (result && result.then) {
@@ -53,19 +51,19 @@ export default function createProcessor() {
       genResult = result.next();
       while (!genResult.done) {
         if (isActMLElement(genResult.value)) {
-          toGenValue = await process(node.addChildNode(genResult.value), stack);
+          toGenValue = await processNode(node.addChildNode(genResult.value), stack);
         }
         genResult = result.next(toGenValue);
       }
       if (isActMLElement(genResult.value)) {
-        result = await process(node.addChildNode(genResult.value), stack);
+        result = await processNode(node.addChildNode(genResult.value), stack);
       } else {
         result = genResult.value;
       }
 
     // handling another ActML element
     } else if (isActMLElement(result)) {
-      result = await process(node.addChildNode(result), stack);
+      result = await processNode(node.addChildNode(result), stack);
     }
 
     // handling children
@@ -83,8 +81,10 @@ export default function createProcessor() {
     node() {
       return currentNode;
     },
-    run(elementPrimitive) {
-      return process(tree.resolveRoot(elementPrimitive));
+    run(element) {
+      const resolvedRootNode = tree.resolveRoot(element);
+
+      return processNode(resolvedRootNode, []);
     },
     onNodeEnter(callback) {
       tree.addNodeEnterCallback(callback);

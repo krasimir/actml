@@ -14,7 +14,7 @@ const resolveProduct = (prop, stackIndex, stack, error) => {
   return resolveProduct(prop, stackIndex - 1, stack, error);
 };
 
-const createUseProductHook = (processor) => {
+const createUseProductHook = (processor, useState) => {
   processor.onNodeEnter(node => {
     const { element, stack } = node;
     const { props } = element;
@@ -23,13 +23,14 @@ const createUseProductHook = (processor) => {
     propNames.forEach(propName => {
       if (propName.charAt(0) === '$') {
         const keyword = propName.substr(1, propName.length);
+        const stackToSearchIn = node.stack.slice(0, node.stack.length - 1);
         const productValue = resolveProduct(
           keyword,
-          0,
-          node.stack,
+          stackToSearchIn.length - 1,
+          stackToSearchIn,
           new Error(
             `"${ keyword }" prop requested by "${ element.name }" can not be found.\n\nStack:\n` +
-            [ ...stack, element ].map(({ name }) => `  <${ name }>`).join('\n')
+            stack.map(({ name }) => `  <${ name }>`).join('\n')
           )
         );
 
@@ -37,7 +38,7 @@ const createUseProductHook = (processor) => {
       } else if (propName === 'exports') {
         element.requestProduct = (keyword) => {
           if (props && props.exports && props.exports === keyword) {
-            return { value: node.product };
+            return { value: node.__product };
           }
           return null;
         };
@@ -52,10 +53,10 @@ const createUseProductHook = (processor) => {
 
     return [
       (initialValue) => {
-        if (typeof initialValue !== 'undefined') {
-          node.product = initialValue;
-        }
-        return [ newValue => (node.product = newValue) ];
+        const [ product, setProduct ] = useState(initialValue);
+
+        node.__product = product;
+        return [ setProduct ];
       }
     ];
   };

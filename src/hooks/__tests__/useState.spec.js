@@ -1,6 +1,6 @@
 /** @jsx A */
 
-import { A, run, processor } from '../../';
+import { A, run, processor, useState } from '../../';
 import { delay } from '../../__helpers__/utils';
 
 describe('Given the ActML library', () => {
@@ -10,7 +10,7 @@ describe('Given the ActML library', () => {
   describe('when use the useState hook', () => {
     it('should allow us to preserve state across reruns', async () => {
       const mock = jest.fn();
-      const E = ({ useState }) => {
+      const E = () => {
         const [ state, setState ] = useState(1);
 
         setState(state + 1);
@@ -30,7 +30,7 @@ describe('Given the ActML library', () => {
     });
     it('should allow us to keep multiple states', async () => {
       const mock = jest.fn();
-      const E = ({ useState }) => {
+      const E = () => {
         const [ numbers, increment ] = useState(1);
         const [ letters, addLetter ] = useState('a');
 
@@ -51,7 +51,7 @@ describe('Given the ActML library', () => {
     });
     it('should re-run the function if we call setState', async () => {
       const mock = jest.fn();
-      const E = ({ useState }) => {
+      const E = () => {
         const [ numbers, increment ] = useState(1);
 
         if (numbers === 1) {
