@@ -9,10 +9,10 @@ const subscribe = (element, type, callback) => {
     delete subscribers[type][element.id];
   };
 };
-const publish = (element, type, payload) => {
+const publish = (type, payload) => {
   if (!subscribers[type]) return;
   Object.keys(subscribers[type]).forEach(id => {
-    subscribers[type][id](payload, element);
+    subscribers[type][id](payload);
   });
 };
 
@@ -31,7 +31,7 @@ export default function createUsePubSubHook(processor) {
 
     return {
       subscribe: (...params) => subscribe(scopedElement || node.element, ...params),
-      publish: (...params) => publish(scopedElement || node.element, ...params),
+      publish: (...params) => publish(...params),
       subscribers
     };
   };

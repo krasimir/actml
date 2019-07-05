@@ -32,12 +32,7 @@ describe('Given the usePubSub hook', () => {
       );
       await delay(50);
 
-      expect(mock).toBeCalledWith(
-        42,
-        expect.objectContaining({
-          name: 'Publisher'
-        })
-      );
+      expect(mock).toBeCalledWith(42);
     });
     it('should provide a way to unsubscribe', async () => {
       const mockS = jest.fn();

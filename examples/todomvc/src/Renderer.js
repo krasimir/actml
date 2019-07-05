@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 /** @jsx A */
-import { A } from '../../../src';
+import { A } from 'actml';
 
 import { FillContainer } from './DOM';
 

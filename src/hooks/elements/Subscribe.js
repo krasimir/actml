@@ -1,7 +1,7 @@
-export default function createSubscribeElement(hostElement) {
-  return ({ type, useChildren, usePubSub }) => {
+export default function createSubscribeElement(hostElement, useChildren, usePubSub) {
+  return ({ type }) => {
     const [ children ] = useChildren();
-    const [ subscribe ] = usePubSub(hostElement);
+    const { subscribe } = usePubSub(hostElement);
 
     subscribe(type, children);
   };

@@ -1,6 +1,6 @@
-export default function createPublishElement(hostElement) {
-  return ({ type, payload, usePubSub }) => {
-    const [ , publish ] = usePubSub(hostElement);
+export default function createPublishElement(hostElement, useChildren, usePubSub) {
+  return ({ type, payload }) => {
+    const { publish } = usePubSub(hostElement);
 
     publish(type, payload);
   };

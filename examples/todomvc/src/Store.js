@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 /** @jsx A */
-import { A, Fragment } from '../../../src';
+import { A, Fragment, useState, useProduct, useElements } from 'actml';
 
 const ToDo = ({ label }) => ({ label, completed: false, editing: false });
 
@@ -9,7 +9,7 @@ var initialValue = [
   ToDo({ label: 'Second task' })
 ];
 
-export default function Store({ useState, useProduct, useElements }) {
+export default function Store() {
   const [ todos, setTodos ] = useState(initialValue);
   const [ setProduct ] = useProduct(todos);
   const { Subscribe } = useElements();

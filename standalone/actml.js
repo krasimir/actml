@@ -430,7 +430,7 @@ function createProcessor() {
   };
 };
 
-},{"./Tree":3,"./hooks/usePubSub":7,"./hooks/useState":9,"./utils/isActMLElement":12}],3:[function(require,module,exports){
+},{"./Tree":3,"./hooks/usePubSub":10,"./hooks/useState":12,"./utils/isActMLElement":15}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -567,7 +567,75 @@ function Tree() {
 } /* eslint-disable no-use-before-define, no-return-assign, max-len */
 ;
 
-},{"fast-deep-equal":13}],4:[function(require,module,exports){
+},{"fast-deep-equal":16}],4:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = createPublishElement;
+function createPublishElement(hostElement, useChildren, usePubSub) {
+  return function (_ref) {
+    var type = _ref.type,
+        payload = _ref.payload;
+
+    var _usePubSub = usePubSub(hostElement),
+        publish = _usePubSub.publish;
+
+    publish(type, payload);
+  };
+}
+
+},{}],5:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _slicedToArray = function () {
+  function sliceIterator(arr, i) {
+    var _arr = [];var _n = true;var _d = false;var _e = undefined;try {
+      for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+        _arr.push(_s.value);if (i && _arr.length === i) break;
+      }
+    } catch (err) {
+      _d = true;_e = err;
+    } finally {
+      try {
+        if (!_n && _i["return"]) _i["return"]();
+      } finally {
+        if (_d) throw _e;
+      }
+    }return _arr;
+  }return function (arr, i) {
+    if (Array.isArray(arr)) {
+      return arr;
+    } else if (Symbol.iterator in Object(arr)) {
+      return sliceIterator(arr, i);
+    } else {
+      throw new TypeError("Invalid attempt to destructure non-iterable instance");
+    }
+  };
+}();
+
+exports.default = createSubscribeElement;
+function createSubscribeElement(hostElement, useChildren, usePubSub) {
+  return function (_ref) {
+    var type = _ref.type;
+
+    var _useChildren = useChildren(),
+        _useChildren2 = _slicedToArray(_useChildren, 1),
+        children = _useChildren2[0];
+
+    var _usePubSub = usePubSub(hostElement),
+        subscribe = _usePubSub.subscribe;
+
+    subscribe(type, children);
+  };
+};
+
+},{}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -595,7 +663,7 @@ var createUseChildrenHook = function createUseChildrenHook(processor) {
 
 exports.default = createUseChildrenHook;
 
-},{"./utils/isValidHookContext":10}],5:[function(require,module,exports){
+},{"./utils/isValidHookContext":13}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -620,7 +688,44 @@ var createUseElementHook = function createUseElementHook(processor) {
 
 exports.default = createUseElementHook;
 
-},{"./utils/isValidHookContext":10}],6:[function(require,module,exports){
+},{"./utils/isValidHookContext":13}],8:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = createUseElementsHook;
+
+var _Subscribe = require('./elements/Subscribe');
+
+var _Subscribe2 = _interopRequireDefault(_Subscribe);
+
+var _Publish = require('./elements/Publish');
+
+var _Publish2 = _interopRequireDefault(_Publish);
+
+var _isValidHookContext = require('./utils/isValidHookContext');
+
+var _isValidHookContext2 = _interopRequireDefault(_isValidHookContext);
+
+function _interopRequireDefault(obj) {
+  return obj && obj.__esModule ? obj : { default: obj };
+}
+
+function createUseElementsHook(processor, useChildren, usePubSub) {
+  return function () {
+    (0, _isValidHookContext2.default)(processor);
+
+    var node = processor.node();
+
+    return {
+      Subscribe: (0, _Subscribe2.default)(node.element, useChildren, usePubSub),
+      Publish: (0, _Publish2.default)(node.element, useChildren, usePubSub)
+    };
+  };
+};
+
+},{"./elements/Publish":4,"./elements/Subscribe":5,"./utils/isValidHookContext":13}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -730,7 +835,7 @@ var createUseProductHook = function createUseProductHook(processor, useState) {
 
 exports.default = createUseProductHook;
 
-},{"./utils/isValidHookContext":10}],7:[function(require,module,exports){
+},{"./utils/isValidHookContext":13}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -755,10 +860,10 @@ var _subscribe = function _subscribe(element, type, callback) {
     delete subscribers[type][element.id];
   };
 };
-var _publish = function _publish(element, type, payload) {
+var _publish = function _publish(type, payload) {
   if (!subscribers[type]) return;
   Object.keys(subscribers[type]).forEach(function (id) {
-    subscribers[type][id](payload, element);
+    subscribers[type][id](payload);
   });
 };
 
@@ -784,11 +889,7 @@ function createUsePubSubHook(processor) {
         return _subscribe.apply(undefined, [scopedElement || node.element].concat(params));
       },
       publish: function publish() {
-        for (var _len2 = arguments.length, params = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-          params[_key2] = arguments[_key2];
-        }
-
-        return _publish.apply(undefined, [scopedElement || node.element].concat(params));
+        return _publish.apply(undefined, arguments);
       },
       subscribers: subscribers
     };
@@ -799,7 +900,7 @@ createUsePubSubHook.clear = function () {
   subscribers = {};
 };
 
-},{"./utils/isValidHookContext":10}],8:[function(require,module,exports){
+},{"./utils/isValidHookContext":13}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -846,7 +947,7 @@ function createUseReducerHook(useState) {
   };
 }
 
-},{}],9:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -915,7 +1016,7 @@ createUseStateHook.clear = function () {
   Storage.elements = {};
 };
 
-},{"./utils/isValidHookContext":10}],10:[function(require,module,exports){
+},{"./utils/isValidHookContext":13}],13:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -931,7 +1032,7 @@ function isValidHookContext(processor) {
   }
 };
 
-},{}],11:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -975,6 +1076,10 @@ var _useReducer = require('./hooks/useReducer');
 
 var _useReducer2 = _interopRequireDefault(_useReducer);
 
+var _useElements = require('./hooks/useElements');
+
+var _useElements2 = _interopRequireDefault(_useElements);
+
 function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj };
 }
@@ -1002,6 +1107,7 @@ function createUniverse() {
   var useProduct = (0, _useProduct2.default)(processor, useState);
   var usePubSub = (0, _usePubSub2.default)(processor);
   var useReducer = (0, _useReducer2.default)(useState);
+  var useElements = (0, _useElements2.default)(processor, useChildren, usePubSub);
 
   return {
     A: A,
@@ -1013,7 +1119,8 @@ function createUniverse() {
     useProduct: useProduct,
     usePubSub: usePubSub,
     useState: useState,
-    useReducer: useReducer
+    useReducer: useReducer,
+    useElements: useElements
   };
 }
 
@@ -1022,7 +1129,7 @@ var universe = createUniverse();
 module.exports = universe;
 module.exports.createUniverse = createUniverse();
 
-},{"./ActElement":1,"./Processor":2,"./hooks/useChildren":4,"./hooks/useElement":5,"./hooks/useProduct":6,"./hooks/usePubSub":7,"./hooks/useReducer":8,"./hooks/useState":9,"./utils/isActMLElement":12}],12:[function(require,module,exports){
+},{"./ActElement":1,"./Processor":2,"./hooks/useChildren":6,"./hooks/useElement":7,"./hooks/useElements":8,"./hooks/useProduct":9,"./hooks/usePubSub":10,"./hooks/useReducer":11,"./hooks/useState":12,"./utils/isActMLElement":15}],15:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1033,7 +1140,7 @@ function isActMLElement(element) {
   return element && element.__actml === true;
 };
 
-},{}],13:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 
 var isArray = Array.isArray;
@@ -1090,5 +1197,5 @@ module.exports = function equal(a, b) {
   return a!==a && b!==b;
 };
 
-},{}]},{},[11])(11)
+},{}]},{},[14])(14)
 });
