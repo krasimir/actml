@@ -3,7 +3,7 @@ import isActMLElement from './utils/isActMLElement';
 import Tree from './Tree';
 import createUsePubSubHook from './hooks/usePubSub';
 import createUseStateHook from './hooks/useState';
-// import initializeHooks from './hooks';
+import createUseEffectHook from './hooks/useEffect';
 
 export default function createProcessor() {
   const tree = Tree();
@@ -102,6 +102,7 @@ export default function createProcessor() {
           tree.reset();
           createUsePubSubHook.clear();
           createUseStateHook.clear();
+          createUseEffectHook.clear();
         }
       };
     }

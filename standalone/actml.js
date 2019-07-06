@@ -87,6 +87,10 @@ var _useState = require('./hooks/useState');
 
 var _useState2 = _interopRequireDefault(_useState);
 
+var _useEffect = require('./hooks/useEffect');
+
+var _useEffect2 = _interopRequireDefault(_useEffect);
+
 function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj };
 }
@@ -112,8 +116,6 @@ function _asyncToGenerator(fn) {
     });
   };
 } /* eslint-disable no-use-before-define */
-
-// import initializeHooks from './hooks';
 
 function createProcessor() {
   var _this = this;
@@ -370,13 +372,14 @@ function createProcessor() {
           tree.reset();
           _usePubSub2.default.clear();
           _useState2.default.clear();
+          _useEffect2.default.clear();
         }
       };
     }
   };
 };
 
-},{"./Tree":3,"./hooks/usePubSub":7,"./hooks/useState":9,"./utils/isActMLElement":12}],3:[function(require,module,exports){
+},{"./Tree":3,"./hooks/useEffect":5,"./hooks/usePubSub":8,"./hooks/useState":10,"./utils/isActMLElement":13}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -511,7 +514,7 @@ function Tree() {
 } /* eslint-disable no-use-before-define, no-return-assign, max-len */
 ;
 
-},{"fast-deep-equal":13}],4:[function(require,module,exports){
+},{"fast-deep-equal":14}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -539,7 +542,130 @@ var createUseChildrenHook = function createUseChildrenHook(processor) {
 
 exports.default = createUseChildrenHook;
 
-},{"./utils/isValidHookContext":10}],5:[function(require,module,exports){
+},{"./utils/isValidHookContext":11}],5:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _fastDeepEqual = require('fast-deep-equal');
+
+var _fastDeepEqual2 = _interopRequireDefault(_fastDeepEqual);
+
+var _isValidHookContext = require('./utils/isValidHookContext');
+
+var _isValidHookContext2 = _interopRequireDefault(_isValidHookContext);
+
+function _interopRequireDefault(obj) {
+  return obj && obj.__esModule ? obj : { default: obj };
+}
+
+/* eslint-disable no-return-assign */
+var Storage = {
+  elements: {},
+  get: function get(element) {
+    if (this.elements[element.id]) {
+      return this.elements[element.id];
+    }
+    return this.elements[element.id] = { effects: [], consumer: 0 };
+  },
+  cleanUp: function cleanUp(id) {
+    if (this.elements[id]) {
+      delete this.elements[id];
+    }
+  }
+};
+
+var createEffect = function createEffect(callback, deps) {
+  return {
+    callback: callback,
+    deps: deps
+  };
+};
+var updateEffect = function updateEffect(effect, callback, deps) {
+  effect.callback = callback;
+  effect.oldDeps = effect.deps;
+  effect.deps = deps;
+  return effect;
+};
+
+function depsEqual(oldDeps, newDeps) {
+  if (!oldDeps) return false;
+  if (oldDeps.length !== newDeps.length) return false;
+  return (0, _fastDeepEqual2.default)(oldDeps, newDeps);
+}
+function resolveEffect(node, effect) {
+  var deps = effect.deps,
+      oldDeps = effect.oldDeps,
+      callback = effect.callback;
+
+  if (typeof deps === 'undefined') {
+    effect.cleanUp = callback();
+  } else if (deps.length === 0) {
+    if (node.element.used() === 1) {
+      effect.cleanUp = callback();
+    }
+  } else {
+    var areEqual = depsEqual(oldDeps, deps);
+
+    if (!areEqual) {
+      effect.cleanUp = callback();
+    }
+  }
+}
+
+var createUseEffectHook = function createUseEffectHook(processor) {
+  processor.onNodeRemove(function (node) {
+    var element = node.element;
+
+    var storage = Storage.get(element);
+
+    storage.effects.forEach(function (effect) {
+      if (effect.cleanUp) effect.cleanUp();
+    });
+    Storage.cleanUp(node.element.id);
+  });
+  processor.onNodeOut(function (node) {
+    var element = node.element;
+
+    var storage = Storage.get(element);
+
+    if (storage.effects.length > 0) {
+      storage.effects.forEach(function (effect) {
+        return resolveEffect(node, effect);
+      });
+    }
+  });
+  return function (callback, deps) {
+    (0, _isValidHookContext2.default)(processor);
+
+    var node = processor.node();
+    var element = node.element;
+
+    var storage = Storage.get(element);
+
+    // first run
+    if (element.used() === 0) {
+      storage.effects.push(createEffect(callback, deps));
+
+      // other runs
+    } else {
+      var index = storage.consumer;
+
+      storage.consumer = index < storage.effects.length - 1 ? storage.consumer + 1 : 0;
+      updateEffect(storage.effects[index], callback, deps);
+    }
+  };
+};
+
+exports.default = createUseEffectHook;
+
+createUseEffectHook.clear = function () {
+  Storage.elements = {};
+};
+
+},{"./utils/isValidHookContext":11,"fast-deep-equal":14}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -564,7 +690,7 @@ var createUseElementHook = function createUseElementHook(processor) {
 
 exports.default = createUseElementHook;
 
-},{"./utils/isValidHookContext":10}],6:[function(require,module,exports){
+},{"./utils/isValidHookContext":11}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -664,7 +790,7 @@ var createUseProductHook = function createUseProductHook(processor) {
 
 exports.default = createUseProductHook;
 
-},{"./utils/isValidHookContext":10}],7:[function(require,module,exports){
+},{"./utils/isValidHookContext":11}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -783,7 +909,7 @@ createUsePubSubHook.clear = function () {
   subscribers = {};
 };
 
-},{"./utils/isValidHookContext":10}],8:[function(require,module,exports){
+},{"./utils/isValidHookContext":11}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -860,7 +986,7 @@ function createUseReducerHook(useState) {
   };
 }
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -931,7 +1057,7 @@ createUseStateHook.clear = function () {
   Storage.elements = {};
 };
 
-},{"./utils/isValidHookContext":10}],10:[function(require,module,exports){
+},{"./utils/isValidHookContext":11}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -947,7 +1073,7 @@ function isValidHookContext(processor) {
   }
 };
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -991,6 +1117,10 @@ var _useReducer = require('./hooks/useReducer');
 
 var _useReducer2 = _interopRequireDefault(_useReducer);
 
+var _useEffect = require('./hooks/useEffect');
+
+var _useEffect2 = _interopRequireDefault(_useEffect);
+
 function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj };
 }
@@ -1018,6 +1148,7 @@ function createUniverse() {
   var useProduct = (0, _useProduct2.default)(processor, useState);
   var usePubSub = (0, _usePubSub2.default)(processor, useChildren);
   var useReducer = (0, _useReducer2.default)(useState);
+  var useEffect = (0, _useEffect2.default)(processor);
 
   return {
     A: A,
@@ -1029,7 +1160,8 @@ function createUniverse() {
     useProduct: useProduct,
     usePubSub: usePubSub,
     useState: useState,
-    useReducer: useReducer
+    useReducer: useReducer,
+    useEffect: useEffect
   };
 }
 
@@ -1038,7 +1170,7 @@ var universe = createUniverse();
 module.exports = universe;
 module.exports.createUniverse = createUniverse();
 
-},{"./ActElement":1,"./Processor":2,"./hooks/useChildren":4,"./hooks/useElement":5,"./hooks/useProduct":6,"./hooks/usePubSub":7,"./hooks/useReducer":8,"./hooks/useState":9,"./utils/isActMLElement":12}],12:[function(require,module,exports){
+},{"./ActElement":1,"./Processor":2,"./hooks/useChildren":4,"./hooks/useEffect":5,"./hooks/useElement":6,"./hooks/useProduct":7,"./hooks/usePubSub":8,"./hooks/useReducer":9,"./hooks/useState":10,"./utils/isActMLElement":13}],13:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1049,7 +1181,7 @@ function isActMLElement(element) {
   return element && element.__actml === true;
 };
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 'use strict';
 
 var isArray = Array.isArray;
@@ -1106,5 +1238,5 @@ module.exports = function equal(a, b) {
   return a!==a && b!==b;
 };
 
-},{}]},{},[11])(11)
+},{}]},{},[12])(12)
 });
