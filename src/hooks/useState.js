@@ -46,7 +46,8 @@ export default function createUseStateHook(processor) {
           node.rerun();
         }
         return newState;
-      }
+      },
+      () => storage.states[index]
     ];
   };
 }

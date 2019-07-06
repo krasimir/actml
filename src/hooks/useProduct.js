@@ -14,7 +14,7 @@ const resolveProduct = (prop, stackIndex, stack, error) => {
   return resolveProduct(prop, stackIndex - 1, stack, error);
 };
 
-const createUseProductHook = (processor, useState) => {
+const createUseProductHook = (processor) => {
   processor.onNodeEnter(node => {
     const { element, stack } = node;
     const { props } = element;
@@ -46,18 +46,13 @@ const createUseProductHook = (processor, useState) => {
     });
   });
 
-  return () => {
+  return (value) => {
     isValidHookContext(processor);
-
     const node = processor.node();
 
+    node.__product = value;
     return [
-      (initialValue) => {
-        const [ product, setProduct ] = useState(initialValue);
-
-        node.__product = product;
-        return [ setProduct ];
-      }
+      (newValue) => (node.__product = newValue)
     ];
   };
 };

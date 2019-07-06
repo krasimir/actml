@@ -1,9 +1,9 @@
 {
   "private": true,
   "dependencies": {
-    "actml": "0.8.0",
-    "todomvc-app-css": "2.0.0",
-    "todomvc-common": "1.0.0"
+    "actml": "0.9.1",
+    "todomvc-app-css": "2.2.0",
+    "todomvc-common": "1.0.5"
   },
   "devDependencies": {
     "@babel/core": "7.5.0",

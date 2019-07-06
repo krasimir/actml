@@ -8,7 +8,6 @@ import createUseProductHook from './hooks/useProduct';
 import createUsePubSubHook from './hooks/usePubSub';
 import createUseStateHook from './hooks/useState';
 import createUseReducerHook from './hooks/useReducer';
-import createUseElementsHook from './hooks/useElements';
 
 export function createUniverse() {
   const processor = createProcessor();
@@ -27,9 +26,8 @@ export function createUniverse() {
   const useElement = createUseElementHook(processor);
   const useState = createUseStateHook(processor);
   const useProduct = createUseProductHook(processor, useState);
-  const usePubSub = createUsePubSubHook(processor);
+  const usePubSub = createUsePubSubHook(processor, useChildren);
   const useReducer = createUseReducerHook(useState);
-  const useElements = createUseElementsHook(processor, useChildren, usePubSub);
 
   return {
     A,
@@ -41,8 +39,7 @@ export function createUniverse() {
     useProduct,
     usePubSub,
     useState,
-    useReducer,
-    useElements
+    useReducer
   };
 }
 

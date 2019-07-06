@@ -39,7 +39,7 @@ export default function createProcessor() {
     };
 
     // actual call of the ActML element
-    let result = await node.element.run();
+    let result = node.element.enter();
     let genResult, toGenValue;
 
     // handling a promise
@@ -71,6 +71,7 @@ export default function createProcessor() {
       await node.callChildren();
     }
 
+    node.element.out();
     node.out();
     currentNode = null;
 

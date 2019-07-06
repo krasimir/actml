@@ -4,29 +4,6 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-function _asyncToGenerator(fn) {
-  return function () {
-    var gen = fn.apply(this, arguments);return new Promise(function (resolve, reject) {
-      function step(key, arg) {
-        try {
-          var info = gen[key](arg);var value = info.value;
-        } catch (error) {
-          reject(error);return;
-        }if (info.done) {
-          resolve(value);
-        } else {
-          return Promise.resolve(value).then(function (value) {
-            step("next", value);
-          }, function (err) {
-            step("throw", err);
-          });
-        }
-      }return step("next");
-    });
-  };
-}
-
 function getFuncName(func) {
   if (func.name) return func.name;
   var result = /^function\s+([\w\$]+)\s*\(/.exec(func.toString());
@@ -35,6 +12,9 @@ function getFuncName(func) {
 };
 
 var createElement = function createElement(func, props, children) {
+  if (typeof func !== 'function') {
+    throw new Error('ActML element expects a function. "' + func + '" given instead.');
+  }
   return {
     __actml: true,
     __used: 0,
@@ -68,35 +48,15 @@ var createElement = function createElement(func, props, children) {
       this.__processChildrenAutomatically = value;
       return value;
     },
-    run: function run() {
-      var _this = this;
+    enter: function enter() {
+      this.__running = true;
+      this.__processChildrenAutomatically = true;
 
-      return _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
-        var result;
-        return regeneratorRuntime.wrap(function _callee$(_context) {
-          while (1) {
-            switch (_context.prev = _context.next) {
-              case 0:
-                _this.__running = true;
-                _this.__processChildrenAutomatically = true;
-
-                _context.next = 4;
-                return func(_this.props);
-
-              case 4:
-                result = _context.sent;
-
-                _this.__used += 1;
-                _this.__running = false;
-                return _context.abrupt('return', result);
-
-              case 8:
-              case 'end':
-                return _context.stop();
-            }
-          }
-        }, _callee, _this);
-      }))();
+      return func(this.props);
+    },
+    out: function out() {
+      this.__used += 1;
+      this.__running = false;
     }
   };
 };
@@ -285,108 +245,105 @@ function createProcessor() {
               }();
 
               // actual call of the ActML element
-              _context2.next = 7;
-              return node.element.run();
-
-            case 7:
-              result = _context2.sent;
+              result = node.element.enter();
               genResult = void 0, toGenValue = void 0;
 
               // handling a promise
 
               if (!(result && result.then)) {
-                _context2.next = 15;
+                _context2.next = 13;
                 break;
               }
 
-              _context2.next = 12;
+              _context2.next = 10;
               return result;
 
-            case 12:
+            case 10:
               result = _context2.sent;
-              _context2.next = 38;
+              _context2.next = 36;
               break;
 
-            case 15:
+            case 13:
               if (!(result && typeof result.next === 'function')) {
-                _context2.next = 34;
+                _context2.next = 32;
                 break;
               }
 
               genResult = result.next();
 
-            case 17:
+            case 15:
               if (genResult.done) {
-                _context2.next = 25;
+                _context2.next = 23;
                 break;
               }
 
               if (!(0, _isActMLElement2.default)(genResult.value)) {
-                _context2.next = 22;
+                _context2.next = 20;
                 break;
               }
 
-              _context2.next = 21;
+              _context2.next = 19;
               return processNode(node.addChildNode(genResult.value), stack);
 
-            case 21:
+            case 19:
               toGenValue = _context2.sent;
 
-            case 22:
+            case 20:
               genResult = result.next(toGenValue);
-              _context2.next = 17;
+              _context2.next = 15;
               break;
 
-            case 25:
+            case 23:
               if (!(0, _isActMLElement2.default)(genResult.value)) {
-                _context2.next = 31;
+                _context2.next = 29;
                 break;
               }
 
-              _context2.next = 28;
+              _context2.next = 26;
               return processNode(node.addChildNode(genResult.value), stack);
 
-            case 28:
+            case 26:
               result = _context2.sent;
-              _context2.next = 32;
+              _context2.next = 30;
               break;
 
-            case 31:
+            case 29:
               result = genResult.value;
 
-            case 32:
-              _context2.next = 38;
+            case 30:
+              _context2.next = 36;
               break;
 
-            case 34:
+            case 32:
               if (!(0, _isActMLElement2.default)(result)) {
-                _context2.next = 38;
+                _context2.next = 36;
                 break;
               }
 
-              _context2.next = 37;
+              _context2.next = 35;
               return processNode(node.addChildNode(result), stack);
 
-            case 37:
+            case 35:
               result = _context2.sent;
 
-            case 38:
+            case 36:
               if (!node.element.shouldProcessChildrenAutomatically()) {
-                _context2.next = 41;
+                _context2.next = 39;
                 break;
               }
 
-              _context2.next = 41;
+              _context2.next = 39;
               return node.callChildren();
 
-            case 41:
+            case 39:
 
+              node.element.out();
               node.out();
               currentNode = null;
 
               return _context2.abrupt('return', result);
 
-            case 44:
+            case 43:
             case 'end':
               return _context2.stop();
           }
@@ -430,7 +387,7 @@ function createProcessor() {
   };
 };
 
-},{"./Tree":3,"./hooks/usePubSub":10,"./hooks/useState":12,"./utils/isActMLElement":15}],3:[function(require,module,exports){
+},{"./Tree":3,"./hooks/usePubSub":7,"./hooks/useState":9,"./utils/isActMLElement":12}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -567,75 +524,7 @@ function Tree() {
 } /* eslint-disable no-use-before-define, no-return-assign, max-len */
 ;
 
-},{"fast-deep-equal":16}],4:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = createPublishElement;
-function createPublishElement(hostElement, useChildren, usePubSub) {
-  return function (_ref) {
-    var type = _ref.type,
-        payload = _ref.payload;
-
-    var _usePubSub = usePubSub(hostElement),
-        publish = _usePubSub.publish;
-
-    publish(type, payload);
-  };
-}
-
-},{}],5:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _slicedToArray = function () {
-  function sliceIterator(arr, i) {
-    var _arr = [];var _n = true;var _d = false;var _e = undefined;try {
-      for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
-        _arr.push(_s.value);if (i && _arr.length === i) break;
-      }
-    } catch (err) {
-      _d = true;_e = err;
-    } finally {
-      try {
-        if (!_n && _i["return"]) _i["return"]();
-      } finally {
-        if (_d) throw _e;
-      }
-    }return _arr;
-  }return function (arr, i) {
-    if (Array.isArray(arr)) {
-      return arr;
-    } else if (Symbol.iterator in Object(arr)) {
-      return sliceIterator(arr, i);
-    } else {
-      throw new TypeError("Invalid attempt to destructure non-iterable instance");
-    }
-  };
-}();
-
-exports.default = createSubscribeElement;
-function createSubscribeElement(hostElement, useChildren, usePubSub) {
-  return function (_ref) {
-    var type = _ref.type;
-
-    var _useChildren = useChildren(),
-        _useChildren2 = _slicedToArray(_useChildren, 1),
-        children = _useChildren2[0];
-
-    var _usePubSub = usePubSub(hostElement),
-        subscribe = _usePubSub.subscribe;
-
-    subscribe(type, children);
-  };
-};
-
-},{}],6:[function(require,module,exports){
+},{"fast-deep-equal":13}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -663,7 +552,7 @@ var createUseChildrenHook = function createUseChildrenHook(processor) {
 
 exports.default = createUseChildrenHook;
 
-},{"./utils/isValidHookContext":13}],7:[function(require,module,exports){
+},{"./utils/isValidHookContext":10}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -688,75 +577,12 @@ var createUseElementHook = function createUseElementHook(processor) {
 
 exports.default = createUseElementHook;
 
-},{"./utils/isValidHookContext":13}],8:[function(require,module,exports){
+},{"./utils/isValidHookContext":10}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = createUseElementsHook;
-
-var _Subscribe = require('./elements/Subscribe');
-
-var _Subscribe2 = _interopRequireDefault(_Subscribe);
-
-var _Publish = require('./elements/Publish');
-
-var _Publish2 = _interopRequireDefault(_Publish);
-
-var _isValidHookContext = require('./utils/isValidHookContext');
-
-var _isValidHookContext2 = _interopRequireDefault(_isValidHookContext);
-
-function _interopRequireDefault(obj) {
-  return obj && obj.__esModule ? obj : { default: obj };
-}
-
-function createUseElementsHook(processor, useChildren, usePubSub) {
-  return function () {
-    (0, _isValidHookContext2.default)(processor);
-
-    var node = processor.node();
-
-    return {
-      Subscribe: (0, _Subscribe2.default)(node.element, useChildren, usePubSub),
-      Publish: (0, _Publish2.default)(node.element, useChildren, usePubSub)
-    };
-  };
-};
-
-},{"./elements/Publish":4,"./elements/Subscribe":5,"./utils/isValidHookContext":13}],9:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _slicedToArray = function () {
-  function sliceIterator(arr, i) {
-    var _arr = [];var _n = true;var _d = false;var _e = undefined;try {
-      for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
-        _arr.push(_s.value);if (i && _arr.length === i) break;
-      }
-    } catch (err) {
-      _d = true;_e = err;
-    } finally {
-      try {
-        if (!_n && _i["return"]) _i["return"]();
-      } finally {
-        if (_d) throw _e;
-      }
-    }return _arr;
-  }return function (arr, i) {
-    if (Array.isArray(arr)) {
-      return arr;
-    } else if (Symbol.iterator in Object(arr)) {
-      return sliceIterator(arr, i);
-    } else {
-      throw new TypeError("Invalid attempt to destructure non-iterable instance");
-    }
-  };
-}();
 
 var _isValidHookContext = require('./utils/isValidHookContext');
 
@@ -816,31 +642,52 @@ var createUseProductHook = function createUseProductHook(processor, useState) {
     });
   });
 
-  return function () {
+  return function (value) {
     (0, _isValidHookContext2.default)(processor);
-
     var node = processor.node();
 
-    return [function (initialValue) {
-      var _useState = useState(initialValue),
-          _useState2 = _slicedToArray(_useState, 2),
-          product = _useState2[0],
-          setProduct = _useState2[1];
-
-      node.__product = product;
-      return [setProduct];
+    node.__product = value;
+    return [function (newValue) {
+      return node.__product = newValue;
     }];
   };
 };
 
 exports.default = createUseProductHook;
 
-},{"./utils/isValidHookContext":13}],10:[function(require,module,exports){
+},{"./utils/isValidHookContext":10}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _slicedToArray = function () {
+  function sliceIterator(arr, i) {
+    var _arr = [];var _n = true;var _d = false;var _e = undefined;try {
+      for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+        _arr.push(_s.value);if (i && _arr.length === i) break;
+      }
+    } catch (err) {
+      _d = true;_e = err;
+    } finally {
+      try {
+        if (!_n && _i["return"]) _i["return"]();
+      } finally {
+        if (_d) throw _e;
+      }
+    }return _arr;
+  }return function (arr, i) {
+    if (Array.isArray(arr)) {
+      return arr;
+    } else if (Symbol.iterator in Object(arr)) {
+      return sliceIterator(arr, i);
+    } else {
+      throw new TypeError("Invalid attempt to destructure non-iterable instance");
+    }
+  };
+}();
+
 exports.default = createUsePubSubHook;
 
 var _isValidHookContext = require('./utils/isValidHookContext');
@@ -853,21 +700,43 @@ function _interopRequireDefault(obj) {
 
 var subscribers = {};
 
-var _subscribe = function _subscribe(element, type, callback) {
+function createSubscribeElement(subscribe, useChildren) {
+  return function (_ref) {
+    var type = _ref.type;
+
+    var _useChildren = useChildren(),
+        _useChildren2 = _slicedToArray(_useChildren, 1),
+        children = _useChildren2[0];
+
+    subscribe(type, function (payload) {
+      children({ payload: payload });
+    });
+  };
+};
+function createPublishElement(publish) {
+  return function (_ref2) {
+    var type = _ref2.type,
+        payload = _ref2.payload;
+
+    publish(type, payload);
+  };
+}
+
+var subscribe = function subscribe(element, type, callback) {
   if (!subscribers[type]) subscribers[type] = {};
   subscribers[type][element.id] = callback;
   return function () {
     delete subscribers[type][element.id];
   };
 };
-var _publish = function _publish(type, payload) {
+var publish = function publish(type, payload) {
   if (!subscribers[type]) return;
   Object.keys(subscribers[type]).forEach(function (id) {
     subscribers[type][id](payload);
   });
 };
 
-function createUsePubSubHook(processor) {
+function createUsePubSubHook(processor, useChildren) {
   processor.onNodeRemove(function (node) {
     Object.keys(subscribers).forEach(function (type) {
       if (subscribers[type][node.element.id]) {
@@ -879,19 +748,24 @@ function createUsePubSubHook(processor) {
     (0, _isValidHookContext2.default)(processor);
 
     var node = processor.node();
+    var el = scopedElement || node.element;
+    var subscribeFunc = function subscribeFunc() {
+      for (var _len = arguments.length, params = Array(_len), _key = 0; _key < _len; _key++) {
+        params[_key] = arguments[_key];
+      }
+
+      return subscribe.apply(undefined, [el].concat(params));
+    };
+    var publishFunc = function publishFunc() {
+      return publish.apply(undefined, arguments);
+    };
 
     return {
-      subscribe: function subscribe() {
-        for (var _len = arguments.length, params = Array(_len), _key = 0; _key < _len; _key++) {
-          params[_key] = arguments[_key];
-        }
-
-        return _subscribe.apply(undefined, [scopedElement || node.element].concat(params));
-      },
-      publish: function publish() {
-        return _publish.apply(undefined, arguments);
-      },
-      subscribers: subscribers
+      subscribe: subscribeFunc,
+      publish: publishFunc,
+      subscribers: subscribers,
+      Subscribe: createSubscribeElement(subscribeFunc, useChildren),
+      Publish: createPublishElement(publishFunc)
     };
   };
 }
@@ -900,8 +774,8 @@ createUsePubSubHook.clear = function () {
   subscribers = {};
 };
 
-},{"./utils/isValidHookContext":13}],11:[function(require,module,exports){
-"use strict";
+},{"./utils/isValidHookContext":10}],8:[function(require,module,exports){
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -934,20 +808,51 @@ var _slicedToArray = function () {
 }();
 
 exports.default = createUseReducerHook;
-function createUseReducerHook(useState) {
-  return function (reducer, initialState) {
-    var _useState = useState(initialState),
-        _useState2 = _slicedToArray(_useState, 2),
-        data = _useState2[0],
-        setData = _useState2[1];
 
-    return [data, function (action) {
-      return setData(reducer(data, action));
-    }];
+function _objectWithoutProperties(obj, keys) {
+  var target = {};for (var i in obj) {
+    if (keys.indexOf(i) >= 0) continue;if (!Object.prototype.hasOwnProperty.call(obj, i)) continue;target[i] = obj[i];
+  }return target;
+}
+
+function createDispatchElement(dispatch) {
+  return function (_ref) {
+    var action = _ref.action,
+        propsToAction = _ref.propsToAction,
+        rest = _objectWithoutProperties(_ref, ['action', 'propsToAction']);
+
+    console.log('calling <Dispatch>');
+    if (action) {
+      dispatch(action);
+    } else if (propsToAction) {
+      dispatch(propsToAction(rest));
+    } else {
+      throw new Error('<Dispatch> expects "action" or "propsToAction" prop.');
+    }
   };
 }
 
-},{}],12:[function(require,module,exports){
+function createUseReducerHook(useState) {
+  return function (reducer, initialState) {
+    var _useState = useState(initialState),
+        _useState2 = _slicedToArray(_useState, 3),
+        state = _useState2[0],
+        setState = _useState2[1],
+        getState = _useState2[2];
+
+    var dispatch = function dispatch(action) {
+      return setState(reducer(getState(), action));
+    };
+
+    return [state, dispatch, createDispatchElement(dispatch), // <Dispatch>
+    function () {
+      return getState();
+    } // <GetState>
+    ];
+  };
+}
+
+},{}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1008,6 +913,8 @@ function createUseStateHook(processor) {
         node.rerun();
       }
       return newState;
+    }, function () {
+      return storage.states[index];
     }];
   };
 }
@@ -1016,7 +923,7 @@ createUseStateHook.clear = function () {
   Storage.elements = {};
 };
 
-},{"./utils/isValidHookContext":13}],13:[function(require,module,exports){
+},{"./utils/isValidHookContext":10}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1032,7 +939,7 @@ function isValidHookContext(processor) {
   }
 };
 
-},{}],14:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1076,10 +983,6 @@ var _useReducer = require('./hooks/useReducer');
 
 var _useReducer2 = _interopRequireDefault(_useReducer);
 
-var _useElements = require('./hooks/useElements');
-
-var _useElements2 = _interopRequireDefault(_useElements);
-
 function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj };
 }
@@ -1105,9 +1008,8 @@ function createUniverse() {
   var useElement = (0, _useElement2.default)(processor);
   var useState = (0, _useState2.default)(processor);
   var useProduct = (0, _useProduct2.default)(processor, useState);
-  var usePubSub = (0, _usePubSub2.default)(processor);
+  var usePubSub = (0, _usePubSub2.default)(processor, useChildren);
   var useReducer = (0, _useReducer2.default)(useState);
-  var useElements = (0, _useElements2.default)(processor, useChildren, usePubSub);
 
   return {
     A: A,
@@ -1119,8 +1021,7 @@ function createUniverse() {
     useProduct: useProduct,
     usePubSub: usePubSub,
     useState: useState,
-    useReducer: useReducer,
-    useElements: useElements
+    useReducer: useReducer
   };
 }
 
@@ -1129,7 +1030,7 @@ var universe = createUniverse();
 module.exports = universe;
 module.exports.createUniverse = createUniverse();
 
-},{"./ActElement":1,"./Processor":2,"./hooks/useChildren":6,"./hooks/useElement":7,"./hooks/useElements":8,"./hooks/useProduct":9,"./hooks/usePubSub":10,"./hooks/useReducer":11,"./hooks/useState":12,"./utils/isActMLElement":15}],15:[function(require,module,exports){
+},{"./ActElement":1,"./Processor":2,"./hooks/useChildren":4,"./hooks/useElement":5,"./hooks/useProduct":6,"./hooks/usePubSub":7,"./hooks/useReducer":8,"./hooks/useState":9,"./utils/isActMLElement":12}],12:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1140,7 +1041,7 @@ function isActMLElement(element) {
   return element && element.__actml === true;
 };
 
-},{}],16:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 'use strict';
 
 var isArray = Array.isArray;
@@ -1197,5 +1098,5 @@ module.exports = function equal(a, b) {
   return a!==a && b!==b;
 };
 
-},{}]},{},[14])(14)
+},{}]},{},[11])(11)
 });

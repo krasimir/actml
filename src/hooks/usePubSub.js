@@ -2,6 +2,19 @@ import isValidHookContext from './utils/isValidHookContext';
 
 var subscribers = {};
 
+function createSubscribeElement(subscribe, useChildren) {
+  return ({ type }) => {
+    const [ children ] = useChildren();
+
+    subscribe(type, (payload) => children({ payload }));
+  };
+};
+function createPublishElement(publish) {
+  return ({ type, payload }) => {
+    publish(type, payload);
+  };
+}
+
 const subscribe = (element, type, callback) => {
   if (!subscribers[type]) subscribers[type] = {};
   subscribers[type][element.id] = callback;
@@ -16,7 +29,7 @@ const publish = (type, payload) => {
   });
 };
 
-export default function createUsePubSubHook(processor) {
+export default function createUsePubSubHook(processor, useChildren) {
   processor.onNodeRemove(node => {
     Object.keys(subscribers).forEach(type => {
       if (subscribers[type][node.element.id]) {
@@ -28,11 +41,16 @@ export default function createUsePubSubHook(processor) {
     isValidHookContext(processor);
 
     const node = processor.node();
+    const el = scopedElement || node.element;
+    const subscribeFunc = (...params) => subscribe(el, ...params);
+    const publishFunc = (...params) => publish(...params);
 
     return {
-      subscribe: (...params) => subscribe(scopedElement || node.element, ...params),
-      publish: (...params) => publish(...params),
-      subscribers
+      subscribe: subscribeFunc,
+      publish: publishFunc,
+      subscribers,
+      Subscribe: createSubscribeElement(subscribeFunc, useChildren),
+      Publish: createPublishElement(publishFunc)
     };
   };
 }

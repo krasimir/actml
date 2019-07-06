@@ -40,4 +40,34 @@ describe('Given the useReducer hook', () => {
       await delay(40);
     });
   });
+  describe('when we use the Dispatch element', () => {
+    it('should dispatch an action', async () => {
+      const initialState = { count: 0 };
+
+      function reducer(state, action) {
+        switch (action.type) {
+          case 'increment':
+            return { count: state.count + 1};
+          case 'decrement':
+            return { count: state.count - 1};
+          default:
+            throw new Error();
+        }
+      }
+      const G = function * () {
+        const [ ,, Dispatch, GetState ] = useReducer(reducer, initialState);
+
+        yield <Dispatch action={ { type: 'increment' } } />;
+        yield <Dispatch action={ { type: 'increment' } } />;
+        yield <Dispatch action={ { type: 'increment' } } />;
+        yield <Dispatch action={ { type: 'increment' } } />;
+
+        return <GetState />;
+      };
+
+      const result = await run(<G />);
+
+      expect(result).toStrictEqual({ count: 4 });
+    });
+  });
 });

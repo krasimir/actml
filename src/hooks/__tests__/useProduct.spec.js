@@ -8,6 +8,16 @@ describe('Given the ActML library', () => {
     processor.system().reset();
   });
   describe('and we use the useProduct hook', () => {
+    it('should set the product of the element', async () => {
+      async function E() {
+        useProduct('foo');
+      };
+
+      const C = jest.fn();
+
+      await run(<Fragment><E exports='bar'><C $bar/></E></Fragment>);
+      expect(C).toBeCalledWith(expect.objectContaining({ bar: 'foo' }));
+    });
     it('should provide a way to update the value', async () => {
       async function E() {
         const [ setValue ] = useProduct('foo');

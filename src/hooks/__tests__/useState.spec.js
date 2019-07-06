@@ -72,5 +72,21 @@ describe('Given the ActML library', () => {
       expect(mock).toBeCalledWith(2);
       expect(C).toBeCalledTimes(2);
     });
+    it('should allow us to get the state immediately', async () => {
+      const mock = jest.fn();
+      const E = () => {
+        const [ numbers, increment, getNumbers ] = useState(1);
+        const [ letters, addLetter, getLetters ] = useState('a');
+
+        increment(increment(increment(numbers + 1) + 1) + 1);
+        addLetter(addLetter(addLetter(letters + 'a') + 'a') + 'a');
+        mock(getNumbers(), getLetters());
+      };
+
+      await run(<E />);
+
+      expect(mock).toBeCalledTimes(1);
+      expect(mock).toBeCalledWith(4, 'aaaa');
+    });
   });
 });

@@ -1,30 +1,39 @@
 /* eslint-disable react/prop-types */
 /** @jsx A */
-import { A } from 'actml';
+import { A } from '../../../lib';
 
 import { FillContainer } from './DOM';
+import { FILTER_ALL, FILTER_ACTIVE, FILTER_COMPLETED } from './Filter';
 
-export default function Renderer({ todos }) {
+export default function Renderer({ todos, filter }) {
   return (
     <FillContainer>
       {
-        todos.map((todo, i) => {
+        todos
+        .filter(({ completed }) => {
+          if (filter === FILTER_ALL) return true;
+          if (filter === FILTER_ACTIVE) return !completed;
+          if (filter === FILTER_COMPLETED) return completed;
+          return false;
+        }).map((todo, i) => {
+          const liClass = todo.editing ? 'editing' : (todo.completed ? 'completed' : '');
+
           return `
-            <li class='${ todo.completed ? 'completed' : '' }'>
+            <li class='${ liClass }'>
               <div class="view">
                 <input 
                   class="toggle"
                   type="checkbox"
                   data-index="${ i }"
-                  data-action="toggle"
+                  data-toggle
                   ${ todo.completed ? 'checked' : '' }>
-                <label>${ todo.label }</label>
+                <label data-index="${ i }" data-label>${ todo.label }</label>
                 <button
                   class="destroy"
                   data-index="${ i }"
-                  data-action="delete"></button>
+                  data-delete></button>
               </div>
-              <input class="edit" value="Rule the web">
+              <input class="edit" value="${ todo.label }" data-index="${ i }" data-edit>
             </li>
           `;
         }).join('')

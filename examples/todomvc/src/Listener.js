@@ -1,17 +1,11 @@
 /* eslint-disable react/prop-types */
 /** @jsx A */
-import { A } from 'actml';
+import { A, usePubSub } from '../../../lib';
 
 import { Container } from './DOM';
 
-export default function Listener({ useElements }) {
-  const { Publish } = useElements();
+export default function Listener() {
+  const { publish } = usePubSub();
 
-  return (
-    <Container>
-      {
-        (type, todoIndex) => <Publish type={ type } payload={ todoIndex } />
-      }
-    </Container>
-  );
+  return <Container onUserAction={ publish } />;
 }
