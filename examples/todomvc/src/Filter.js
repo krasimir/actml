@@ -1,6 +1,5 @@
 /** @jsx A */
 import { A, Fragment, useProduct, usePubSub, useState } from '../../../lib';
-import { FilterOptions } from './DOM';
 
 export const FILTER_ALL = 'FILTER_ALL';
 export const FILTER_ACTIVE = 'FILTER_ACTIVE';
@@ -14,7 +13,6 @@ export default function Filter() {
 
   return (
     <Fragment>
-      <FilterOptions filter={ filter } />
       <Subscribe type={ FILTER_ALL }>
         { () => setFilter(FILTER_ALL) }
       </Subscribe>

@@ -22,15 +22,14 @@ export default function Tree() {
     }
     return false;
   }
-  function createNewNode(element) {
+  function createNewNode(element, parent) {
     if (element) { element.initialize(getId()); }
     return {
       element,
       children: [],
-      stack: [],
+      parent,
       cursor: 0,
-      enter(stack) {
-        this.stack = stack;
+      enter() {
         onNodeEnter.forEach(c => c(this));
       },
       out() {
@@ -41,7 +40,6 @@ export default function Tree() {
             .forEach(removedNode => onNodeRemove.forEach(c => c(removedNode)));
         }
         this.cursor = 0;
-        this.stack = [];
         onNodeOut.forEach(c => c(this));
       },
       addChildNode(newElement) {
@@ -54,7 +52,7 @@ export default function Tree() {
         }
 
         // creating a new node
-        const newChildNode = createNewNode(newElement);
+        const newChildNode = createNewNode(newElement, this);
 
         if (this.children[ this.cursor ]) {
           onNodeRemove.forEach(c => c(this.children[ this.cursor ]));

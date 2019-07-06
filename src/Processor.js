@@ -9,11 +9,10 @@ export default function createProcessor() {
   const tree = Tree();
   let currentNode = null;
 
-  const processNode = async (node, stack) => {
+  const processNode = async (node) => {
     currentNode = node;
-    stack = [ ...stack, node.element ];
-    node.enter(stack);
-    node.rerun = () => processNode(node, stack);
+    node.enter();
+    node.rerun = () => processNode(node);
     node.callChildren = async (...additionalProps) => {
       const childrenResult = [];
       const { children } = node.element;
@@ -22,12 +21,12 @@ export default function createProcessor() {
         for (let i = 0; i < children.length; i++) {
           if (isActMLElement(children[i])) {
             children[i].mergeProps(...additionalProps);
-            childrenResult.push(await processNode(node.addChildNode(children[i]), stack));
+            childrenResult.push(await processNode(node.addChildNode(children[i])));
           } else if (typeof children[i] === 'function') {
             const funcResult = await children[i](...additionalProps);
 
             if (isActMLElement(funcResult)) {
-              childrenResult.push(await processNode(node.addChildNode(funcResult), stack));
+              childrenResult.push(await processNode(node.addChildNode(funcResult)));
             } else {
               childrenResult.push(funcResult);
             }
@@ -51,19 +50,19 @@ export default function createProcessor() {
       genResult = result.next();
       while (!genResult.done) {
         if (isActMLElement(genResult.value)) {
-          toGenValue = await processNode(node.addChildNode(genResult.value), stack);
+          toGenValue = await processNode(node.addChildNode(genResult.value));
         }
         genResult = result.next(toGenValue);
       }
       if (isActMLElement(genResult.value)) {
-        result = await processNode(node.addChildNode(genResult.value), stack);
+        result = await processNode(node.addChildNode(genResult.value));
       } else {
         result = genResult.value;
       }
 
     // handling another ActML element
     } else if (isActMLElement(result)) {
-      result = await processNode(node.addChildNode(result), stack);
+      result = await processNode(node.addChildNode(result));
     }
 
     // handling children

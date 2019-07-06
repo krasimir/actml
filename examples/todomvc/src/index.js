@@ -1,20 +1,24 @@
 /** @jsx A */
-import { A, run, Fragment } from '../../../lib';
+import { A, run, Fragment, usePubSub } from '../../../lib';
 
 import Store from './Store';
 import Renderer from './Renderer';
-import Listener from './Listener';
 import CheckForEditField from './CheckForEditField';
-import { ProgressChecker } from './DOM';
+import { ProgressChecker, FilterOptionsTabs, Container, FilterOptions } from './DOM';
 import Filter from './Filter';
 
 function App() {
+  const { publish } = usePubSub();
+
   return (
     <Fragment>
-      <Listener />
-      <Filter exports='filter' />
+      <Container onUserAction={ publish } />
+      <FilterOptions onUserAction={ publish }/>
       <Store exports='todos'>
-        <Renderer $todos $filter/>
+        <Filter exports='filter'>
+          <Renderer $todos $filter />
+          <FilterOptionsTabs $filter />
+        </Filter>
         <CheckForEditField $todos />
         <ProgressChecker $todos />
       </Store>

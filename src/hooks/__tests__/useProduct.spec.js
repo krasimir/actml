@@ -99,5 +99,27 @@ Stack:
         expect(error.message).toMatch('"bar" prop requested');
       }
     });
+    it('should access products on parent siblings', async () => {
+      function B() {
+        useProduct('foo');
+      }
+      function C() {}
+      function D() {}
+
+      const X = jest.fn();
+
+      await run(
+        <Fragment>
+          <B exports='bar' />
+          <C>
+            <D>
+              <X $bar />
+            </D>
+          </C>
+        </Fragment>
+      );
+
+      expect(X).toBeCalledWith(expect.objectContaining({ bar: 'foo' }));
+    });
   });
 });

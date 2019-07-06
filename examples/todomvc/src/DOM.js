@@ -82,7 +82,7 @@ export function ProgressChecker({ todos }) {
     <strong>${ itemsLeft }</strong> ${ itemsLeft > 1 || itemsLeft === 0 ? 'items' : 'item' } left
   `;
 };
-export function FilterOptions({ filter, onUserAction }) {
+export function FilterOptions({ onUserAction }) {
   $('[data-filter]').addEventListener('click', (e) => {
     if (e.target.hasAttribute('data-all')) {
       onUserAction(FILTER_ALL);
@@ -92,7 +92,9 @@ export function FilterOptions({ filter, onUserAction }) {
       onUserAction(FILTER_COMPLETED);
     }
   });
+};
+export function FilterOptionsTabs({ filter }) {
   $('[data-all]').setAttribute('class', filter === FILTER_ALL ? 'selected' : '');
   $('[data-active]').setAttribute('class', filter === FILTER_ACTIVE ? 'selected' : '');
   $('[data-completed]').setAttribute('class', filter === FILTER_COMPLETED ? 'selected' : '');
-};
+}
