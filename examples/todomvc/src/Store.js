@@ -7,18 +7,16 @@ export const NEW_TODO = 'NEW_TODO';
 export const DELETE = 'DELETE';
 export const EDIT = 'EDIT';
 export const EDIT_TODO = 'EDIT_TODO';
+export const CLEAR_COMPLETED = 'CLEAR_COMPLETED';
 
 const toggle = (todoIndex) => ({ type: TOGGLE, todoIndex });
 const deleteTodo = (todoIndex) => ({ type: DELETE, todoIndex });
 const newTodo = (label) => ({ type: NEW_TODO, label });
 const edit = (todoIndex) => ({ type: EDIT, todoIndex });
 const editToDo = ({ index, label }) => ({ type: EDIT_TODO, index, label });
+const clearCompleted = () => ({ type: CLEAR_COMPLETED });
 
-const ToDo = ({ label }) => ({ label, completed: false, editing: false });
-const initialValue = [
-  ToDo({ label: 'First task' }),
-  ToDo({ label: 'Second task' })
-];
+export const ToDo = ({ label }) => ({ label, completed: false, editing: false });
 const reducer = function (todos, action) {
   switch (action.type) {
     case TOGGLE:
@@ -59,12 +57,14 @@ const reducer = function (todos, action) {
       return [ ...todos, ToDo({ label: action.label }) ];
     case DELETE:
       return todos.filter((todo, index) => index !== action.todoIndex);
+    case CLEAR_COMPLETED:
+      return todos.filter((todo) => !todo.completed);
     default:
       return todos;
   }
 };
 
-export default function Store() {
+export default function Store({ initialValue }) {
   const [ todos, , Dispatch ] = useReducer(reducer, initialValue);
   const { Subscribe } = usePubSub();
 
@@ -86,6 +86,9 @@ export default function Store() {
       </Subscribe>
       <Subscribe type={ EDIT_TODO }>
         <Dispatch propsToAction={ ({ payload }) => editToDo(payload) } />
+      </Subscribe>
+      <Subscribe type={ CLEAR_COMPLETED }>
+        <Dispatch action={ clearCompleted() } />
       </Subscribe>
     </Fragment>
   );

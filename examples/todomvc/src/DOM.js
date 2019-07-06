@@ -5,7 +5,8 @@ import {
   NEW_TODO,
   DELETE,
   EDIT,
-  EDIT_TODO
+  EDIT_TODO,
+  CLEAR_COMPLETED
 } from './Store';
 
 import {
@@ -82,7 +83,7 @@ export function ProgressChecker({ todos }) {
     <strong>${ itemsLeft }</strong> ${ itemsLeft > 1 || itemsLeft === 0 ? 'items' : 'item' } left
   `;
 };
-export function FilterOptions({ onUserAction }) {
+export function Footer({ onUserAction }) {
   $('[data-filter]').addEventListener('click', (e) => {
     if (e.target.hasAttribute('data-all')) {
       onUserAction(FILTER_ALL);
@@ -91,6 +92,9 @@ export function FilterOptions({ onUserAction }) {
     } else if (e.target.hasAttribute('data-completed')) {
       onUserAction(FILTER_COMPLETED);
     }
+  });
+  $('[data-clear-completed]').addEventListener('click', () => {
+    onUserAction(CLEAR_COMPLETED);
   });
 };
 export function FilterOptionsTabs({ filter }) {
