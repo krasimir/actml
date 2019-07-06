@@ -1,4 +1,3 @@
-/** @jsx A */
 import { useProduct } from '../../../lib';
 
 import { ToDo } from './Store';
