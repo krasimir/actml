@@ -1,6 +1,6 @@
 /** @jsx A */
 
-import { A, run, Fragment, processor, useChildren, useReducer, usePubSub, useProduct } from '../';
+import { A, run, Fragment, processor, useChildren, useReducer, usePubSub, useProduct, useState, useEffect } from '../';
 import { delay, exerciseTree } from '../__helpers__/utils';
 
 describe('Given the ActML library', () => {
@@ -59,6 +59,35 @@ describe('Given the ActML library', () => {
         Button(1)
       `);
       expect(Print).toBeCalledTimes(4);
+    });
+  });
+  describe('when we have useState and useEffect together', () => {
+    it('should work as expected', async () => {
+      const values = [];
+      const Counter = function () {
+        const [ value, setCounter, getCounter ] = useState(0);
+        const [ children ] = useChildren();
+
+        children({ value, update: () => setCounter(getCounter() + 1) });
+      };
+      const Controls = function ({ update }) {
+        useEffect(() => {
+          setTimeout(() => update(), 10);
+          setTimeout(() => update(), 20);
+          setTimeout(() => update(), 25);
+        }, []);
+      };
+      const PrintValue = ({ value }) => values.push(value);
+
+      await run(
+        <Counter>
+          <PrintValue />
+          <Controls />
+        </Counter>
+      );
+      await delay(30);
+
+      expect(values).toStrictEqual([ 0, 1, 2, 3 ]);
     });
   });
 });
