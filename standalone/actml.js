@@ -91,16 +91,6 @@ function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj };
 }
 
-function _toConsumableArray(arr) {
-  if (Array.isArray(arr)) {
-    for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) {
-      arr2[i] = arr[i];
-    }return arr2;
-  } else {
-    return Array.from(arr);
-  }
-}
-
 function _asyncToGenerator(fn) {
   return function () {
     var gen = fn.apply(this, arguments);return new Promise(function (resolve, reject) {
@@ -132,17 +122,16 @@ function createProcessor() {
   var currentNode = null;
 
   var processNode = function () {
-    var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(node, stack) {
+    var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(node) {
       var result, genResult, toGenValue;
       return regeneratorRuntime.wrap(function _callee2$(_context2) {
         while (1) {
           switch (_context2.prev = _context2.next) {
             case 0:
               currentNode = node;
-              stack = [].concat(_toConsumableArray(stack), [node.element]);
-              node.enter(stack);
+              node.enter();
               node.rerun = function () {
-                return processNode(node, stack);
+                return processNode(node);
               };
               node.callChildren = function () {
                 var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
@@ -181,7 +170,7 @@ function createProcessor() {
                           (_children$i = children[i]).mergeProps.apply(_children$i, _args);
                           _context.t0 = childrenResult;
                           _context.next = 10;
-                          return processNode(node.addChildNode(children[i]), stack);
+                          return processNode(node.addChildNode(children[i]));
 
                         case 10:
                           _context.t1 = _context.sent;
@@ -210,7 +199,7 @@ function createProcessor() {
 
                           _context.t2 = childrenResult;
                           _context.next = 22;
-                          return processNode(node.addChildNode(funcResult), stack);
+                          return processNode(node.addChildNode(funcResult));
 
                         case 22:
                           _context.t3 = _context.sent;
@@ -251,91 +240,91 @@ function createProcessor() {
               // handling a promise
 
               if (!(result && result.then)) {
-                _context2.next = 13;
+                _context2.next = 12;
                 break;
               }
 
-              _context2.next = 10;
+              _context2.next = 9;
               return result;
 
-            case 10:
+            case 9:
               result = _context2.sent;
-              _context2.next = 36;
+              _context2.next = 35;
               break;
 
-            case 13:
+            case 12:
               if (!(result && typeof result.next === 'function')) {
-                _context2.next = 32;
+                _context2.next = 31;
                 break;
               }
 
               genResult = result.next();
 
-            case 15:
+            case 14:
               if (genResult.done) {
-                _context2.next = 23;
+                _context2.next = 22;
                 break;
               }
 
               if (!(0, _isActMLElement2.default)(genResult.value)) {
-                _context2.next = 20;
+                _context2.next = 19;
                 break;
               }
 
-              _context2.next = 19;
-              return processNode(node.addChildNode(genResult.value), stack);
+              _context2.next = 18;
+              return processNode(node.addChildNode(genResult.value));
 
-            case 19:
+            case 18:
               toGenValue = _context2.sent;
 
-            case 20:
+            case 19:
               genResult = result.next(toGenValue);
-              _context2.next = 15;
+              _context2.next = 14;
               break;
 
-            case 23:
+            case 22:
               if (!(0, _isActMLElement2.default)(genResult.value)) {
-                _context2.next = 29;
+                _context2.next = 28;
                 break;
               }
 
-              _context2.next = 26;
-              return processNode(node.addChildNode(genResult.value), stack);
+              _context2.next = 25;
+              return processNode(node.addChildNode(genResult.value));
 
-            case 26:
+            case 25:
               result = _context2.sent;
-              _context2.next = 30;
+              _context2.next = 29;
               break;
 
-            case 29:
+            case 28:
               result = genResult.value;
 
-            case 30:
-              _context2.next = 36;
+            case 29:
+              _context2.next = 35;
               break;
 
-            case 32:
+            case 31:
               if (!(0, _isActMLElement2.default)(result)) {
-                _context2.next = 36;
+                _context2.next = 35;
                 break;
               }
 
-              _context2.next = 35;
-              return processNode(node.addChildNode(result), stack);
+              _context2.next = 34;
+              return processNode(node.addChildNode(result));
 
-            case 35:
+            case 34:
               result = _context2.sent;
 
-            case 36:
+            case 35:
               if (!node.element.shouldProcessChildrenAutomatically()) {
-                _context2.next = 39;
+                _context2.next = 38;
                 break;
               }
 
-              _context2.next = 39;
+              _context2.next = 38;
               return node.callChildren();
 
-            case 39:
+            case 38:
 
               node.element.out();
               node.out();
@@ -343,7 +332,7 @@ function createProcessor() {
 
               return _context2.abrupt('return', result);
 
-            case 43:
+            case 42:
             case 'end':
               return _context2.stop();
           }
@@ -351,7 +340,7 @@ function createProcessor() {
       }, _callee2, _this);
     }));
 
-    return function processNode(_x, _x2) {
+    return function processNode(_x) {
       return _ref.apply(this, arguments);
     };
   }();
@@ -424,19 +413,18 @@ function Tree() {
     }
     return false;
   }
-  function createNewNode(element) {
+  function createNewNode(element, parent) {
     if (element) {
       element.initialize(getId());
     }
     return {
       element: element,
       children: [],
-      stack: [],
+      parent: parent,
       cursor: 0,
-      enter: function enter(stack) {
+      enter: function enter() {
         var _this = this;
 
-        this.stack = stack;
         onNodeEnter.forEach(function (c) {
           return c(_this);
         });
@@ -453,7 +441,6 @@ function Tree() {
           });
         }
         this.cursor = 0;
-        this.stack = [];
         onNodeOut.forEach(function (c) {
           return c(_this2);
         });
@@ -470,7 +457,7 @@ function Tree() {
         }
 
         // creating a new node
-        var newChildNode = createNewNode(newElement);
+        var newChildNode = createNewNode(newElement, this);
 
         if (this.children[this.cursor]) {
           _onNodeRemove.forEach(function (c) {
@@ -600,23 +587,50 @@ function _defineProperty(obj, key, value) {
   }return obj;
 } /* eslint-disable no-return-assign */
 
-var resolveProduct = function resolveProduct(prop, stackIndex, stack, error) {
-  if (stackIndex < 0) {
-    throw error;
+var bridgeMethodName = function bridgeMethodName(keyword) {
+  return '__request__' + keyword;
+};
+
+var resolveProduct = function resolveProduct(bridgeMethod, node, getError) {
+  if (!node) {
+    throw getError();
   }
-  var parent = stack[stackIndex];
-  var product = parent.requestProduct ? parent.requestProduct(prop) : null;
+  var source = void 0;
+
+  if (node[bridgeMethod]) {
+    source = node;
+  } else {
+    source = node.children.find(function (child) {
+      return !!child[bridgeMethod];
+    });
+  }
+  var product = source ? source[bridgeMethod]() : null;
 
   if (product !== null) {
     return product.value;
   }
-  return resolveProduct(prop, stackIndex - 1, stack, error);
+  return resolveProduct(bridgeMethod, node.parent, getError);
 };
 
-var createUseProductHook = function createUseProductHook(processor, useState) {
+var getNotFoundError = function getNotFoundError(keyword, node) {
+  var getStack = function getStack(node) {
+    var stack = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+
+    stack.push(node.element.name);
+    if (node.parent) {
+      return getStack(node.parent, stack);
+    }
+    return stack;
+  };
+
+  return new Error('"' + keyword + '" prop requested by "' + node.element.name + '" can not be found.\n\nStack:\n' + getStack(node).reverse().map(function (name) {
+    return '  <' + name + '>';
+  }).join('\n'));
+};
+
+var createUseProductHook = function createUseProductHook(processor) {
   processor.onNodeEnter(function (node) {
-    var element = node.element,
-        stack = node.stack;
+    var element = node.element;
     var props = element.props;
 
     var propNames = props ? Object.keys(props) : [];
@@ -624,19 +638,14 @@ var createUseProductHook = function createUseProductHook(processor, useState) {
     propNames.forEach(function (propName) {
       if (propName.charAt(0) === '$') {
         var keyword = propName.substr(1, propName.length);
-        var stackToSearchIn = node.stack.slice(0, node.stack.length - 1);
-        var productValue = resolveProduct(keyword, stackToSearchIn.length - 1, stackToSearchIn, new Error('"' + keyword + '" prop requested by "' + element.name + '" can not be found.\n\nStack:\n' + stack.map(function (_ref) {
-          var name = _ref.name;
-          return '  <' + name + '>';
-        }).join('\n')));
+        var productValue = resolveProduct(bridgeMethodName(keyword), node.parent, function () {
+          return getNotFoundError(keyword, node);
+        });
 
         element.mergeProps(_defineProperty({}, keyword, productValue));
       } else if (propName === 'exports') {
-        element.requestProduct = function (keyword) {
-          if (props && props.exports && props.exports === keyword) {
-            return { value: node.__product };
-          }
-          return null;
+        node[bridgeMethodName(props[propName])] = function () {
+          return { value: node.__product };
         };
       }
     });
@@ -709,7 +718,7 @@ function createSubscribeElement(subscribe, useChildren) {
         children = _useChildren2[0];
 
     subscribe(type, function (payload) {
-      children({ payload: payload });
+      return children({ payload: payload });
     });
   };
 };
@@ -821,7 +830,6 @@ function createDispatchElement(dispatch) {
         propsToAction = _ref.propsToAction,
         rest = _objectWithoutProperties(_ref, ['action', 'propsToAction']);
 
-    console.log('calling <Dispatch>');
     if (action) {
       dispatch(action);
     } else if (propsToAction) {
