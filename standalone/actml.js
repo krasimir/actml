@@ -386,14 +386,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = Tree;
-
-var _fastDeepEqual = require('fast-deep-equal');
-
-var _fastDeepEqual2 = _interopRequireDefault(_fastDeepEqual);
-
-function _interopRequireDefault(obj) {
-  return obj && obj.__esModule ? obj : { default: obj };
-}
+/* eslint-disable no-use-before-define, no-return-assign, max-len */
 
 function Tree() {
   var onNodeEnter = [];
@@ -412,7 +405,10 @@ function Tree() {
   }
   function treeDiff(oldElement, newElement) {
     if (oldElement && oldElement.name === newElement.name) {
-      return (0, _fastDeepEqual2.default)(oldElement.props, newElement.props);
+      if (oldElement.props && newElement.props) {
+        return oldElement.props.key === newElement.props.key;
+      }
+      return true;
     }
     return false;
   }
@@ -511,10 +507,9 @@ function Tree() {
       _onNodeRemove.push(callback);
     }
   };
-} /* eslint-disable no-use-before-define, no-return-assign, max-len */
-;
+};
 
-},{"fast-deep-equal":14}],4:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {

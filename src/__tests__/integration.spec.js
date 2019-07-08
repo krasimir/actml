@@ -4,6 +4,9 @@ import { A, run, Fragment, processor, useChildren, useReducer, usePubSub, usePro
 import { delay, exerciseTree } from '../__helpers__/utils';
 
 describe('Given the ActML library', () => {
+  beforeEach(() => {
+    processor.system().reset();
+  });
   describe('when we use bunch of hooks', () => {
     it('should work :)', async () => {
       const reducer = (state, action) => {
@@ -88,6 +91,34 @@ describe('Given the ActML library', () => {
       await delay(30);
 
       expect(values).toStrictEqual([ 0, 1, 2, 3 ]);
+    });
+  });
+  describe('when we want to re-use elements even if the props change', () => {
+    it('should work as expected', async () => {
+      const mock = jest.fn();
+      const Counter = function () {
+        const [ children ] = useChildren();
+
+        children(() => {});
+      };
+      const Controls = function () {
+        useEffect(() => {
+          mock();
+        }, []);
+      };
+      const el = (
+        <Counter>
+          {
+            (fn) => <Controls fn={ fn }/>
+          }
+        </Counter>
+      );
+
+      await run(el);
+      await run(el);
+
+      await delay(50);
+      expect(mock).toBeCalledTimes(1);
     });
   });
 });

@@ -1,5 +1,4 @@
 /* eslint-disable no-use-before-define, no-return-assign, max-len */
-import equal from 'fast-deep-equal';
 
 export default function Tree() {
   var onNodeEnter = [];
@@ -18,7 +17,10 @@ export default function Tree() {
   }
   function treeDiff(oldElement, newElement) {
     if (oldElement && oldElement.name === newElement.name) {
-      return equal(oldElement.props, newElement.props);
+      if (oldElement.props && newElement.props) {
+        return oldElement.props.key === newElement.props.key;
+      }
+      return true;
     }
     return false;
   }

@@ -95,7 +95,7 @@ describe('Given the ActML library', () => {
         return (
           <Fragment>
             <B />
-            <B i={ i }/>
+            <B key={ i }/>
             <B />
           </Fragment>
         );
@@ -125,7 +125,7 @@ describe('Given the ActML library', () => {
           return (
             <Fragment>
               <B />
-              <B i={ i }/>
+              <B key={ i }/>
             </Fragment>
           );
         }
