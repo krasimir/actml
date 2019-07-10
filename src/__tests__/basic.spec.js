@@ -8,6 +8,96 @@ describe('Given the ActML library', () => {
   beforeEach(() => {
     processor.system().reset();
   });
+  describe('when running an ActML element (sync)', () => {
+    it('should run our function and return its result', () => {
+      const E = function () {
+        return 42;
+      };
+
+      expect(run(<E />)).toBe(42);
+    });
+    describe('and we return another ActML element', () => {
+      it('should run that element too', () => {
+        const B = () => 42;
+        const E = () => <B />;
+
+        expect(run(<E />)).toBe(42);
+      });
+    });
+    describe('and we have a child', () => {
+      it('should run the child too', () => {
+        const B = jest.fn();
+        const E = () => 42;
+
+        expect(run(<E><B /></E>)).toBe(42);
+        expect(B).toBeCalledTimes(1);
+      });
+    });
+    describe('and we have a multiple nested children', () => {
+      it('should run the child too', () => {
+        const B = jest.fn();
+        const C = jest.fn();
+        const E = () => 42;
+
+        expect(run(
+          <E>
+            <B />
+            <B>
+              <C />
+              <C />
+            </B>
+          </E>
+        )).toBe(42);
+        expect(B).toBeCalledTimes(2);
+        expect(C).toBeCalledTimes(2);
+      });
+    });
+  });
+  describe('when running an ActML element (async)', () => {
+    it('should run our function and return its result', async () => {
+      const E = async function () {
+        return 42;
+      };
+
+      expect(await run(<E />)).toBe(42);
+    });
+    describe('and we return another ActML element', () => {
+      it('should run that element too', async () => {
+        const B = async () => 42;
+        const E = async () => <B />;
+
+        expect(await run(<E />)).toBe(42);
+      });
+    });
+    describe('and we have a child', () => {
+      it('should run the child too', () => {
+        const B = jest.fn();
+        const E = () => 42;
+
+        expect(run(<E><B /></E>)).toBe(42);
+        expect(B).toBeCalledTimes(1);
+      });
+    });
+    describe('and we have a multiple nested children', () => {
+      it('should run the child too', () => {
+        const B = jest.fn();
+        const C = jest.fn();
+        const E = () => 42;
+
+        expect(run(
+          <E>
+            <B />
+            <B>
+              <C />
+              <C />
+            </B>
+          </E>
+        )).toBe(42);
+        expect(B).toBeCalledTimes(2);
+        expect(C).toBeCalledTimes(2);
+      });
+    });
+  });
   describe('when representing a function as an ActML element', () => {
     it('should create new ActML', async () => {
       const B = () => {};
