@@ -10,7 +10,7 @@ import createUseStateHook from './hooks/useState';
 import createUseReducerHook from './hooks/useReducer';
 import createUseEffectHook from './hooks/useEffect';
 
-export function createUniverse() {
+export function createRuntime() {
   const processor = createProcessor();
 
   function A(func, props, ...children) {
@@ -46,7 +46,7 @@ export function createUniverse() {
   };
 }
 
-const universe = createUniverse();
+const runtime = createRuntime();
 
-module.exports = universe;
-module.exports.createUniverse = createUniverse();
+module.exports = runtime;
+module.exports.createRuntime = createRuntime();
