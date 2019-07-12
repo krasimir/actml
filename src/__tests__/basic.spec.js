@@ -59,6 +59,23 @@ describe('Given the ActML library', () => {
           expect(B).toBeCalledTimes(1);
         });
       });
+      describe('and run the children manually with a delay', () => {
+        it.only('should run the children', async () => {
+          const B = jest.fn();
+          const E = function () {
+            const [ children ] = useChildren();
+
+            delay(20, () => {
+              children();
+            });
+          };
+
+          run(<E><B /></E>);
+          await delay(30);
+
+          expect(B).toBeCalledTimes(1);
+        });
+      });
     });
     describe('and we have a multiple nested children', () => {
       it('should run the child too', () => {
@@ -81,7 +98,7 @@ describe('Given the ActML library', () => {
     });
     describe('and we have a generator as a result', () => {
       describe('and we yield an ActML element', () => {
-        it.only('should run it', async () => {
+        it('should run it', async () => {
           const C = () => 42;
           const D = ({ v }) => v * 2;
           const E = jest.fn();
@@ -261,6 +278,7 @@ describe('Given the ActML library', () => {
         const [ children ] = useChildren();
 
         children();
+
         yield <N />;
         children();
         setTimeout(() => {
@@ -277,9 +295,10 @@ describe('Given the ActML library', () => {
 
       exerciseTree(processor, `
         P(1)
-        E(2)
+        E(1)
         N(1)
-        E(2)
+        E(1)
+        E(1)
       `);
     });
     it('should run the function and return its result', async () => {
