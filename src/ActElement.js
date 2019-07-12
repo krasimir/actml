@@ -43,7 +43,8 @@ const createElement = (func, props, children) => {
     enter() {
       this.__running = true;
       this.__processChildrenAutomatically = true;
-
+    },
+    consume() {
       return func(this.props);
     },
     out() {

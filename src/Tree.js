@@ -32,9 +32,13 @@ export default function Tree() {
       parent,
       cursor: 0,
       enter() {
+        console.log(`-> ${ this.element.name }`);
+        this.element.enter();
         onNodeEnter.forEach(c => c(this));
       },
       out() {
+        console.log(`<- ${ this.element.name }`);
+        this.element.out();
         // If there're more nodes in the tree than what was processed
         if (this.cursor < this.children.length) {
           this.children
