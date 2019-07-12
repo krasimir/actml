@@ -50,7 +50,7 @@ describe('Given the ActML library', () => {
         expect(B).toBeCalledTimes(1);
       });
       describe('and some of the children is an async', () => {
-        it.only('should wait for the child to finish', async () => {
+        it('should wait for the child to finish', async () => {
           const B = jest.fn();
           const C = async () => <B />;
           const E = () => 42;
@@ -77,6 +77,38 @@ describe('Given the ActML library', () => {
         )).toBe(42);
         expect(B).toBeCalledTimes(2);
         expect(C).toBeCalledTimes(2);
+      });
+    });
+    describe('and we have a generator as a result', () => {
+      describe('and we yield an ActML element', () => {
+        it.only('should run it', async () => {
+          const C = () => 42;
+          const D = ({ v }) => v * 2;
+          const E = jest.fn();
+
+          const B = function * () {
+            const v = yield <C />;
+            const result = yield <D v={ v }><E a={ v }/></D>;
+
+            return result * 2;
+          };
+
+          expect(await run(<B />)).toEqual(168);
+          expect(E).toBeCalledWith(expect.objectContaining({ a: 42 }));
+        });
+      });
+      describe('and we return another ActML element', () => {
+        it('should run it', async () => {
+          const C = jest.fn().mockImplementation(() => 42);
+          const D = jest.fn();
+          const B = function * () {
+            return <C><D /></C>;
+          };
+
+          expect(await run(<B />)).toBe(42);
+          expect(C).toBeCalledTimes(1);
+          expect(D).toBeCalledTimes(1);
+        });
       });
     });
   });

@@ -1,5 +1,7 @@
+/* eslint-disable no-return-assign */
+const LOGS = false;
+const log = (...something) => LOGS ? console.log(...something) : null;
 const isPromise = obj => obj && typeof obj['then'] === 'function';
-const isGenerator = obj => obj && typeof obj['next'] === 'function';
 const createItem = (type, func) => ({
   type,
   func,
@@ -11,6 +13,7 @@ export default function createQueue(node) {
   let items = [];
   let async = false;
   let release;
+  let promise;
 
   return {
     _extractResult() {
@@ -29,13 +32,13 @@ export default function createQueue(node) {
       const item = items.find(({ consumed }) => consumed === false);
 
       if (!item) {
-        console.log(`${ node.element.name }:Q:done`);
+        log(`${ node.element.name }:Q:done`);
         done();
         if (release) release();
         return;
       }
 
-      console.log(`${ node.element.name }:Q:${ item.type }`);
+      log(`${ node.element.name }:Q:${ item.type }`);
       item.result = item.func();
 
       if (isPromise(item.result)) {
@@ -55,7 +58,7 @@ export default function createQueue(node) {
     },
     result() {
       if (async) {
-        return new Promise(done => {
+        return promise ? promise : promise = new Promise(done => {
           release = () => done(this._extractResult());
         });
       }

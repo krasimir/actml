@@ -6,7 +6,6 @@ import createUseStateHook from './hooks/useState';
 import createUseEffectHook from './hooks/useEffect';
 import createQueue from './Queue';
 
-const isPromise = obj => obj && typeof obj['then'] === 'function';
 const isGenerator = obj => obj && typeof obj['next'] === 'function';
 
 export default function createProcessor() {
@@ -14,7 +13,7 @@ export default function createProcessor() {
   let stack = [];
   let currentNode = () => stack[stack.length - 1];
 
-  const processNode = function (node) {
+  const processNode = function (node, processingDone = () => {}) {
     stack.push(node);
     currentNode().enter();
 
@@ -27,7 +26,32 @@ export default function createProcessor() {
 
       if (isActMLElement(consumption)) {
         queue.add(RETURNED_ELEMENT, () => processNode(node.addChildNode(consumption)));
-      }
+      } else if (isGenerator(consumption)) {
+        const generator = consumption;
+
+        queue.add(RETURNED_ELEMENT, () => new Promise(generatorDone => {
+          let genResult;
+
+          (function iterate(value) {
+            genResult = generator.next(value);
+            if (!genResult.done) {
+              if (isActMLElement(genResult.value)) {
+                processNode(node.addChildNode(genResult.value), (r) => {
+                  iterate(r);
+                });
+              }
+            } else {
+              if (isActMLElement(genResult.value)) {
+                processNode(node.addChildNode(genResult.value), (r) => {
+                  generatorDone(r);
+                });
+              } else {
+                generatorDone(genResult.value);
+              }
+            }
+          })();
+        }));
+      };
     });
     queue.add(HANDLE_CHILDREN, () => {
       const { children } = node.element;
@@ -52,6 +76,7 @@ export default function createProcessor() {
     queue.process(() => {
       currentNode().out();
       stack.pop();
+      processingDone(queue.result());
     });
     return queue.result();
   };
