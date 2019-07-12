@@ -9,7 +9,7 @@ describe('Given the ActML library', () => {
     processor.system().reset();
   });
   describe('when running an ActML element', () => {
-    it.only('should run our function and return its result', () => {
+    it('should run our function and return its result', () => {
       const E = function () {
         return 42;
       };
