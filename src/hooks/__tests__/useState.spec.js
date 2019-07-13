@@ -8,7 +8,7 @@ describe('Given the ActML library', () => {
     processor.system().reset();
   });
   describe('when use the useState hook', () => {
-    it('should allow us to preserve state across reruns', async () => {
+    it('should allow us to preserve state across reruns', () => {
       const mock = jest.fn();
       const E = () => {
         const [ state, setState ] = useState(1);
@@ -19,9 +19,9 @@ describe('Given the ActML library', () => {
       };
       const el = <E />;
 
-      await run(el);
-      await run(el);
-      await run(el);
+      run(el);
+      run(el);
+      run(el);
 
       expect(mock).toBeCalledTimes(3);
       expect(mock).toBeCalledWith(1);
@@ -64,7 +64,7 @@ describe('Given the ActML library', () => {
       const C = jest.fn();
       const el = <E><C /></E>;
 
-      await run(el);
+      run(el);
       await delay(30);
 
       expect(mock).toBeCalledTimes(2);

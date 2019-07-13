@@ -77,7 +77,7 @@ describe('Given the ActML library', () => {
         });
       });
       describe('and run the children manually within a generator', () => {
-        it('should run the children after the generator is finished', async () => {
+        it('should run the children', async () => {
           const B = function B() {};
           const C = function C() {};
           const E = function * () {
@@ -91,8 +91,8 @@ describe('Given the ActML library', () => {
 
           exerciseTree(processor, `
             E(1)
-            B(1)
             C(1)
+            B(1)
           `);
         });
       });
@@ -386,16 +386,19 @@ describe('Given the ActML library', () => {
       const spyB = jest.fn().mockImplementation(() => value.push('B'));
       const spyC = jest.fn().mockImplementation(() => value.push('C'));
       const spyD = jest.fn().mockImplementation(() => value.push('D'));
-      const B = () => delay(50, spyB);
-      const C = () => delay(30, spyC);
-      const D = () => delay(40, spyD);
-      const F = jest.fn();
+      const B = () => delay(30, spyB);
+      const C = () => delay(10, spyC);
+      const D = () => delay(20, spyD);
+      const F = function F() {};
 
       await run(
         <F>
-          <B /><C /><D />
+          <B />
+          <C />
+          <D />
         </F>
       );
+      await delay(40);
 
       expect(value).toStrictEqual(['B', 'C', 'D']);
     });

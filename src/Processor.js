@@ -22,19 +22,20 @@ export default function createProcessor() {
   const processNode = function (node) {
     currentNode = node;
     node.enter();
-    node.callChildren = () => {
+    node.rerun = () => processNode(node);
+    node.callChildren = (...additionalProps) => {
       const { children } = node.element;
-      const additionalProps = {}; // <--- TODO
-      const queueItemsToAdd = [];
-      const results = [];
 
       if (children && children.length > 0) {
+        const queueItemsToAdd = [];
+        const results = [];
+        const childrenQueue = createQueue(`  ${ node.element.name }:children`);
+
         for (let i = 0; i < children.length; i++) {
           if (isActMLElement(children[i])) {
             children[i].mergeProps(...additionalProps);
             queueItemsToAdd.push(() => processNode(node.addChildNode(children[i])));
           } else if (typeof children[i] === 'function') {
-            queueItemsToAdd.push(() => children[i](...additionalProps));
             const funcResult = children[i](...additionalProps);
 
             if (isActMLElement(funcResult)) {
@@ -43,18 +44,16 @@ export default function createProcessor() {
           }
         }
         queueItemsToAdd.reverse().forEach(func => {
-          queue.prependItem(CHILD, func, (r) => results.push(r));
+          childrenQueue.prependItem(CHILD, func, (r) => results.push(r));
         });
-        if (!queue.isRunning()) {
-          queue.process();
-          return queue.onDone(() => results);
-        }
+        childrenQueue.process();
+        return childrenQueue.onDone(() => results);
       }
-      return results;
+      return null;
     };
 
     let results = {};
-    const queue = createQueue(node);
+    const queue = createQueue(` ${ node.element.name }`);
 
     // CONSUME
     queue.add(
@@ -115,9 +114,9 @@ export default function createProcessor() {
 
     // HANDLE_CHILDREN
     queue.add(HANDLE_CHILDREN, () => {
-      if (node.element.shouldProcessChildrenAutomatically()) {
-        node.callChildren();
-      }
+      return node.element.shouldProcessChildrenAutomatically() ?
+        node.callChildren() :
+        null;
     });
 
     // Running the queue

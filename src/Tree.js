@@ -1,5 +1,4 @@
 /* eslint-disable no-use-before-define, no-return-assign, max-len */
-
 const LOGS = false;
 const log = (...something) => LOGS ? console.log(...something) : null;
 

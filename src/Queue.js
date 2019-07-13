@@ -8,7 +8,7 @@ const createItem = (type, func, onDone = () => {}) => ({
   onDone
 });
 
-export default function createQueue(node) {
+export default function createQueue(context) {
   let items = [];
   let async = false;
   let running = false;
@@ -16,17 +16,17 @@ export default function createQueue(node) {
 
   return {
     add(type, func, onDone) {
-      log(`${ node.element.name }:Q: [...${ type }] (${ items.length + 1 })`);
+      log(`${ context }:Q: [...${ type }] (${ items.length + 1 } total)`);
       items.push(createItem(type, func, onDone));
     },
     prependItem(type, func, onDone) {
-      log(`${ node.element.name }:Q: [${ type }...] (${ items.length + 1 })`);
+      log(`${ context }:Q: [${ type }...] (${ items.length + 1 } total)`);
       items = [ createItem(type, func, onDone), ...items ];
     },
     process(lastResult) {
       running = true;
       if (items.length === 0) {
-        log(`${ node.element.name }:Q:done`);
+        log(`${ context }:Q:done`);
         running = false;
         release();
         return;
@@ -34,7 +34,7 @@ export default function createQueue(node) {
 
       const item = items.shift();
 
-      log(`${ node.element.name }:Q: ${ item.type }() (${ items.length })`);
+      log(`${ context }:Q: ${ item.type }() (${ items.length } left)`);
       const result = item.func(lastResult);
 
       if (isPromise(result)) {
