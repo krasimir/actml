@@ -13,7 +13,6 @@ const createElement = (func, props, children) => {
     __actml: true,
     __used: 0,
     __running: false,
-    __processChildrenAutomatically: true,
     id: null,
     props,
     name: getFuncName(func),
@@ -22,7 +21,6 @@ const createElement = (func, props, children) => {
       this.id = id;
       this.__used = used;
       this.__running = false;
-      this.__processChildrenAutomatically = true;
     },
     mergeProps(newProps) {
       this.props = Object.assign({}, this.props, newProps);
@@ -33,16 +31,8 @@ const createElement = (func, props, children) => {
     isRunning() {
       return this.__running;
     },
-    shouldProcessChildrenAutomatically(value) {
-      if (typeof value === 'undefined') {
-        return this.__processChildrenAutomatically;
-      }
-      this.__processChildrenAutomatically = value;
-      return value;
-    },
     enter() {
       this.__running = true;
-      this.__processChildrenAutomatically = true;
     },
     consume() {
       return func(this.props);

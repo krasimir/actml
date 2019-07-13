@@ -2,7 +2,6 @@ import createProcessor from './Processor';
 import isActMLElement from './utils/isActMLElement';
 import ActElement from './ActElement';
 
-import createUseChildrenHook from './hooks/useChildren';
 import createUseElementHook from './hooks/useElement';
 import createUseProductHook from './hooks/useProduct';
 import createUsePubSubHook from './hooks/usePubSub';
@@ -22,12 +21,11 @@ export function createRuntime() {
     }
     return processor.run(element);
   }
-  const Fragment = () => {};
-  const useChildren = createUseChildrenHook(processor);
+  const Fragment = ({ children }) => children;
   const useElement = createUseElementHook(processor);
   const useState = createUseStateHook(processor);
   const useProduct = createUseProductHook(processor, useState);
-  const usePubSub = createUsePubSubHook(processor, useChildren);
+  const usePubSub = createUsePubSubHook(processor);
   const useReducer = createUseReducerHook(useState);
   const useEffect = createUseEffectHook(processor);
 
@@ -36,7 +34,6 @@ export function createRuntime() {
     run,
     Fragment,
     processor,
-    useChildren,
     useElement,
     useProduct,
     usePubSub,

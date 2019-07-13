@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types, no-sequences */
 /** @jsx A */
 
-import { A, run, Fragment, processor, useChildren, useElement } from '../';
+import { A, run, Fragment, processor, useElement } from '../';
 import { exerciseTree, delay } from '../__helpers__/utils';
 
 describe('Given the ActML library', () => {
@@ -42,18 +42,18 @@ describe('Given the ActML library', () => {
       });
     });
     describe('and we have a child', () => {
-      it('should run the child too', () => {
-        const B = jest.fn();
-        const E = () => 42;
+      it('should run the child', () => {
+        const B = jest.fn().mockImplementation(() => 42);
+        const E = ({ children }) => children;
 
         expect(run(<E><B /></E>)).toBe(42);
         expect(B).toBeCalledTimes(1);
       });
-      describe('and some of the children is an async', () => {
+      describe('and some of the children are async', () => {
         it('should wait for the child to finish', async () => {
-          const B = jest.fn();
+          const B = jest.fn().mockImplementation(() => 42);
           const C = async () => <B />;
-          const E = () => 42;
+          const E = ({ children }) => children;
 
           expect(await run(<E><C /></E>)).toBe(42);
           expect(B).toBeCalledTimes(1);
@@ -62,9 +62,7 @@ describe('Given the ActML library', () => {
       describe('and run the children manually with a delay', () => {
         it('should run the children', async () => {
           const B = jest.fn();
-          const E = function () {
-            const [ children ] = useChildren();
-
+          const E = function ({ children }) {
             delay(20, () => {
               children();
             });
@@ -80,8 +78,7 @@ describe('Given the ActML library', () => {
         it('should run the children', async () => {
           const B = function B() {};
           const C = function C() {};
-          const E = function * () {
-            const [ children ] = useChildren();
+          const E = function * ({ children }) {
 
             children();
             yield <B />;
@@ -100,9 +97,7 @@ describe('Given the ActML library', () => {
         it('should run the children at the time of children() call', () => {
           const B = function B() {};
           const C = function C() {};
-          const E = function () {
-            const [ children ] = useChildren();
-
+          const E = function ({ children }) {
             children();
             return <B />;
           };
@@ -119,9 +114,9 @@ describe('Given the ActML library', () => {
     });
     describe('and we have a multiple nested children', () => {
       it('should run the child too', () => {
-        const B = jest.fn();
-        const C = jest.fn();
-        const E = () => 42;
+        const B = jest.fn().mockImplementation(({ children }) => children);
+        const C = jest.fn().mockImplementation(() => 'foo');
+        const E = ({ children }) => children;
 
         expect(run(
           <E>
@@ -131,7 +126,10 @@ describe('Given the ActML library', () => {
               <C />
             </B>
           </E>
-        )).toBe(42);
+        )).toStrictEqual([
+          undefined,
+          [ 'foo', 'foo' ]
+        ]);
         expect(B).toBeCalledTimes(2);
         expect(C).toBeCalledTimes(2);
       });
@@ -140,12 +138,12 @@ describe('Given the ActML library', () => {
       describe('and we yield an ActML element', () => {
         it('should run it', async () => {
           const C = () => 42;
-          const D = ({ v }) => v * 2;
-          const E = jest.fn();
+          const D = ({ children }) => children;
+          const E = jest.fn().mockImplementation(({ a }) => a * 2);
 
           const B = function * () {
             const v = yield <C />;
-            const result = yield <D v={ v }><E a={ v }/></D>;
+            const result = yield <D><E a={ v }/></D>;
 
             return result * 2;
           };
@@ -156,8 +154,8 @@ describe('Given the ActML library', () => {
       });
       describe('and we return another ActML element', () => {
         it('should run it', async () => {
-          const C = jest.fn().mockImplementation(() => 42);
-          const D = jest.fn();
+          const C = jest.fn().mockImplementation(({ children }) => children);
+          const D = jest.fn().mockImplementation(() => 42);
           const B = function * () {
             return <C><D /></C>;
           };
@@ -389,7 +387,7 @@ describe('Given the ActML library', () => {
       const B = () => delay(30, spyB);
       const C = () => delay(10, spyC);
       const D = () => delay(20, spyD);
-      const F = function F() {};
+      const F = function F({ children }) { return children; };
 
       await run(
         <F>
@@ -407,11 +405,11 @@ describe('Given the ActML library', () => {
     describe('and we yield an ActML element', () => {
       it('should run it', async () => {
         const C = () => 42;
-        const D = ({ v }) => v * 2;
-        const E = jest.fn();
+        const D = ({ children }) => children;
+        const E = jest.fn().mockImplementation(({ v }) => v * 2);
         const B = function * () {
           const v = yield <C />;
-          const result = yield <D v={ v }><E /></D>;
+          const result = yield <D><E v={ v } /></D>;
 
           return result * 2;
         };
@@ -422,8 +420,8 @@ describe('Given the ActML library', () => {
     });
     describe('and we return another ActML element', () => {
       it('should run it', async () => {
-        const C = jest.fn().mockImplementation(() => 42);
-        const D = jest.fn();
+        const C = jest.fn().mockImplementation(({ children }) => children);
+        const D = jest.fn().mockImplementation(() => 42);
         const B = function * () {
           return <C><D /></C>;
         };
@@ -437,16 +435,16 @@ describe('Given the ActML library', () => {
   describe.each([
     [
       'sync func',
-      (values) => () => {
+      (values) => ({ children }) => {
         values.push('a');
-        return 42;
+        return children;
       }
     ],
     [
       'promise',
-      (values) => () => {
+      (values) => ({ children }) => {
         return new Promise(done => {
-          setTimeout(() => (values.push('a'), done()), 20);
+          setTimeout(() => (values.push('a'), done(), children()), 20);
         });
       }
     ],
@@ -454,26 +452,27 @@ describe('Given the ActML library', () => {
       'generator',
       (values) => {
         const D = () => delay(20, () => values.push('a'));
-        const E = function * () {
+        const E = function * ({ children }) {
           yield <D />;
+          children();
         };
 
         return E;
       }
     ],
     [
-      'another ActML element',
+      'another ActML element containing the children',
       (values) => {
-        const D = () => delay(20, () => values.push('a'));
-        const E = function () {
-          return <D />;
+        const D = ({ children }) => delay(20, () => (values.push('a'), children));
+        const E = function ({ children }) {
+          return <D>{ children }</D>;
         };
 
         return E;
       }
     ]
   ])('when running a %s', (_, createElement) => {
-    it('should always run the element and then its children', async () => {
+    it('should always run the element and its children', async () => {
       const values = [];
       const C = jest.fn().mockImplementation(() => values.push('b'));
       const E = createElement(values);
@@ -488,7 +487,7 @@ describe('Given the ActML library', () => {
       const E = () => {
         return <B><C /></B>;
       };
-      const B = () => {};
+      const B = ({ children }) => children;
       const C = () => {};
       const calls = [];
       const enter = node => calls.push(`<${ node.element.name }>`);

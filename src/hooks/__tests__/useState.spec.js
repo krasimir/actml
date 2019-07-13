@@ -51,7 +51,7 @@ describe('Given the ActML library', () => {
     });
     it('should re-run the function if we call setState', async () => {
       const mock = jest.fn();
-      const E = () => {
+      const E = ({ children }) => {
         const [ numbers, increment ] = useState(1);
 
         if (numbers === 1) {
@@ -60,6 +60,7 @@ describe('Given the ActML library', () => {
           }, 20);
         }
         mock(numbers);
+        return children;
       };
       const C = jest.fn();
       const el = <E><C /></E>;

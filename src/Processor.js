@@ -1,4 +1,4 @@
-/* eslint-disable no-use-before-define */
+/* eslint-disable no-use-before-define, consistent-return */
 import isActMLElement from './utils/isActMLElement';
 import Tree from './Tree';
 import createUsePubSubHook from './hooks/usePubSub';
@@ -6,10 +6,10 @@ import createUseStateHook from './hooks/useState';
 import createUseEffectHook from './hooks/useEffect';
 import createQueue from './Queue';
 
+const CHILDREN = '__ACTML_CHILDREN__';
 const CONSUME = 'CONSUME';
 const PROCESS_RESULT = 'PROCESS_RESULT';
 const RETURNED_ELEMENT = 'RETURNED_ELEMENT';
-const HANDLE_CHILDREN = 'HANDLE_CHILDREN';
 const CHILD = 'CHILD';
 
 const isGenerator = obj => obj && typeof obj['next'] === 'function';
@@ -23,7 +23,7 @@ export default function createProcessor() {
     currentNode = node;
     node.enter();
     node.rerun = () => processNode(node);
-    node.callChildren = (...additionalProps) => {
+    const children = (...additionalProps) => {
       const { children } = node.element;
 
       if (children && children.length > 0) {
@@ -53,8 +53,11 @@ export default function createProcessor() {
         childrenQueue.process();
         return childrenQueue.onDone(() => results);
       }
-      return null;
     };
+
+    children[CHILDREN] = true;
+
+    node.element.mergeProps({ children });
 
     let results = {};
     const queue = createQueue(` ${ node.element.name }`);
@@ -70,12 +73,15 @@ export default function createProcessor() {
     queue.add(PROCESS_RESULT, () => {
       const consumption = results[CONSUME];
 
+      // ActML element
       if (isActMLElement(consumption)) {
         queue.prependItem(
           RETURNED_ELEMENT,
           () => processNode(node.addChildNode(consumption)),
           (result) => (results[RETURNED_ELEMENT] = result)
         );
+
+      // generator
       } else if (isGenerator(consumption)) {
         const generator = consumption;
 
@@ -113,14 +119,19 @@ export default function createProcessor() {
           }),
           (result) => (results[RETURNED_ELEMENT] = result)
         );
-      };
-    });
 
-    // HANDLE_CHILDREN
-    queue.add(HANDLE_CHILDREN, () => {
-      return node.element.shouldProcessChildrenAutomatically() ?
-        node.callChildren() :
-        null;
+      // children
+      } else if (consumption && consumption[CHILDREN]) {
+        queue.prependItem(
+          RETURNED_ELEMENT,
+          () => consumption(),
+          (result) => {
+            results[RETURNED_ELEMENT] = result && result.length === 1 ?
+              result[0] :
+              result;
+          }
+        );
+      }
     });
 
     // Running the queue

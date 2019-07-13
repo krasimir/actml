@@ -1,3 +1,4 @@
+/* eslint-disable no-sequences */
 /** @jsx A */
 
 import { A, run, processor, useProduct, Fragment } from '../../';
@@ -9,8 +10,9 @@ describe('Given the ActML library', () => {
   });
   describe('and we use the useProduct hook', () => {
     it('should set the product of the element', async () => {
-      async function E() {
+      async function E({ children }) {
         useProduct('foo');
+        return children;
       };
 
       const C = jest.fn();
@@ -19,10 +21,11 @@ describe('Given the ActML library', () => {
       expect(C).toBeCalledWith(expect.objectContaining({ bar: 'foo' }));
     });
     it('should provide a way to update the value', async () => {
-      async function E() {
+      async function E({ children }) {
         const [ setValue ] = useProduct('foo');
 
         await delay(20, () => setValue('bar'));
+        return children;
       };
 
       const C = jest.fn();
@@ -32,12 +35,12 @@ describe('Given the ActML library', () => {
       expect(C).toBeCalledWith(expect.objectContaining({ bar: 'bar' }));
     });
     it('should allow export and import', async () => {
-      function E() {
+      function E({ children }) {
         const [ setValue ] = useProduct();
 
-        return delay(20, () => setValue(42));
+        return delay(20, () => (setValue(42), children));
       }
-      const B = () => {};
+      const B = ({ children }) => children;
       const C = jest.fn();
 
       await run(
@@ -51,9 +54,9 @@ describe('Given the ActML library', () => {
       expect(C).toBeCalledWith(expect.objectContaining({ data: 42 }));
     });
     it('should throw an error if the prop is not found', async () => {
-      const Root = () => {};
-      const E = () => {};
-      const B = () => {};
+      const Root = ({ children }) => children;
+      const E = ({ children }) => children;
+      const B = ({ children }) => children;
       const C = function C() {};
 
       try {
@@ -77,8 +80,8 @@ Stack:
       }
     });
     it('should pass down undefined if that is the value of the scoped variable', async () => {
-      async function E() {
-        return await delay(100, () => 'foo');
+      async function E({ children }) {
+        return await delay(100, () => children);
       }
       const C = jest.fn();
 
@@ -103,8 +106,8 @@ Stack:
       function B() {
         useProduct('foo');
       }
-      function C() {}
-      function D() {}
+      function C({ children }) { return children; }
+      function D({ children }) { return children; }
 
       const X = jest.fn();
 

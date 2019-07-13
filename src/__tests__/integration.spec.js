@@ -1,6 +1,6 @@
 /** @jsx A */
 
-import { A, run, Fragment, processor, useChildren, useReducer, usePubSub, useProduct, useState, useEffect } from '../';
+import { A, run, Fragment, processor, useReducer, usePubSub, useProduct, useState, useEffect } from '../';
 import { delay, exerciseTree } from '../__helpers__/utils';
 
 describe('Given the ActML library', () => {
@@ -12,8 +12,7 @@ describe('Given the ActML library', () => {
       const reducer = (state, action) => {
         return state + 1;
       };
-      const Computer = async function () {
-        const [ children ] = useChildren();
+      const Computer = async function ({ children }) {
         const [ numOfKeyPressed, pressed ] = useReducer(reducer, 0);
         const { subscribe } = usePubSub();
         const [ setProduct ] = useProduct();
@@ -23,12 +22,13 @@ describe('Given the ActML library', () => {
           setProduct(numOfKeyPressed + 1);
         });
         setProduct(numOfKeyPressed);
-        children();
+        return children;
       };
-      const Keyboard = function () {
+      const Keyboard = function ({ children }) {
         const { subscribe, publish } = usePubSub();
 
         subscribe('hit', key => publish('keyup', key));
+        return children;
       };
       const Button = function ({ timeout, letter }) {
         const { publish } = usePubSub();
@@ -67,9 +67,8 @@ describe('Given the ActML library', () => {
   describe('when we have useState and useEffect together', () => {
     it('should work as expected', async () => {
       const values = [];
-      const Counter = function () {
+      const Counter = function ({ children }) {
         const [ value, setCounter, getCounter ] = useState(0);
-        const [ children ] = useChildren();
 
         children({ value, update: () => setCounter(getCounter() + 1) });
       };
@@ -96,8 +95,7 @@ describe('Given the ActML library', () => {
   describe('when we want to re-use elements even if the props change', () => {
     it('should work as expected', async () => {
       const mock = jest.fn();
-      const Counter = function () {
-        const [ children ] = useChildren();
+      const Counter = function ({ children }) {
 
         children(() => {});
       };

@@ -2,10 +2,8 @@ import isValidHookContext from './utils/isValidHookContext';
 
 var subscribers = {};
 
-function createSubscribeElement(subscribe, useChildren) {
-  return ({ type }) => {
-    const [ children ] = useChildren();
-
+function createSubscribeElement(subscribe) {
+  return ({ type, children }) => {
     subscribe(type, (payload) => children({ payload }));
   };
 };
@@ -29,7 +27,7 @@ const publish = (type, payload) => {
   });
 };
 
-export default function createUsePubSubHook(processor, useChildren) {
+export default function createUsePubSubHook(processor) {
   processor.onNodeRemove(node => {
     Object.keys(subscribers).forEach(type => {
       if (subscribers[type][node.element.id]) {
@@ -49,7 +47,7 @@ export default function createUsePubSubHook(processor, useChildren) {
       subscribe: subscribeFunc,
       publish: publishFunc,
       subscribers,
-      Subscribe: createSubscribeElement(subscribeFunc, useChildren),
+      Subscribe: createSubscribeElement(subscribeFunc),
       Publish: createPublishElement(publishFunc)
     };
   };
