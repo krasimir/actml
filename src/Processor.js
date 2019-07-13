@@ -51,11 +51,14 @@ export default function createProcessor() {
     let results = {};
     const queue = createQueue(node);
 
+    // CONSUME
     queue.add(
       CONSUME,
       () => node.element.consume(),
       (result) => (results[CONSUME] = result)
     );
+
+    // PROCESS_RESULT
     queue.add(PROCESS_RESULT, (consumption) => {
       if (isActMLElement(consumption)) {
         queue.prependItem(
@@ -102,13 +105,20 @@ export default function createProcessor() {
         );
       };
     });
+
+    // HANDLE_CHILDREN
     queue.add(HANDLE_CHILDREN, () => {
       if (node.element.shouldProcessChildrenAutomatically()) {
         node.callChildren();
       }
     });
+
+    // Running the queue
     queue.process();
-    return queue.result(() => {
+
+    // Getting the result. It is either a promise if there is
+    // something asynchronous or a value
+    return queue.onDone(() => {
       currentNode().out();
       stack.pop();
       return RETURNED_ELEMENT in results ? results[RETURNED_ELEMENT] : results[CONSUME];

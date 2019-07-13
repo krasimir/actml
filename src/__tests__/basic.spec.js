@@ -60,7 +60,7 @@ describe('Given the ActML library', () => {
         });
       });
       describe('and run the children manually with a delay', () => {
-        it.skip('should run the children', async () => {
+        it.only('should run the children', async () => {
           const B = jest.fn();
           const E = function () {
             const [ children ] = useChildren();

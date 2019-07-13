@@ -47,7 +47,7 @@ export default function createQueue(node) {
         this.process(result);
       }
     },
-    result(getResult) {
+    onDone(getResult) {
       if (async) {
         return new Promise((done, reject) => {
           release = (error) => {
