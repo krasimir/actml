@@ -2,71 +2,64 @@
 const LOGS = true;
 const log = (...something) => LOGS ? console.log(...something) : null;
 const isPromise = obj => obj && typeof obj['then'] === 'function';
-const createItem = (type, func) => ({
+const createItem = (type, func, onDone = () => {}) => ({
   type,
   func,
-  result: undefined,
-  consumed: false
+  onDone
 });
 
-export default function createQueue(node, extractResult) {
+export default function createQueue(node) {
   let items = [];
   let async = false;
-  let destroy = () => (items = []);
   let release = () => {};
-  let promise;
 
   return {
-    add(type, func) {
-      items.push(createItem(type, func));
+    add(type, func, onDone) {
+      log(`${ node.element.name }:Q: <- ${ type }`);
+      items.push(createItem(type, func, onDone));
     },
-    prependItems(type, ...toAdd) {
-      log(`${ node.element.name }:Q: + ${ type }[${ toAdd.length }]`);
-      items = [ ...toAdd.map(func => createItem(type, func)), ...items ];
+    prependItem(type, func, onDone) {
+      log(`${ node.element.name }:Q: <-+ ${ type }`);
+      items = [ createItem(type, func, onDone), ...items ];
     },
-    process(done) {
-      const item = items.find(({ consumed }) => consumed === false);
-
-      if (!item) {
+    process(lastResult) {
+      if (items.length === 0) {
         log(`${ node.element.name }:Q:done`);
-        done();
         release();
         return;
       }
 
-      log(`${ node.element.name }:Q:${ item.type }`);
-      item.result = item.func();
+      const item = items.shift();
 
-      if (isPromise(item.result)) {
+      log(`${ node.element.name }:Q -> ${ item.type }`);
+      const result = item.func(lastResult);
+
+      if (isPromise(result)) {
         async = true;
-        item.result.then(asyncResult => {
-          item.consumed = true;
-          item.result = asyncResult;
-          this.process(done);
+        result.then(asyncResult => {
+          item.onDone(asyncResult);
+          this.process(asyncResult);
         }).catch(error => {
           release(error);
         });
       } else {
-        item.consumed = true;
-        this.process(done);
+        item.onDone(result);
+        this.process(result);
       }
     },
-    get(t) {
-      return items.find(({ type }) => type === t);
-    },
-    result() {
+    result(getResult) {
       if (async) {
-        return promise ? promise : promise = new Promise((done, reject) => {
+        return new Promise((done, reject) => {
           release = (error) => {
             if (error) {
               reject(error);
             } else {
-              done(extractResult(this));
+              done(getResult());
             }
           };
         });
       }
-      return extractResult(this);
+      return getResult();
     },
     dump() {
       return items;

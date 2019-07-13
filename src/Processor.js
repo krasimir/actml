@@ -13,20 +13,14 @@ const HANDLE_CHILDREN = 'HANDLE_CHILDREN';
 const CHILD = 'CHILD';
 
 const isGenerator = obj => obj && typeof obj['next'] === 'function';
-const queueExtractResult = function (queue) {
-  console.log('extract');
-  const returnedElement = queue.get(RETURNED_ELEMENT);
-
-  if (returnedElement) return returnedElement.result;
-  return queue.get(CONSUME).result;
-};
+const isPromise = obj => obj && typeof obj['then'] === 'function';
 
 export default function createProcessor() {
   const tree = Tree();
   let stack = [];
   let currentNode = () => stack[stack.length - 1];
 
-  const processNode = function (node, processingDone = () => {}) {
+  const processNode = function (node) {
     stack.push(node);
     node.enter();
     node.callChildren = () => {
@@ -48,25 +42,31 @@ export default function createProcessor() {
             }
           }
         }
-        queue.prependItems(CHILD, ...queueItemsToAdd);
+        queueItemsToAdd.reverse().forEach(func => {
+          queue.prependItem(CHILD, func);
+        });
       }
     };
 
-    const queue = createQueue(node, queueExtractResult);
+    let results = {};
+    const queue = createQueue(node);
 
-    queue.add(CONSUME, () => node.element.consume());
-    queue.add(PROCESS_RESULT, () => {
-      const consumption = queue.get(CONSUME).result;
-
+    queue.add(
+      CONSUME,
+      () => node.element.consume(),
+      (result) => (results[CONSUME] = result)
+    );
+    queue.add(PROCESS_RESULT, (consumption) => {
       if (isActMLElement(consumption)) {
-        queue.prependItems(
+        queue.prependItem(
           RETURNED_ELEMENT,
-          () => processNode(node.addChildNode(consumption))
+          () => processNode(node.addChildNode(consumption)),
+          (result) => (results[RETURNED_ELEMENT] = result)
         );
       } else if (isGenerator(consumption)) {
         const generator = consumption;
 
-        queue.prependItems(
+        queue.prependItem(
           RETURNED_ELEMENT,
           () => new Promise(generatorDone => {
             let genResult;
@@ -75,21 +75,30 @@ export default function createProcessor() {
               genResult = generator.next(value);
               if (!genResult.done) {
                 if (isActMLElement(genResult.value)) {
-                  processNode(node.addChildNode(genResult.value), (r) => {
-                    iterate(r);
-                  });
+                  let res = processNode(node.addChildNode(genResult.value));
+
+                  if (isPromise(res)) {
+                    res.then(r => iterate(r));
+                  } else {
+                    iterate(res);
+                  }
                 }
               } else {
                 if (isActMLElement(genResult.value)) {
-                  processNode(node.addChildNode(genResult.value), (r) => {
-                    generatorDone(r);
-                  });
+                  let res = processNode(node.addChildNode(genResult.value));
+
+                  if (isPromise(res)) {
+                    res.then(r => generatorDone(r));
+                  } else {
+                    generatorDone(res);
+                  }
                 } else {
                   generatorDone(genResult.value);
                 }
               }
             })();
-          })
+          }),
+          (result) => (results[RETURNED_ELEMENT] = result)
         );
       };
     });
@@ -98,12 +107,12 @@ export default function createProcessor() {
         node.callChildren();
       }
     });
-    queue.process(() => {
+    queue.process();
+    return queue.result(() => {
       currentNode().out();
       stack.pop();
-      processingDone(queue.result());
+      return RETURNED_ELEMENT in results ? results[RETURNED_ELEMENT] : results[CONSUME];
     });
-    return queue.result();
   };
 
   return {
