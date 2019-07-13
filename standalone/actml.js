@@ -92,6 +92,7 @@ function _interopRequireDefault(obj) {
 
 /* eslint-disable no-use-before-define, consistent-return */
 var CHILDREN = '__ACTML_CHILDREN__';
+
 var CONSUME = 'CONSUME';
 var PROCESS_RESULT = 'PROCESS_RESULT';
 var RETURNED_ELEMENT = 'RETURNED_ELEMENT';
@@ -104,6 +105,58 @@ var isPromise = function isPromise(obj) {
   return obj && typeof obj['then'] === 'function';
 };
 
+function createChildrenFunc(node, processNode) {
+  var f = function f() {
+    var _arguments = arguments;
+    var children = node.element.children;
+
+    if (children && children.length > 0) {
+      var queueItemsToAdd = [];
+      var results = [];
+      var childrenQueue = (0, _Queue2.default)('  ' + node.element.name + ':children');
+
+      var _loop = function _loop(i) {
+        if ((0, _isActMLElement2.default)(children[i])) {
+          var _children$i;
+
+          (_children$i = children[i]).mergeProps.apply(_children$i, _arguments);
+          queueItemsToAdd.push(function () {
+            return processNode(node.addChildNode(children[i]));
+          });
+        } else if (typeof children[i] === 'function') {
+          var funcResult = children[i].apply(children, _arguments);
+
+          if ((0, _isActMLElement2.default)(funcResult)) {
+            queueItemsToAdd.push(function () {
+              return processNode(node.addChildNode(funcResult));
+            });
+          } else {
+            results.push(funcResult);
+          }
+        } else {
+          results.push(children[i]);
+        }
+      };
+
+      for (var i = 0; i < children.length; i++) {
+        _loop(i);
+      }
+      queueItemsToAdd.reverse().forEach(function (func) {
+        childrenQueue.prependItem(CHILD, func, function (r) {
+          return results.push(r);
+        });
+      });
+      childrenQueue.process();
+      return childrenQueue.onDone(function () {
+        return results;
+      });
+    }
+  };
+
+  f[CHILDREN] = true;
+  return f;
+}
+
 function createProcessor() {
   var tree = (0, _Tree2.default)();
   var currentNode = null;
@@ -114,56 +167,9 @@ function createProcessor() {
     node.rerun = function () {
       return processNode(node);
     };
-    var children = function children() {
-      var _arguments = arguments;
-      var children = node.element.children;
-
-      if (children && children.length > 0) {
-        var queueItemsToAdd = [];
-        var _results = [];
-        var childrenQueue = (0, _Queue2.default)('  ' + node.element.name + ':children');
-
-        var _loop = function _loop(i) {
-          if ((0, _isActMLElement2.default)(children[i])) {
-            var _children$i;
-
-            (_children$i = children[i]).mergeProps.apply(_children$i, _arguments);
-            queueItemsToAdd.push(function () {
-              return processNode(node.addChildNode(children[i]));
-            });
-          } else if (typeof children[i] === 'function') {
-            var funcResult = children[i].apply(children, _arguments);
-
-            if ((0, _isActMLElement2.default)(funcResult)) {
-              queueItemsToAdd.push(function () {
-                return processNode(node.addChildNode(funcResult));
-              });
-            } else {
-              _results.push(funcResult);
-            }
-          } else {
-            _results.push(children[i]);
-          }
-        };
-
-        for (var i = 0; i < children.length; i++) {
-          _loop(i);
-        }
-        queueItemsToAdd.reverse().forEach(function (func) {
-          childrenQueue.prependItem(CHILD, func, function (r) {
-            return _results.push(r);
-          });
-        });
-        childrenQueue.process();
-        return childrenQueue.onDone(function () {
-          return _results;
-        });
-      }
-    };
-
-    children[CHILDREN] = true;
-
-    node.element.mergeProps({ children: children });
+    node.element.mergeProps({
+      children: createChildrenFunc(node, processNode)
+    });
 
     var results = {};
     var queue = (0, _Queue2.default)(' ' + node.element.name);

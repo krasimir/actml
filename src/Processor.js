@@ -7,6 +7,7 @@ import createUseEffectHook from './hooks/useEffect';
 import createQueue from './Queue';
 
 const CHILDREN = '__ACTML_CHILDREN__';
+
 const CONSUME = 'CONSUME';
 const PROCESS_RESULT = 'PROCESS_RESULT';
 const RETURNED_ELEMENT = 'RETURNED_ELEMENT';
@@ -14,6 +15,43 @@ const CHILD = 'CHILD';
 
 const isGenerator = obj => obj && typeof obj['next'] === 'function';
 const isPromise = obj => obj && typeof obj['then'] === 'function';
+
+function createChildrenFunc(node, processNode) {
+  const f = (...additionalProps) => {
+    const { children } = node.element;
+
+    if (children && children.length > 0) {
+      const queueItemsToAdd = [];
+      const results = [];
+      const childrenQueue = createQueue(`  ${ node.element.name }:children`);
+
+      for (let i = 0; i < children.length; i++) {
+        if (isActMLElement(children[i])) {
+          children[i].mergeProps(...additionalProps);
+          queueItemsToAdd.push(() => processNode(node.addChildNode(children[i])));
+        } else if (typeof children[i] === 'function') {
+          const funcResult = children[i](...additionalProps);
+
+          if (isActMLElement(funcResult)) {
+            queueItemsToAdd.push(() => processNode(node.addChildNode(funcResult)));
+          } else {
+            results.push(funcResult);
+          }
+        } else {
+          results.push(children[i]);
+        }
+      }
+      queueItemsToAdd.reverse().forEach(func => {
+        childrenQueue.prependItem(CHILD, func, (r) => results.push(r));
+      });
+      childrenQueue.process();
+      return childrenQueue.onDone(() => results);
+    }
+  };
+
+  f[CHILDREN] = true;
+  return f;
+}
 
 export default function createProcessor() {
   const tree = Tree();
@@ -23,41 +61,9 @@ export default function createProcessor() {
     currentNode = node;
     node.enter();
     node.rerun = () => processNode(node);
-    const children = (...additionalProps) => {
-      const { children } = node.element;
-
-      if (children && children.length > 0) {
-        const queueItemsToAdd = [];
-        const results = [];
-        const childrenQueue = createQueue(`  ${ node.element.name }:children`);
-
-        for (let i = 0; i < children.length; i++) {
-          if (isActMLElement(children[i])) {
-            children[i].mergeProps(...additionalProps);
-            queueItemsToAdd.push(() => processNode(node.addChildNode(children[i])));
-          } else if (typeof children[i] === 'function') {
-            const funcResult = children[i](...additionalProps);
-
-            if (isActMLElement(funcResult)) {
-              queueItemsToAdd.push(() => processNode(node.addChildNode(funcResult)));
-            } else {
-              results.push(funcResult);
-            }
-          } else {
-            results.push(children[i]);
-          }
-        }
-        queueItemsToAdd.reverse().forEach(func => {
-          childrenQueue.prependItem(CHILD, func, (r) => results.push(r));
-        });
-        childrenQueue.process();
-        return childrenQueue.onDone(() => results);
-      }
-    };
-
-    children[CHILDREN] = true;
-
-    node.element.mergeProps({ children });
+    node.element.mergeProps({
+      children: createChildrenFunc(node, processNode)
+    });
 
     let results = {};
     const queue = createQueue(` ${ node.element.name }`);
