@@ -1,8 +1,8 @@
 ![ActML](assets/logo.jpg)
 
-# :dizzy: ActML <!-- omit in toc -->
+# ActML <!-- omit in toc -->
 
-> ActML is a library that allows you to use JSX syntax outside of React world. It aims to provide the same experience in terms of composability and patterns.
+> :dizzy: ActML is a library that allows you to use JSX syntax outside of React world. It aims to provide the same experience in terms of composability and patterns. :dizzy: 
 
 ```javascript
 /** @jsx A */

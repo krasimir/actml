@@ -51,7 +51,8 @@ var createElement = function createElement(func, props, children) {
     enter: function enter() {
       this.__running = true;
       this.__processChildrenAutomatically = true;
-
+    },
+    consume: function consume() {
       return func(this.props);
     },
     out: function out() {
@@ -91,270 +92,174 @@ var _useEffect = require('./hooks/useEffect');
 
 var _useEffect2 = _interopRequireDefault(_useEffect);
 
+var _Queue = require('./Queue');
+
+var _Queue2 = _interopRequireDefault(_Queue);
+
 function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj };
 }
 
-function _asyncToGenerator(fn) {
-  return function () {
-    var gen = fn.apply(this, arguments);return new Promise(function (resolve, reject) {
-      function step(key, arg) {
-        try {
-          var info = gen[key](arg);var value = info.value;
-        } catch (error) {
-          reject(error);return;
-        }if (info.done) {
-          resolve(value);
-        } else {
-          return Promise.resolve(value).then(function (value) {
-            step("next", value);
-          }, function (err) {
-            step("throw", err);
-          });
-        }
-      }return step("next");
-    });
-  };
-} /* eslint-disable no-use-before-define */
+/* eslint-disable no-use-before-define */
+var CONSUME = 'CONSUME';
+var PROCESS_RESULT = 'PROCESS_RESULT';
+var RETURNED_ELEMENT = 'RETURNED_ELEMENT';
+var HANDLE_CHILDREN = 'HANDLE_CHILDREN';
+var CHILD = 'CHILD';
+
+var isGenerator = function isGenerator(obj) {
+  return obj && typeof obj['next'] === 'function';
+};
+var isPromise = function isPromise(obj) {
+  return obj && typeof obj['then'] === 'function';
+};
 
 function createProcessor() {
-  var _this = this;
-
   var tree = (0, _Tree2.default)();
   var currentNode = null;
 
-  var processNode = function () {
-    var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(node) {
-      var result, genResult, toGenValue;
-      return regeneratorRuntime.wrap(function _callee2$(_context2) {
-        while (1) {
-          switch (_context2.prev = _context2.next) {
-            case 0:
-              currentNode = node;
-              node.enter();
-              node.rerun = function () {
-                return processNode(node);
-              };
-              node.callChildren = function () {
-                var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
-                  var childrenResult,
-                      children,
-                      i,
-                      _children$i,
-                      funcResult,
-                      _args = arguments;
-
-                  return regeneratorRuntime.wrap(function _callee$(_context) {
-                    while (1) {
-                      switch (_context.prev = _context.next) {
-                        case 0:
-                          childrenResult = [];
-                          children = node.element.children;
-
-                          if (!(children && children.length > 0)) {
-                            _context.next = 30;
-                            break;
-                          }
-
-                          i = 0;
-
-                        case 4:
-                          if (!(i < children.length)) {
-                            _context.next = 30;
-                            break;
-                          }
-
-                          if (!(0, _isActMLElement2.default)(children[i])) {
-                            _context.next = 14;
-                            break;
-                          }
-
-                          (_children$i = children[i]).mergeProps.apply(_children$i, _args);
-                          _context.t0 = childrenResult;
-                          _context.next = 10;
-                          return processNode(node.addChildNode(children[i]));
-
-                        case 10:
-                          _context.t1 = _context.sent;
-
-                          _context.t0.push.call(_context.t0, _context.t1);
-
-                          _context.next = 27;
-                          break;
-
-                        case 14:
-                          if (!(typeof children[i] === 'function')) {
-                            _context.next = 27;
-                            break;
-                          }
-
-                          _context.next = 17;
-                          return children[i].apply(children, _args);
-
-                        case 17:
-                          funcResult = _context.sent;
-
-                          if (!(0, _isActMLElement2.default)(funcResult)) {
-                            _context.next = 26;
-                            break;
-                          }
-
-                          _context.t2 = childrenResult;
-                          _context.next = 22;
-                          return processNode(node.addChildNode(funcResult));
-
-                        case 22:
-                          _context.t3 = _context.sent;
-
-                          _context.t2.push.call(_context.t2, _context.t3);
-
-                          _context.next = 27;
-                          break;
-
-                        case 26:
-                          childrenResult.push(funcResult);
-
-                        case 27:
-                          i++;
-                          _context.next = 4;
-                          break;
-
-                        case 30:
-                          return _context.abrupt('return', childrenResult);
-
-                        case 31:
-                        case 'end':
-                          return _context.stop();
-                      }
-                    }
-                  }, _callee, _this);
-                }));
-
-                return function () {
-                  return _ref2.apply(this, arguments);
-                };
-              }();
-
-              // actual call of the ActML element
-              result = node.element.enter();
-              genResult = void 0, toGenValue = void 0;
-
-              // handling a promise
-
-              if (!(result && result.then)) {
-                _context2.next = 12;
-                break;
-              }
-
-              _context2.next = 9;
-              return result;
-
-            case 9:
-              result = _context2.sent;
-              _context2.next = 35;
-              break;
-
-            case 12:
-              if (!(result && typeof result.next === 'function')) {
-                _context2.next = 31;
-                break;
-              }
-
-              genResult = result.next();
-
-            case 14:
-              if (genResult.done) {
-                _context2.next = 22;
-                break;
-              }
-
-              if (!(0, _isActMLElement2.default)(genResult.value)) {
-                _context2.next = 19;
-                break;
-              }
-
-              _context2.next = 18;
-              return processNode(node.addChildNode(genResult.value));
-
-            case 18:
-              toGenValue = _context2.sent;
-
-            case 19:
-              genResult = result.next(toGenValue);
-              _context2.next = 14;
-              break;
-
-            case 22:
-              if (!(0, _isActMLElement2.default)(genResult.value)) {
-                _context2.next = 28;
-                break;
-              }
-
-              _context2.next = 25;
-              return processNode(node.addChildNode(genResult.value));
-
-            case 25:
-              result = _context2.sent;
-              _context2.next = 29;
-              break;
-
-            case 28:
-              result = genResult.value;
-
-            case 29:
-              _context2.next = 35;
-              break;
-
-            case 31:
-              if (!(0, _isActMLElement2.default)(result)) {
-                _context2.next = 35;
-                break;
-              }
-
-              _context2.next = 34;
-              return processNode(node.addChildNode(result));
-
-            case 34:
-              result = _context2.sent;
-
-            case 35:
-              if (!node.element.shouldProcessChildrenAutomatically()) {
-                _context2.next = 38;
-                break;
-              }
-
-              _context2.next = 38;
-              return node.callChildren();
-
-            case 38:
-
-              node.element.out();
-              node.out();
-              currentNode = null;
-
-              return _context2.abrupt('return', result);
-
-            case 42:
-            case 'end':
-              return _context2.stop();
-          }
-        }
-      }, _callee2, _this);
-    }));
-
-    return function processNode(_x) {
-      return _ref.apply(this, arguments);
+  var processNode = function processNode(node) {
+    currentNode = node;
+    node.enter();
+    node.rerun = function () {
+      return processNode(node);
     };
-  }();
+    node.callChildren = function () {
+      var _arguments = arguments;
+      var children = node.element.children;
+
+      if (children && children.length > 0) {
+        var queueItemsToAdd = [];
+        var _results = [];
+        var childrenQueue = (0, _Queue2.default)('  ' + node.element.name + ':children');
+
+        var _loop = function _loop(i) {
+          if ((0, _isActMLElement2.default)(children[i])) {
+            var _children$i;
+
+            (_children$i = children[i]).mergeProps.apply(_children$i, _arguments);
+            queueItemsToAdd.push(function () {
+              return processNode(node.addChildNode(children[i]));
+            });
+          } else if (typeof children[i] === 'function') {
+            var funcResult = children[i].apply(children, _arguments);
+
+            if ((0, _isActMLElement2.default)(funcResult)) {
+              queueItemsToAdd.push(function () {
+                return processNode(node.addChildNode(funcResult));
+              });
+            } else {
+              _results.push(funcResult);
+            }
+          } else {
+            _results.push(children[i]);
+          }
+        };
+
+        for (var i = 0; i < children.length; i++) {
+          _loop(i);
+        }
+        queueItemsToAdd.reverse().forEach(function (func) {
+          childrenQueue.prependItem(CHILD, func, function (r) {
+            return _results.push(r);
+          });
+        });
+        childrenQueue.process();
+        return childrenQueue.onDone(function () {
+          return _results;
+        });
+      }
+      return null;
+    };
+
+    var results = {};
+    var queue = (0, _Queue2.default)(' ' + node.element.name);
+
+    // CONSUME
+    queue.add(CONSUME, function () {
+      return node.element.consume();
+    }, function (result) {
+      return results[CONSUME] = result;
+    });
+
+    // PROCESS_RESULT
+    queue.add(PROCESS_RESULT, function () {
+      var consumption = results[CONSUME];
+
+      if ((0, _isActMLElement2.default)(consumption)) {
+        queue.prependItem(RETURNED_ELEMENT, function () {
+          return processNode(node.addChildNode(consumption));
+        }, function (result) {
+          return results[RETURNED_ELEMENT] = result;
+        });
+      } else if (isGenerator(consumption)) {
+        var generator = consumption;
+
+        queue.prependItem(RETURNED_ELEMENT, function () {
+          return new Promise(function (generatorDone) {
+            var genResult = void 0;
+
+            (function iterate(value) {
+              genResult = generator.next(value);
+              if (!genResult.done) {
+                if ((0, _isActMLElement2.default)(genResult.value)) {
+                  var res = processNode(node.addChildNode(genResult.value));
+
+                  if (isPromise(res)) {
+                    res.then(function (r) {
+                      return iterate(r);
+                    });
+                  } else {
+                    iterate(res);
+                  }
+                }
+              } else {
+                if ((0, _isActMLElement2.default)(genResult.value)) {
+                  var _res = processNode(node.addChildNode(genResult.value));
+
+                  if (isPromise(_res)) {
+                    _res.then(function (r) {
+                      return generatorDone(r);
+                    });
+                  } else {
+                    generatorDone(_res);
+                  }
+                } else {
+                  generatorDone(genResult.value);
+                }
+              }
+            })();
+          });
+        }, function (result) {
+          return results[RETURNED_ELEMENT] = result;
+        });
+      };
+    });
+
+    // HANDLE_CHILDREN
+    queue.add(HANDLE_CHILDREN, function () {
+      return node.element.shouldProcessChildrenAutomatically() ? node.callChildren() : null;
+    });
+
+    // Running the queue
+    queue.process();
+
+    // Getting the result. It is either a promise if there is
+    // something asynchronous or a value
+    return queue.onDone(function () {
+      node.out();
+      return RETURNED_ELEMENT in results ? results[RETURNED_ELEMENT] : results[CONSUME];
+    });
+  };
 
   return {
     node: function node() {
       return currentNode;
     },
     run: function run(element) {
-      var resolvedRootNode = tree.resolveRoot(element);
+      var rootNode = tree.resolveRoot(element);
 
-      return processNode(resolvedRootNode, []);
+      return processNode(rootNode);
     },
     onNodeEnter: function onNodeEnter(callback) {
       tree.addNodeEnterCallback(callback);
@@ -369,6 +274,7 @@ function createProcessor() {
       return {
         tree: tree,
         reset: function reset() {
+          currentNode = null;
           tree.reset();
           _usePubSub2.default.clear();
           _useState2.default.clear();
@@ -379,7 +285,108 @@ function createProcessor() {
   };
 };
 
-},{"./Tree":3,"./hooks/useEffect":5,"./hooks/usePubSub":8,"./hooks/useState":10,"./utils/isActMLElement":13}],3:[function(require,module,exports){
+},{"./Queue":3,"./Tree":4,"./hooks/useEffect":6,"./hooks/usePubSub":9,"./hooks/useState":11,"./utils/isActMLElement":14}],3:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = createQueue;
+
+function _toConsumableArray(arr) {
+  if (Array.isArray(arr)) {
+    for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) {
+      arr2[i] = arr[i];
+    }return arr2;
+  } else {
+    return Array.from(arr);
+  }
+}
+
+/* eslint-disable no-return-assign */
+var LOGS = false;
+var log = function log() {
+  var _console;
+
+  return LOGS ? (_console = console).log.apply(_console, arguments) : null;
+};
+var isPromise = function isPromise(obj) {
+  return obj && typeof obj['then'] === 'function';
+};
+var createItem = function createItem(type, func) {
+  var onDone = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : function () {};
+  return {
+    type: type,
+    func: func,
+    onDone: onDone
+  };
+};
+
+function createQueue(context) {
+  var items = [];
+  var async = false;
+  var running = false;
+  var release = function release() {};
+
+  return {
+    add: function add(type, func, onDone) {
+      log(context + ':Q: [...' + type + '] (' + (items.length + 1) + ' total)');
+      items.push(createItem(type, func, onDone));
+    },
+    prependItem: function prependItem(type, func, onDone) {
+      log(context + ':Q: [' + type + '...] (' + (items.length + 1) + ' total)');
+      items = [createItem(type, func, onDone)].concat(_toConsumableArray(items));
+    },
+    process: function process(lastResult) {
+      var _this = this;
+
+      running = true;
+      if (items.length === 0) {
+        log(context + ':Q:done');
+        running = false;
+        release();
+        return;
+      }
+
+      var item = items.shift();
+
+      log(context + ':Q: ' + item.type + '() (' + items.length + ' left)');
+      var result = item.func(lastResult);
+
+      if (isPromise(result)) {
+        async = true;
+        result.then(function (asyncResult) {
+          item.onDone(asyncResult);
+          _this.process(asyncResult);
+        }).catch(function (error) {
+          release(error);
+        });
+      } else {
+        item.onDone(result);
+        this.process(result);
+      }
+    },
+    onDone: function onDone(getResult) {
+      if (async) {
+        return new Promise(function (done, reject) {
+          release = function release(error) {
+            if (error) {
+              reject(error);
+            } else {
+              done(getResult());
+            }
+          };
+        });
+      }
+      return getResult();
+    },
+    isRunning: function isRunning() {
+      return running;
+    }
+  };
+};
+
+},{}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -387,6 +394,12 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = Tree;
 /* eslint-disable no-use-before-define, no-return-assign, max-len */
+var LOGS = false;
+var log = function log() {
+  var _console;
+
+  return LOGS ? (_console = console).log.apply(_console, arguments) : null;
+};
 
 function Tree() {
   var onNodeEnter = [];
@@ -424,6 +437,8 @@ function Tree() {
       enter: function enter() {
         var _this = this;
 
+        log('-> ' + this.element.name);
+        this.element.enter();
         onNodeEnter.forEach(function (c) {
           return c(_this);
         });
@@ -431,6 +446,8 @@ function Tree() {
       out: function out() {
         var _this2 = this;
 
+        log('<- ' + this.element.name);
+        this.element.out();
         // If there're more nodes in the tree than what was processed
         if (this.cursor < this.children.length) {
           this.children.splice(this.cursor, this.children.length - this.cursor).forEach(function (removedNode) {
@@ -485,7 +502,6 @@ function Tree() {
       return function loopOver(node) {
         var ind = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
 
-        // console.log(node.element.name, node.children.length);
         return {
           ind: ind,
           name: node.element.name,
@@ -509,7 +525,7 @@ function Tree() {
   };
 };
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -537,7 +553,7 @@ var createUseChildrenHook = function createUseChildrenHook(processor) {
 
 exports.default = createUseChildrenHook;
 
-},{"./utils/isValidHookContext":11}],5:[function(require,module,exports){
+},{"./utils/isValidHookContext":12}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -660,7 +676,7 @@ createUseEffectHook.clear = function () {
   Storage.elements = {};
 };
 
-},{"./utils/isValidHookContext":11,"fast-deep-equal":14}],6:[function(require,module,exports){
+},{"./utils/isValidHookContext":12,"fast-deep-equal":15}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -685,7 +701,7 @@ var createUseElementHook = function createUseElementHook(processor) {
 
 exports.default = createUseElementHook;
 
-},{"./utils/isValidHookContext":11}],7:[function(require,module,exports){
+},{"./utils/isValidHookContext":12}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -785,7 +801,7 @@ var createUseProductHook = function createUseProductHook(processor) {
 
 exports.default = createUseProductHook;
 
-},{"./utils/isValidHookContext":11}],8:[function(require,module,exports){
+},{"./utils/isValidHookContext":12}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -904,7 +920,7 @@ createUsePubSubHook.clear = function () {
   subscribers = {};
 };
 
-},{"./utils/isValidHookContext":11}],9:[function(require,module,exports){
+},{"./utils/isValidHookContext":12}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -981,7 +997,7 @@ function createUseReducerHook(useState) {
   };
 }
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1052,7 +1068,7 @@ createUseStateHook.clear = function () {
   Storage.elements = {};
 };
 
-},{"./utils/isValidHookContext":11}],11:[function(require,module,exports){
+},{"./utils/isValidHookContext":12}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1068,13 +1084,13 @@ function isValidHookContext(processor) {
   }
 };
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.createUniverse = createUniverse;
+exports.createRuntime = createRuntime;
 
 var _Processor = require('./Processor');
 
@@ -1120,7 +1136,7 @@ function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj };
 }
 
-function createUniverse() {
+function createRuntime() {
   var processor = (0, _Processor2.default)();
 
   function A(func, props) {
@@ -1160,12 +1176,12 @@ function createUniverse() {
   };
 }
 
-var universe = createUniverse();
+var runtime = createRuntime();
 
-module.exports = universe;
-module.exports.createUniverse = createUniverse();
+module.exports = runtime;
+module.exports.createRuntime = createRuntime();
 
-},{"./ActElement":1,"./Processor":2,"./hooks/useChildren":4,"./hooks/useEffect":5,"./hooks/useElement":6,"./hooks/useProduct":7,"./hooks/usePubSub":8,"./hooks/useReducer":9,"./hooks/useState":10,"./utils/isActMLElement":13}],13:[function(require,module,exports){
+},{"./ActElement":1,"./Processor":2,"./hooks/useChildren":5,"./hooks/useEffect":6,"./hooks/useElement":7,"./hooks/useProduct":8,"./hooks/usePubSub":9,"./hooks/useReducer":10,"./hooks/useState":11,"./utils/isActMLElement":14}],14:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1176,7 +1192,7 @@ function isActMLElement(element) {
   return element && element.__actml === true;
 };
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 'use strict';
 
 var isArray = Array.isArray;
@@ -1233,5 +1249,5 @@ module.exports = function equal(a, b) {
   return a!==a && b!==b;
 };
 
-},{}]},{},[12])(12)
+},{}]},{},[13])(13)
 });
