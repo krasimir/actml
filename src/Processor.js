@@ -40,7 +40,11 @@ export default function createProcessor() {
 
             if (isActMLElement(funcResult)) {
               queueItemsToAdd.push(() => processNode(node.addChildNode(funcResult)));
+            } else {
+              results.push(funcResult);
             }
+          } else {
+            results.push(children[i]);
           }
         }
         queueItemsToAdd.reverse().forEach(func => {

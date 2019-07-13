@@ -97,5 +97,62 @@ describe('Given the ActML library', () => {
         });
       });
     });
+    it('should allow me to process the children and use the result of them (sync) ', async () => {
+      const E = async () => {
+        const [ children ] = useChildren();
+
+        const r = children(5);
+
+        return r.reduce((value, item) => {
+          return value + item;
+        }, 0);
+      };
+      const B = () => 10;
+      const F = 40;
+
+      const result = await run(
+        <E>
+          <B />
+          { F }
+          {
+            (n) => n * 2
+          }
+        </E>
+      );
+
+      expect(result).toBe(60);
+    });
+    it('should allow me to process the children and use the result of them (async) ', async () => {
+      const E = async () => {
+        const [ children ] = useChildren();
+
+        const r = await children(5);
+
+        return r.reduce((value, item) => {
+          return value + item;
+        }, 0);
+      };
+      const B = () => 10;
+      const C = async () => 20;
+      const X = () => 1;
+      const D = function * () {
+        return 30 + (yield <X />);
+      };
+      const F = 40;
+
+      const result = await run(
+        <E>
+          <B />
+          <C />
+          <D />
+          { F }
+          {
+            (n) => n * 2
+          }
+        </E>
+      );
+
+      expect(result).toBe(111);
+    });
   });
 });
