@@ -19,7 +19,6 @@ var createElement = function createElement(func, props, children) {
     __actml: true,
     __used: 0,
     __running: false,
-    __processChildrenAutomatically: true,
     id: null,
     props: props,
     name: getFuncName(func),
@@ -30,7 +29,6 @@ var createElement = function createElement(func, props, children) {
       this.id = id;
       this.__used = used;
       this.__running = false;
-      this.__processChildrenAutomatically = true;
     },
     mergeProps: function mergeProps(newProps) {
       this.props = Object.assign({}, this.props, newProps);
@@ -41,16 +39,8 @@ var createElement = function createElement(func, props, children) {
     isRunning: function isRunning() {
       return this.__running;
     },
-    shouldProcessChildrenAutomatically: function shouldProcessChildrenAutomatically(value) {
-      if (typeof value === 'undefined') {
-        return this.__processChildrenAutomatically;
-      }
-      this.__processChildrenAutomatically = value;
-      return value;
-    },
     enter: function enter() {
       this.__running = true;
-      this.__processChildrenAutomatically = true;
     },
     consume: function consume() {
       return func(this.props);
@@ -100,11 +90,11 @@ function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj };
 }
 
-/* eslint-disable no-use-before-define */
+/* eslint-disable no-use-before-define, consistent-return */
+var CHILDREN = '__ACTML_CHILDREN__';
 var CONSUME = 'CONSUME';
 var PROCESS_RESULT = 'PROCESS_RESULT';
 var RETURNED_ELEMENT = 'RETURNED_ELEMENT';
-var HANDLE_CHILDREN = 'HANDLE_CHILDREN';
 var CHILD = 'CHILD';
 
 var isGenerator = function isGenerator(obj) {
@@ -124,7 +114,7 @@ function createProcessor() {
     node.rerun = function () {
       return processNode(node);
     };
-    node.callChildren = function () {
+    var children = function children() {
       var _arguments = arguments;
       var children = node.element.children;
 
@@ -169,8 +159,11 @@ function createProcessor() {
           return _results;
         });
       }
-      return null;
     };
+
+    children[CHILDREN] = true;
+
+    node.element.mergeProps({ children: children });
 
     var results = {};
     var queue = (0, _Queue2.default)(' ' + node.element.name);
@@ -186,12 +179,15 @@ function createProcessor() {
     queue.add(PROCESS_RESULT, function () {
       var consumption = results[CONSUME];
 
+      // ActML element
       if ((0, _isActMLElement2.default)(consumption)) {
         queue.prependItem(RETURNED_ELEMENT, function () {
           return processNode(node.addChildNode(consumption));
         }, function (result) {
           return results[RETURNED_ELEMENT] = result;
         });
+
+        // generator
       } else if (isGenerator(consumption)) {
         var generator = consumption;
 
@@ -233,12 +229,15 @@ function createProcessor() {
         }, function (result) {
           return results[RETURNED_ELEMENT] = result;
         });
-      };
-    });
 
-    // HANDLE_CHILDREN
-    queue.add(HANDLE_CHILDREN, function () {
-      return node.element.shouldProcessChildrenAutomatically() ? node.callChildren() : null;
+        // children
+      } else if (consumption && consumption[CHILDREN]) {
+        queue.prependItem(RETURNED_ELEMENT, function () {
+          return consumption();
+        }, function (result) {
+          results[RETURNED_ELEMENT] = result && result.length === 1 ? result[0] : result;
+        });
+      }
     });
 
     // Running the queue
@@ -285,7 +284,7 @@ function createProcessor() {
   };
 };
 
-},{"./Queue":3,"./Tree":4,"./hooks/useEffect":6,"./hooks/usePubSub":9,"./hooks/useState":11,"./utils/isActMLElement":14}],3:[function(require,module,exports){
+},{"./Queue":3,"./Tree":4,"./hooks/useEffect":5,"./hooks/usePubSub":8,"./hooks/useState":10,"./utils/isActMLElement":13}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -532,34 +531,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _isValidHookContext = require('./utils/isValidHookContext');
-
-var _isValidHookContext2 = _interopRequireDefault(_isValidHookContext);
-
-function _interopRequireDefault(obj) {
-  return obj && obj.__esModule ? obj : { default: obj };
-}
-
-var createUseChildrenHook = function createUseChildrenHook(processor) {
-  return function () {
-    (0, _isValidHookContext2.default)(processor);
-
-    var node = processor.node();
-
-    node.element.shouldProcessChildrenAutomatically(false);
-    return [node.callChildren, node.element.children];
-  };
-};
-
-exports.default = createUseChildrenHook;
-
-},{"./utils/isValidHookContext":12}],6:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
 var _fastDeepEqual = require('fast-deep-equal');
 
 var _fastDeepEqual2 = _interopRequireDefault(_fastDeepEqual);
@@ -676,7 +647,7 @@ createUseEffectHook.clear = function () {
   Storage.elements = {};
 };
 
-},{"./utils/isValidHookContext":12,"fast-deep-equal":15}],7:[function(require,module,exports){
+},{"./utils/isValidHookContext":11,"fast-deep-equal":14}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -701,7 +672,7 @@ var createUseElementHook = function createUseElementHook(processor) {
 
 exports.default = createUseElementHook;
 
-},{"./utils/isValidHookContext":12}],8:[function(require,module,exports){
+},{"./utils/isValidHookContext":11}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -801,39 +772,12 @@ var createUseProductHook = function createUseProductHook(processor) {
 
 exports.default = createUseProductHook;
 
-},{"./utils/isValidHookContext":12}],9:[function(require,module,exports){
+},{"./utils/isValidHookContext":11}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _slicedToArray = function () {
-  function sliceIterator(arr, i) {
-    var _arr = [];var _n = true;var _d = false;var _e = undefined;try {
-      for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
-        _arr.push(_s.value);if (i && _arr.length === i) break;
-      }
-    } catch (err) {
-      _d = true;_e = err;
-    } finally {
-      try {
-        if (!_n && _i["return"]) _i["return"]();
-      } finally {
-        if (_d) throw _e;
-      }
-    }return _arr;
-  }return function (arr, i) {
-    if (Array.isArray(arr)) {
-      return arr;
-    } else if (Symbol.iterator in Object(arr)) {
-      return sliceIterator(arr, i);
-    } else {
-      throw new TypeError("Invalid attempt to destructure non-iterable instance");
-    }
-  };
-}();
-
 exports.default = createUsePubSubHook;
 
 var _isValidHookContext = require('./utils/isValidHookContext');
@@ -846,13 +790,10 @@ function _interopRequireDefault(obj) {
 
 var subscribers = {};
 
-function createSubscribeElement(subscribe, useChildren) {
+function createSubscribeElement(subscribe) {
   return function (_ref) {
-    var type = _ref.type;
-
-    var _useChildren = useChildren(),
-        _useChildren2 = _slicedToArray(_useChildren, 1),
-        children = _useChildren2[0];
+    var type = _ref.type,
+        children = _ref.children;
 
     subscribe(type, function (payload) {
       return children({ payload: payload });
@@ -882,7 +823,7 @@ var publish = function publish(type, payload) {
   });
 };
 
-function createUsePubSubHook(processor, useChildren) {
+function createUsePubSubHook(processor) {
   processor.onNodeRemove(function (node) {
     Object.keys(subscribers).forEach(function (type) {
       if (subscribers[type][node.element.id]) {
@@ -910,7 +851,7 @@ function createUsePubSubHook(processor, useChildren) {
       subscribe: subscribeFunc,
       publish: publishFunc,
       subscribers: subscribers,
-      Subscribe: createSubscribeElement(subscribeFunc, useChildren),
+      Subscribe: createSubscribeElement(subscribeFunc),
       Publish: createPublishElement(publishFunc)
     };
   };
@@ -920,7 +861,7 @@ createUsePubSubHook.clear = function () {
   subscribers = {};
 };
 
-},{"./utils/isValidHookContext":12}],10:[function(require,module,exports){
+},{"./utils/isValidHookContext":11}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -997,7 +938,7 @@ function createUseReducerHook(useState) {
   };
 }
 
-},{}],11:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1068,7 +1009,7 @@ createUseStateHook.clear = function () {
   Storage.elements = {};
 };
 
-},{"./utils/isValidHookContext":12}],12:[function(require,module,exports){
+},{"./utils/isValidHookContext":11}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1084,7 +1025,7 @@ function isValidHookContext(processor) {
   }
 };
 
-},{}],13:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1103,10 +1044,6 @@ var _isActMLElement2 = _interopRequireDefault(_isActMLElement);
 var _ActElement = require('./ActElement');
 
 var _ActElement2 = _interopRequireDefault(_ActElement);
-
-var _useChildren = require('./hooks/useChildren');
-
-var _useChildren2 = _interopRequireDefault(_useChildren);
 
 var _useElement = require('./hooks/useElement');
 
@@ -1152,12 +1089,14 @@ function createRuntime() {
     }
     return processor.run(element);
   }
-  var Fragment = function Fragment() {};
-  var useChildren = (0, _useChildren2.default)(processor);
+  var Fragment = function Fragment(_ref) {
+    var children = _ref.children;
+    return children;
+  };
   var useElement = (0, _useElement2.default)(processor);
   var useState = (0, _useState2.default)(processor);
   var useProduct = (0, _useProduct2.default)(processor, useState);
-  var usePubSub = (0, _usePubSub2.default)(processor, useChildren);
+  var usePubSub = (0, _usePubSub2.default)(processor);
   var useReducer = (0, _useReducer2.default)(useState);
   var useEffect = (0, _useEffect2.default)(processor);
 
@@ -1166,7 +1105,6 @@ function createRuntime() {
     run: run,
     Fragment: Fragment,
     processor: processor,
-    useChildren: useChildren,
     useElement: useElement,
     useProduct: useProduct,
     usePubSub: usePubSub,
@@ -1181,7 +1119,7 @@ var runtime = createRuntime();
 module.exports = runtime;
 module.exports.createRuntime = createRuntime();
 
-},{"./ActElement":1,"./Processor":2,"./hooks/useChildren":5,"./hooks/useEffect":6,"./hooks/useElement":7,"./hooks/useProduct":8,"./hooks/usePubSub":9,"./hooks/useReducer":10,"./hooks/useState":11,"./utils/isActMLElement":14}],14:[function(require,module,exports){
+},{"./ActElement":1,"./Processor":2,"./hooks/useEffect":5,"./hooks/useElement":6,"./hooks/useProduct":7,"./hooks/usePubSub":8,"./hooks/useReducer":9,"./hooks/useState":10,"./utils/isActMLElement":13}],13:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1192,7 +1130,7 @@ function isActMLElement(element) {
   return element && element.__actml === true;
 };
 
-},{}],15:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 'use strict';
 
 var isArray = Array.isArray;
@@ -1249,5 +1187,5 @@ module.exports = function equal(a, b) {
   return a!==a && b!==b;
 };
 
-},{}]},{},[13])(13)
+},{}]},{},[12])(12)
 });
