@@ -60,7 +60,7 @@ describe('Given the ActML library', () => {
         });
       });
       describe('and run the children manually with a delay', () => {
-        it.only('should run the children', async () => {
+        it('should run the children', async () => {
           const B = jest.fn();
           const E = function () {
             const [ children ] = useChildren();
@@ -74,6 +74,46 @@ describe('Given the ActML library', () => {
           await delay(30);
 
           expect(B).toBeCalledTimes(1);
+        });
+      });
+      describe('and run the children manually within a generator', () => {
+        it('should run the children after the generator is finished', async () => {
+          const B = function B() {};
+          const C = function C() {};
+          const E = function * () {
+            const [ children ] = useChildren();
+
+            children();
+            yield <B />;
+          };
+
+          await run(<E><C /></E>);
+
+          exerciseTree(processor, `
+            E(1)
+            B(1)
+            C(1)
+          `);
+        });
+      });
+      describe('and run the children manually within a sync function', () => {
+        it('should run the children at the time of children() call', () => {
+          const B = function B() {};
+          const C = function C() {};
+          const E = function () {
+            const [ children ] = useChildren();
+
+            children();
+            return <B />;
+          };
+
+          run(<E><C /></E>);
+
+          exerciseTree(processor, `
+            E(1)
+            C(1)
+            B(1)
+          `);
         });
       });
     });
@@ -269,36 +309,6 @@ describe('Given the ActML library', () => {
         Fragment(3)
         B(3)
         B(1)
-      `);
-    });
-    it('should create multiple tree branches if children hook is fired multiple times', async () => {
-      const E = function () {};
-      const N = function () {};
-      const P = function * () {
-        const [ children ] = useChildren();
-
-        children();
-
-        yield <N />;
-        children();
-        setTimeout(() => {
-          children();
-        }, 20);
-      };
-
-      await run(
-        <P>
-          <E />
-        </P>
-      );
-      await delay(30);
-
-      exerciseTree(processor, `
-        P(1)
-        E(1)
-        N(1)
-        E(1)
-        E(1)
       `);
     });
     it('should run the function and return its result', async () => {

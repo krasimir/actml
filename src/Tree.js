@@ -1,5 +1,8 @@
 /* eslint-disable no-use-before-define, no-return-assign, max-len */
 
+const LOGS = false;
+const log = (...something) => LOGS ? console.log(...something) : null;
+
 export default function Tree() {
   var onNodeEnter = [];
   var onNodeOut = [];
@@ -32,12 +35,12 @@ export default function Tree() {
       parent,
       cursor: 0,
       enter() {
-        console.log(`-> ${ this.element.name }`);
+        log(`-> ${ this.element.name }`);
         this.element.enter();
         onNodeEnter.forEach(c => c(this));
       },
       out() {
-        console.log(`<- ${ this.element.name }`);
+        log(`<- ${ this.element.name }`);
         this.element.out();
         // If there're more nodes in the tree than what was processed
         if (this.cursor < this.children.length) {
@@ -85,7 +88,6 @@ export default function Tree() {
     },
     diagnose() {
       return (function loopOver(node, ind = 0) {
-        // console.log(node.element.name, node.children.length);
         return {
           ind,
           name: node.element.name,

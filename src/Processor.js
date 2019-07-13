@@ -17,16 +17,16 @@ const isPromise = obj => obj && typeof obj['then'] === 'function';
 
 export default function createProcessor() {
   const tree = Tree();
-  let stack = [];
-  let currentNode = () => stack[stack.length - 1];
+  let currentNode = null;
 
   const processNode = function (node) {
-    stack.push(node);
+    currentNode = node;
     node.enter();
     node.callChildren = () => {
       const { children } = node.element;
       const additionalProps = {}; // <--- TODO
       const queueItemsToAdd = [];
+      const results = [];
 
       if (children && children.length > 0) {
         for (let i = 0; i < children.length; i++) {
@@ -43,9 +43,14 @@ export default function createProcessor() {
           }
         }
         queueItemsToAdd.reverse().forEach(func => {
-          queue.prependItem(CHILD, func);
+          queue.prependItem(CHILD, func, (r) => results.push(r));
         });
+        if (!queue.isRunning()) {
+          queue.process();
+          return queue.onDone(() => results);
+        }
       }
+      return results;
     };
 
     let results = {};
@@ -59,7 +64,9 @@ export default function createProcessor() {
     );
 
     // PROCESS_RESULT
-    queue.add(PROCESS_RESULT, (consumption) => {
+    queue.add(PROCESS_RESULT, () => {
+      const consumption = results[CONSUME];
+
       if (isActMLElement(consumption)) {
         queue.prependItem(
           RETURNED_ELEMENT,
@@ -119,15 +126,14 @@ export default function createProcessor() {
     // Getting the result. It is either a promise if there is
     // something asynchronous or a value
     return queue.onDone(() => {
-      currentNode().out();
-      stack.pop();
+      node.out();
       return RETURNED_ELEMENT in results ? results[RETURNED_ELEMENT] : results[CONSUME];
     });
   };
 
   return {
     node() {
-      return currentNode();
+      return currentNode;
     },
     run(element) {
       const rootNode = tree.resolveRoot(element);
@@ -147,6 +153,7 @@ export default function createProcessor() {
       return {
         tree,
         reset() {
+          currentNode = null;
           tree.reset();
           createUsePubSubHook.clear();
           createUseStateHook.clear();
