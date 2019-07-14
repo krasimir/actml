@@ -132,7 +132,7 @@ Notice that `<Greeting>` and `<FavoriteColor>` are synchronous. ActML waits for 
 import { A, useState } from 'actml';
 
 const E = () => {
-  const [ setState, getState ] = useState(initialState);
+  const [ getState, setState ] = useState(initialState);
 }
 ```
 
