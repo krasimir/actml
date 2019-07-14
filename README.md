@@ -32,6 +32,8 @@ run(
   * [Asynchronous](#asynchronous)
 * [Installation](#installation)
 * [API](#api)
+  * [useState](#usestate)
+  * [useEffect](#useeffect)
 
 ---
 
@@ -148,7 +150,32 @@ const E = () => {
 }
 ```
 
-The function `sideEffect` is fired after the function E finishes. After that it gets fired only if some of the `dependencyA` or `dependencyB` are changed. If we pass an empty array we are creating a side effect that is fired only once no matter how many times `E` is executed. The function that we pass to `useEffect` may return another function that is invoked when the element is removed from the tree.
+The function `sideEffect` is fired after the function `E` finishes. After that it gets fired only if some of the `dependencyA` or `dependencyB` are changed. If we pass an empty array we are creating a side effect that is fired only once no matter how many times `E` is executed. The function that we pass to `useEffect` may return another function that is invoked when the element is removed from the tree.
 
 _ActML's `useEffect` mimics [React's `useEffect`](https://reactjs.org/docs/hooks-reference.html#useeffect)_
 
+### useReducer
+
+```js
+import { A, useEffect } from 'actml';
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'increment':
+      return {count: state.count + 1};
+    case 'decrement':
+      return {count: state.count - 1};
+    default:
+      throw new Error();
+  }
+}
+const E = function () {
+  const [ getState, dispatch ] = useReducer(reducer, initialState);
+  //...
+  dispatch({ type: 'increment' })
+}
+```
+
+Very similar to [`useState`](#usestate). In fact `useReducer` internally uses `useState. The mechanism for updating the state is by using actions which are `dispatch`ed and then processed by the `reducer` which returns the new version of the state.
+
+_ActML's `useReducer` mimics [React's `useReducer`](https://reactjs.org/docs/hooks-reference.html#usereducer)_
