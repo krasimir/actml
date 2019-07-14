@@ -2,17 +2,6 @@ import isValidHookContext from './utils/isValidHookContext';
 
 var subscribers = {};
 
-function createSubscribeElement(subscribe) {
-  return ({ type, children }) => {
-    subscribe(type, (payload) => children({ payload }));
-  };
-};
-function createPublishElement(publish) {
-  return ({ type, payload }) => {
-    publish(type, payload);
-  };
-}
-
 const subscribe = (element, type, callback) => {
   if (!subscribers[type]) subscribers[type] = {};
   subscribers[type][element.id] = callback;
@@ -46,9 +35,7 @@ export default function createUsePubSubHook(processor) {
     return {
       subscribe: subscribeFunc,
       publish: publishFunc,
-      subscribers,
-      Subscribe: createSubscribeElement(subscribeFunc),
-      Publish: createPublishElement(publishFunc)
+      subscribers
     };
   };
 }

@@ -1,6 +1,6 @@
 /** @jsx A */
 
-import { A, run, Fragment, processor, useReducer, usePubSub, useProduct, useState, useEffect } from '../';
+import { A, run, Fragment, processor, useReducer, usePubSub, useState, useEffect } from '../';
 import { delay, exerciseTree } from '../__helpers__/utils';
 
 describe('Given the ActML library', () => {
@@ -15,14 +15,11 @@ describe('Given the ActML library', () => {
       const Computer = async function ({ children }) {
         const [ numOfKeyPressed, pressed ] = useReducer(reducer, 0);
         const { subscribe } = usePubSub();
-        const [ setProduct ] = useProduct();
 
         subscribe('keyup', (key) => {
           pressed(numOfKeyPressed() + 1);
-          setProduct(numOfKeyPressed() + 1);
         });
-        setProduct(numOfKeyPressed());
-        return children;
+        children(numOfKeyPressed() + 1);
       };
       const Keyboard = function ({ children }) {
         const { subscribe, publish } = usePubSub();

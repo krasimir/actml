@@ -179,3 +179,41 @@ const E = function () {
 Very similar to [`useState`](#usestate). In fact `useReducer` internally uses `useState. The mechanism for updating the state is by using actions which are `dispatch`ed and then processed by the `reducer` which returns the new version of the state.
 
 _ActML's `useReducer` mimics [React's `useReducer`](https://reactjs.org/docs/hooks-reference.html#usereducer)_
+
+### usePubSub
+
+```js
+import { A, Fragment, usePubSub } from 'actml';
+
+const TYPE = 'TYPE';
+
+const Publisher = function () {
+  const { publish } = usePubSub();
+
+  publish(TYPE, 42);
+};
+const Subscribe = function () {
+  const { subscribe } = usePubSub();
+
+  subscribe(TYPE, (answer) => {
+    console.log(`The answer is ${ answer }`);
+  });
+};
+
+run(
+  <Fragment>
+    <Subscribe />
+    <Publisher />
+  </Fragment>
+);
+```
+
+The `usePubSub` hook can help you if you need to communicate between elements on different levels in the tree. It returns an object with two methods `publish` and `subscribe`:
+
+* `publish(<type>, <payload>)`
+* `subscribe(<type>, <callback>)`
+
+## Examples
+
+* [Playground](https://poet.codes/e/XD26EjK9ECK)
+* [ToDoMVC app](./examples/todomvc)

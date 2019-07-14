@@ -1,5 +1,3 @@
-import { useProduct } from '../../../lib';
-
 import { ToDo } from './Store';
 
 const initialValue = JSON.stringify([
@@ -8,8 +6,8 @@ const initialValue = JSON.stringify([
 ]);
 
 export default {
-  Provider: () => {
-    useProduct(JSON.parse(localStorage.getItem('todos') || initialValue));
+  Provider: ({ children }) => {
+    children(JSON.parse(localStorage.getItem('todos') || initialValue));
   },
   Storage: ({ todos }) => {
     localStorage.setItem('todos', JSON.stringify(todos));

@@ -98,31 +98,4 @@ describe('Given the usePubSub hook', () => {
 
     });
   });
-  describe('when use the Publish and Subscribe elements', () => {
-    it('should allow us to use usePubSub hook', async () => {
-      const mock = jest.fn();
-      const B = () => {
-        const { Subscribe } = usePubSub();
-
-        return (
-          <Subscribe type='foo'>
-            { mock }
-          </Subscribe>
-        );
-      };
-      const C = () => {
-        const { Publish } = usePubSub();
-
-        return <Publish type='foo' payload={ { 'bar': 10 } } />;
-      };
-
-      await run(
-        <Fragment><B /><C /></Fragment>
-      );
-
-      expect(mock).toBeCalledWith(
-        { payload: { bar: 10 } }
-      );
-    });
-  });
 });

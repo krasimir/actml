@@ -3,10 +3,9 @@
 import { A } from '../../../lib';
 
 import { FillContainer } from './DOM';
-import { FILTER_ALL, FILTER_ACTIVE, FILTER_COMPLETED } from './Filter';
+import { FILTER_ALL, FILTER_ACTIVE, FILTER_COMPLETED } from './';
 
 export default function Renderer({ todos, filter }) {
-  console.log(todos, filter);
   return (
     <FillContainer>
       {

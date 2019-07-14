@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 /** @jsx A */
-import { A, Fragment, useReducer, useProduct, usePubSub } from '../../../lib';
+import { useReducer, usePubSub, useEffect } from '../../../lib';
 
 export const TOGGLE = 'TOGGLE';
 export const NEW_TODO = 'NEW_TODO';
@@ -17,6 +17,7 @@ const editToDo = ({ index, label }) => ({ type: EDIT_TODO, index, label });
 const clearCompleted = () => ({ type: CLEAR_COMPLETED });
 
 export const ToDo = ({ label }) => ({ label, completed: false, editing: false });
+
 const reducer = function (todos, action) {
   switch (action.type) {
     case TOGGLE:
@@ -65,32 +66,17 @@ const reducer = function (todos, action) {
 };
 
 export default function Store({ initialValue, children }) {
-  const [ todos, , Dispatch ] = useReducer(reducer, initialValue);
-  const { Subscribe } = usePubSub();
+  const [ todos, dispatch ] = useReducer(reducer, initialValue);
+  const { subscribe } = usePubSub();
 
-  useProduct(todos());
+  useEffect(() => {
+    subscribe(TOGGLE, (todoIndex) => dispatch(toggle(todoIndex)));
+    subscribe(NEW_TODO, (label) => dispatch(newTodo(label)));
+    subscribe(DELETE, (todoIndex) => dispatch(deleteTodo(todoIndex)));
+    subscribe(EDIT, (label) => dispatch(edit(label)));
+    subscribe(EDIT_TODO, (payload) => dispatch(editToDo(payload)));
+    subscribe(CLEAR_COMPLETED, () => dispatch(clearCompleted()));
+  }, []);
 
-  return (
-    <Fragment>
-      { children }
-      <Subscribe type={ TOGGLE }>
-        <Dispatch propsToAction={ ({ payload: todoIndex }) => toggle(todoIndex) } />
-      </Subscribe>
-      <Subscribe type={ NEW_TODO }>
-        <Dispatch propsToAction={ ({ payload: label }) => newTodo(label) } />
-      </Subscribe>
-      <Subscribe type={ DELETE }>
-        <Dispatch propsToAction={ ({ payload: todoIndex }) => deleteTodo(todoIndex) } />
-      </Subscribe>
-      <Subscribe type={ EDIT }>
-        <Dispatch propsToAction={ ({ payload: todoIndex }) => edit(todoIndex) } />
-      </Subscribe>
-      <Subscribe type={ EDIT_TODO }>
-        <Dispatch propsToAction={ ({ payload }) => editToDo(payload) } />
-      </Subscribe>
-      <Subscribe type={ CLEAR_COMPLETED }>
-        <Dispatch action={ clearCompleted() } />
-      </Subscribe>
-    </Fragment>
-  );
+  children({ todos: todos() });
 }

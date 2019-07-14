@@ -1,31 +1,44 @@
 /** @jsx A */
-import { A, run, Fragment, usePubSub } from '../../../lib';
+import { A, run, Fragment, usePubSub, useState, useEffect } from '../../../lib';
 
 import Store from './Store';
 import Renderer from './Renderer';
 import CheckForEditField from './CheckForEditField';
 import { ProgressChecker, FilterOptionsTabs, Container, Footer } from './DOM';
-import Filter from './Filter';
 import Persist from './Persist';
 
+export const FILTER_ALL = 'FILTER_ALL';
+export const FILTER_ACTIVE = 'FILTER_ACTIVE';
+export const FILTER_COMPLETED = 'FILTER_COMPLETED';
+
 function App() {
-  const { publish } = usePubSub();
+  const { publish, subscribe } = usePubSub();
+  const [ filter, setFilter ] = useState(FILTER_ALL);
+
+  useEffect(() => {
+    subscribe(FILTER_ALL, () => setFilter(FILTER_ALL));
+    subscribe(FILTER_ACTIVE, () => setFilter(FILTER_ACTIVE));
+    subscribe(FILTER_COMPLETED, () => setFilter(FILTER_COMPLETED));
+  }, []);
 
   return (
-    <Fragment>
-      <Container onUserAction={ publish } />
-      <Footer onUserAction={ publish }/>
-      <Persist.Provider exports='initialValue' />
-      <Store exports='todos' $initialValue>
-        <Filter exports='filter'>
-          <Renderer $todos $filter />
-          <FilterOptionsTabs $filter />
-        </Filter>
-        <CheckForEditField $todos />
-        <ProgressChecker $todos />
-        <Persist.Storage $todos />
-      </Store>
-    </Fragment>
+    <Persist.Provider>
+      {
+        initialValue => (
+          <Fragment>
+            <Container onUserAction={ publish } />
+            <Footer onUserAction={ publish }/>
+            <Store initialValue={ initialValue }>
+              <FilterOptionsTabs filter={ filter() } />
+              <Renderer filter={ filter() }/>
+              <CheckForEditField />
+              <ProgressChecker />
+              <Persist.Storage />
+            </Store>
+          </Fragment>
+        )
+      }
+    </Persist.Provider>
   );
 };
 
