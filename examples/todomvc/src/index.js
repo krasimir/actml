@@ -5,13 +5,14 @@ import Store from './Store';
 import Renderer from './Renderer';
 import CheckForEditField from './CheckForEditField';
 import { ProgressChecker, FilterOptionsTabs, Container, Footer } from './DOM';
-import Persist from './Persist';
+import { useLocalStorage, Persist } from './Persist';
 
 export const FILTER_ALL = 'FILTER_ALL';
 export const FILTER_ACTIVE = 'FILTER_ACTIVE';
 export const FILTER_COMPLETED = 'FILTER_COMPLETED';
 
 function App() {
+  const initialValue = useLocalStorage();
   const { publish, subscribe } = usePubSub();
   const [ filter, setFilter ] = useState(FILTER_ALL);
 
@@ -22,23 +23,17 @@ function App() {
   }, []);
 
   return (
-    <Persist.Provider>
-      {
-        initialValue => (
-          <Fragment>
-            <Container onUserAction={ publish } />
-            <Footer onUserAction={ publish }/>
-            <Store initialValue={ initialValue }>
-              <FilterOptionsTabs filter={ filter() } />
-              <Renderer filter={ filter() }/>
-              <CheckForEditField />
-              <ProgressChecker />
-              <Persist.Storage />
-            </Store>
-          </Fragment>
-        )
-      }
-    </Persist.Provider>
+    <Fragment>
+      <Container onUserAction={ publish } />
+      <Footer onUserAction={ publish }/>
+      <Store initialValue={ initialValue }>
+        <FilterOptionsTabs filter={ filter() } />
+        <Renderer filter={ filter() }/>
+        <CheckForEditField />
+        <ProgressChecker />
+        <Persist />
+      </Store>
+    </Fragment>
   );
 };
 

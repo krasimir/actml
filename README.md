@@ -31,7 +31,7 @@ run(
   * [Children](#children)
   * [Asynchronous](#asynchronous)
 * [Installation](#installation)
-* [API](#api)
+* [Hooks](#hooks)
   * [useState](#usestate)
   * [useEffect](#useeffect)
   * [useReducer](#usereducer)
@@ -124,7 +124,7 @@ Notice that `<Greeting>` and `<FavoriteColor>` are synchronous. ActML waits for 
 * ActML uses JSX so you need to have some sort of [Babel](https://babeljs.io) integration (or any other transpiler that understands [JSX](https://facebook.github.io/jsx/))
 * ActML requires you to add `/** @jsx A */` at the top of the file. Otherwise the ActML elements will be transpiled to `React.createElement`
 
-## API
+## HOOKS
 
 ### useState
 
