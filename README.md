@@ -28,7 +28,7 @@ run(
 ---
 
 * [How to use it](#how-to-use-it)
-* [Basics](#basics)
+* [Caveats](#caveats)
   * [Children](#children)
   * [Asynchronous](#asynchronous)
 * [Hooks](#hooks)
@@ -46,9 +46,9 @@ run(
 * ActML uses JSX so you need to have some sort of [Babel](https://babeljs.io) integration (or any other transpiler that understands [JSX](https://facebook.github.io/jsx/))
 * ActML requires you to add `/** @jsx A */` at the top of the file. Otherwise the ActML elements will be transpiled to `React.createElement`
 
-## Basics
+## Caveats
 
-ActML looks like [React](https://reactjs.org/) but it's not about rendering UI. It's just about executing your JavaScript.
+ActML looks like [React](https://reactjs.org/) but it's not about rendering UI. It's about executing your JavaScript.
 
 ```js
 const Foo = () => 'bar';
@@ -56,6 +56,8 @@ run(<Foo />); // bar
 ```
 
 You'll probably wonder why using ActML and instead writing `Foo()` we do `<Foo />`? The answer is same reason we you do `<Component />` instead of `React.createElement(Component, null)`. We are declarative instead of imperative. It's much better to say what we want to happen instead of how it happens. Being declarative means having more options for composition.
+
+Also when we write `<Foo />` we are not executing our function `Foo`. We are just saying that this function _should be_ executed at this place. We create a descriptor of that call which is passed to ActML runtime. This abstraction creates a layer where we can do bunch of things. We can for example process async operations behind the scenes or we can build a map of your application functions.
 
 ### Children
 
