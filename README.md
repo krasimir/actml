@@ -34,6 +34,9 @@ run(
 * [API](#api)
   * [useState](#usestate)
   * [useEffect](#useeffect)
+  * [useReducer](#usereducer)
+  * [usePubSub](#usepubsub)
+* [Examples](#examples)
 
 ---
 
