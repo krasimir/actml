@@ -28,6 +28,7 @@ run(
 ---
 
 * [Basics](#basics)
+  * [Children](#children);
 * [Installation](#installation)
 
 ---
@@ -56,7 +57,7 @@ const Y = ({ children }) => {
   return children;
 }
 const Message = () => {
- 	console.log('Hello') 
+  console.log('Hello') 
 };
 run(<X><Message /></X>); // prints Hello twice
 run(<Y><Message /></Y>); // prints Hello once
@@ -68,7 +69,7 @@ If we are calling `children` we are getting back an array containing the results
 const X = () => 'foo';
 const Y = () => 'bar';
 const Results = ({ children }) => {
-	console.log(JSON.stringify(children()));
+  console.log(JSON.stringify(children()));
 };
 run(<Results><X /><Y /></Results>); // prints ["foo","bar"]
 ```
