@@ -41,7 +41,7 @@ const Answer = () => 42;
 run(<Answer />); // 42
 ```
 
-So, why the hell I'll bring this language and instead of `Answer()` I do `<Answer />`? Well, same reason why you do `<Component />` instead of `React.createElement(Component, null)`.
+You'll probably wonder why bringing this tool and instead `Answer()` we do `<Answer />`? The answer is same reason why you do `<Component />` instead of `React.createElement(Component, null)`. You are declarative instead of imperative. It's much better to say what you want to happen instead of how it happens. Being declarative means having more options for composition. The code becomes easier to follow.
 
 ## Installation
 
