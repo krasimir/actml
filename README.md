@@ -116,7 +116,7 @@ run(
 
 (online demo [here](https://poet.codes/e/ZLOngMd8liP))
 
-Notice that `<Greeting>` and `<FavoriteColor>` are synchronous. ActML waits for all the children to be processed and they resolves the promise returned by the `children` call. If all the elements were synchronous they we'll get an array straight away.
+Notice that `<Greeting>` and `<FavoriteColor>` are synchronous. ActML waits for all the children to be processed and then resolves the promise returned by the `children` call. If all the elements were synchronous they we'll get an array straight away.
 
 ## Installation
 
