@@ -31,6 +31,7 @@ run(
   * [Children](#children)
   * [Asynchronous](#asynchronous)
 * [Installation](#installation)
+* [API](#api)
 
 ---
 
@@ -118,6 +119,36 @@ Notice that `<Greeting>` and `<FavoriteColor>` are synchronous. ActML waits for 
 * ActML uses JSX so you need to have some sort of [Babel](https://babeljs.io) integration (or any other transpiler that understands [JSX](https://facebook.github.io/jsx/))
 * ActML requires you to add `/** @jsx A */` at the top of the file. Otherwise the ActML elements will be transpiled to `React.createElement`
 
-## 
+## API
 
+### useState
+
+```js
+import { A, useState } from 'actml';
+
+const E = () => {
+  const [ setState, getState ] = useState(initialState);
+}
+```
+
+Returns two functions for setting and retrieving a state value. In the original [React docs](https://reactjs.org/docs/hooks-reference.html#usestate) the first item is the state value directly but here ActML diverges a little bit by providing a function. It is done to provide a mechanism for immediate retrieval of the update value.
+
+### useEffect
+
+```js
+import { A, useEffect } from 'actml';
+
+const E = () => {
+  useEffect(function sideEffect() {
+    // ...
+    return function onElementRemoved() {
+      // ...
+    }
+  }, [ dependencyA, dependencyB ]);
+}
+```
+
+The function `sideEffect` is fired after the function E finishes. After that it gets fired only if some of the `dependencyA` or `dependencyB` are changed. If we pass an empty array we are creating a side effect that is fired only once no matter how many times `E` is executed. The function that we pass to `useEffect` may return another function that is invoked when the element is removed from the tree.
+
+_ActML's `useEffect` mimics [React's `useEffect`](https://reactjs.org/docs/hooks-reference.html#useeffect)_
 
