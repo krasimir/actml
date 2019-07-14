@@ -28,7 +28,8 @@ run(
 ---
 
 * [Basics](#basics)
-  * [Children](#children);
+  * [Children](#children)
+  * [Asynchronous](#asynchronous)
 * [Installation](#installation)
 
 ---
@@ -73,6 +74,41 @@ const Results = ({ children }) => {
 };
 run(<Results><X /><Y /></Results>); // prints ["foo","bar"]
 ```
+
+### Asynchronous
+
+ActML runtime supports both asynchronous and synchronous elements. You can mix them in a single expression. As soon as there is something asynchronous ActML marks the call as such and the result of it is a promise. For example:
+
+```js
+const App = async ({ children }) => {
+  const message = await children();
+  
+  return message.join(' ');
+}
+const Greeting = () => 'Hey';
+const GetUserFirstName = async () => {
+  const { data: { first_name }} = await (await fetch('https://reqres.in/api/users/2')).json();
+  return first_name;
+}
+const FavoriteColor = () => 'your favorite color is';
+const GetFavoriteColor = async () => {
+  const { data: { color }} = await (await fetch('https://reqres.in/api/products/3')).json();
+  return color;
+}
+
+run(
+  <App>
+    <Greeting />
+    <GetUserFirstName />
+    <FavoriteColor />
+    <GetFavoriteColor />
+  </App>
+).then(message => console.log(message));
+
+// outputs: Hey Janet your favorite color is #BF1932
+```
+
+Notice that `<Greeting>` and `<FavoriteColor>` are synchronous. ActML waits for all the children to be resolved.
 
 ## Installation
 
