@@ -27,10 +27,10 @@ run(
 
 ---
 
+* [How to use it](#howtouseit)
 * [Basics](#basics)
   * [Children](#children)
   * [Asynchronous](#asynchronous)
-* [Installation](#installation)
 * [Hooks](#hooks)
   * [useState](#usestate)
   * [useEffect](#useeffect)
@@ -39,6 +39,12 @@ run(
 * [Examples](#examples)
 
 ---
+
+## How to use it
+
+* `npm i actml` or `yarn install actml`
+* ActML uses JSX so you need to have some sort of [Babel](https://babeljs.io) integration (or any other transpiler that understands [JSX](https://facebook.github.io/jsx/))
+* ActML requires you to add `/** @jsx A */` at the top of the file. Otherwise the ActML elements will be transpiled to `React.createElement`
 
 ## Basics
 
@@ -118,13 +124,7 @@ run(
 
 Notice that `<Greeting>` and `<FavoriteColor>` are synchronous. ActML waits for all the children to be processed and then resolves the promise returned by the `children` call. If all the elements were synchronous they we'll get an array straight away.
 
-## Installation
-
-* `npm i actml` or `yarn install actml`
-* ActML uses JSX so you need to have some sort of [Babel](https://babeljs.io) integration (or any other transpiler that understands [JSX](https://facebook.github.io/jsx/))
-* ActML requires you to add `/** @jsx A */` at the top of the file. Otherwise the ActML elements will be transpiled to `React.createElement`
-
-## HOOKS
+## Hooks
 
 ### useState
 
