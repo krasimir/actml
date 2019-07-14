@@ -9,24 +9,18 @@
 import { A, run } from 'actml';
 
 const Greeting = ({ name }) => {
-	return `Hello ${ name },`;
-}
-const Question = ({ likes }) => {
-  const randomItem = likes[Math.floor(Math.random() * likes.length)];
-	return `Do you want some ${ randomItem }?`;
+  return `Hello ${ name }!`;
 }
 const Message = ({ user, children }) => {
-	children(user).forEach(message => console.log(message));
+  console.log(children(user));
 }
 
 run(
-  <Message user={ { name: 'Emma', likes: ['coffee', 'cake', 'ice cream'] } }>
+  <Message user={ { name: 'Emma' } }>
     <Greeting />
-    <Question />
   </Message>
 );
-// Hello Emma,
-// Do you want some <random item>?
+// Hello Emma!
 ```
 
 (Try it yourself [here](https://poet.codes/e/XD26EjK9ECK).)
