@@ -13,9 +13,8 @@ describe('Given the ActML library', () => {
       const E = () => {
         const [ state, setState ] = useState(1);
 
-        setState(state + 1);
-        // the state at this point is updated but not delivered
-        mock(state);
+        setState(state() + 1);
+        mock(state());
       };
       const el = <E />;
 
@@ -24,19 +23,19 @@ describe('Given the ActML library', () => {
       run(el);
 
       expect(mock).toBeCalledTimes(3);
-      expect(mock).toBeCalledWith(1);
       expect(mock).toBeCalledWith(2);
       expect(mock).toBeCalledWith(3);
+      expect(mock).toBeCalledWith(4);
     });
     it('should allow us to keep multiple states', async () => {
       const mock = jest.fn();
       const E = () => {
-        const [ numbers, increment ] = useState(1);
-        const [ letters, addLetter ] = useState('a');
+        const [ numbers, increment ] = useState(0);
+        const [ letters, addLetter ] = useState('');
 
-        increment(numbers + 1);
-        addLetter(letters + 'a');
-        mock(numbers, letters);
+        increment(numbers() + 1);
+        addLetter(letters() + 'a');
+        mock(numbers(), letters());
       };
       const el = <E />;
 
@@ -54,12 +53,12 @@ describe('Given the ActML library', () => {
       const E = ({ children }) => {
         const [ numbers, increment ] = useState(1);
 
-        if (numbers === 1) {
+        if (numbers() === 1) {
           setTimeout(() => {
-            increment(numbers + 1);
+            increment(numbers() + 1);
           }, 20);
         }
-        mock(numbers);
+        mock(numbers());
         return children;
       };
       const C = jest.fn();
@@ -73,21 +72,46 @@ describe('Given the ActML library', () => {
       expect(mock).toBeCalledWith(2);
       expect(C).toBeCalledTimes(2);
     });
-    it('should allow us to get the state immediately', async () => {
+    it('should get the state immediately', async () => {
       const mock = jest.fn();
       const E = () => {
-        const [ numbers, increment, getNumbers ] = useState(1);
-        const [ letters, addLetter, getLetters ] = useState('a');
+        const [ numbers, increment ] = useState(1);
+        const [ letters, addLetter ] = useState('a');
 
-        increment(increment(increment(numbers + 1) + 1) + 1);
-        addLetter(addLetter(addLetter(letters + 'a') + 'a') + 'a');
-        mock(getNumbers(), getLetters());
+        increment(increment(increment(numbers() + 1) + 1) + 1);
+        addLetter(addLetter(addLetter(letters() + 'a') + 'a') + 'a');
+        mock(numbers(), letters());
       };
 
       await run(<E />);
 
       expect(mock).toBeCalledTimes(1);
       expect(mock).toBeCalledWith(4, 'aaaa');
+    });
+  });
+  describe('when we use useState hook and the element is still running', () => {
+    it('should schedule an update after the processing is done', () => {
+      const mock = jest.fn();
+      const Trip = ({ children }) => {
+        const [ budget, update ] = useState(250);
+
+        children({ budget, update });
+      };
+      const Expenses = ({ budget, amount, update }) => {
+        update(budget() - amount);
+      };
+      const Print = ({ budget }) => mock(budget());
+
+      run(
+        <Trip>
+          <Expenses amount={ 40 } />
+          <Expenses amount={ 10 } />
+          <Expenses amount={ 1 } />
+          <Print />
+        </Trip>
+      );
+
+      expect(mock).toBeCalledWith(199);
     });
   });
 });

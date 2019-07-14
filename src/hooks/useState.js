@@ -39,15 +39,14 @@ export default function createUseStateHook(processor) {
     }
 
     return [
-      storage.states[index],
-      newState => {
+      () => storage.states[index],
+      (newState) => {
         storage.states[index] = newState;
         if (!element.isRunning()) {
           node.rerun();
         }
         return newState;
-      },
-      () => storage.states[index]
+      }
     ];
   };
 }

@@ -12,14 +12,14 @@ function createDispatchElement(dispatch) {
 
 export default function createUseReducerHook(useState) {
   return (reducer, initialState) => {
-    const [ state, setState, getState ] = useState(initialState);
-    const dispatch = action => setState(reducer(getState(), action));
+    const [ state, setState ] = useState(initialState);
+    const dispatch = action => setState(reducer(state(), action));
 
     return [
       state,
       dispatch,
       createDispatchElement(dispatch), // <Dispatch>
-      () => getState() // <GetState>
+      () => state() // <GetState>
     ];
   };
 }

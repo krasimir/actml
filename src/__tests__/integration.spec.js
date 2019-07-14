@@ -18,10 +18,10 @@ describe('Given the ActML library', () => {
         const [ setProduct ] = useProduct();
 
         subscribe('keyup', (key) => {
-          pressed(numOfKeyPressed + 1);
-          setProduct(numOfKeyPressed + 1);
+          pressed(numOfKeyPressed() + 1);
+          setProduct(numOfKeyPressed() + 1);
         });
-        setProduct(numOfKeyPressed);
+        setProduct(numOfKeyPressed());
         return children;
       };
       const Keyboard = function ({ children }) {
@@ -68,9 +68,9 @@ describe('Given the ActML library', () => {
     it('should work as expected', async () => {
       const values = [];
       const Counter = function ({ children }) {
-        const [ value, setCounter, getCounter ] = useState(0);
+        const [ value, setCounter ] = useState(0);
 
-        children({ value, update: () => setCounter(getCounter() + 1) });
+        children({ value: value(), update: () => setCounter(value() + 1) });
       };
       const Controls = function ({ update }) {
         useEffect(() => {

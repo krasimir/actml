@@ -927,18 +927,17 @@ function createDispatchElement(dispatch) {
 function createUseReducerHook(useState) {
   return function (reducer, initialState) {
     var _useState = useState(initialState),
-        _useState2 = _slicedToArray(_useState, 3),
+        _useState2 = _slicedToArray(_useState, 2),
         state = _useState2[0],
-        setState = _useState2[1],
-        getState = _useState2[2];
+        setState = _useState2[1];
 
     var dispatch = function dispatch(action) {
-      return setState(reducer(getState(), action));
+      return setState(reducer(state(), action));
     };
 
     return [state, dispatch, createDispatchElement(dispatch), // <Dispatch>
     function () {
-      return getState();
+      return state();
     } // <GetState>
     ];
   };
@@ -999,14 +998,14 @@ function createUseStateHook(processor) {
       storage.consumer = index < storage.states.length - 1 ? storage.consumer + 1 : 0;
     }
 
-    return [storage.states[index], function (newState) {
+    return [function () {
+      return storage.states[index];
+    }, function (newState) {
       storage.states[index] = newState;
       if (!element.isRunning()) {
         node.rerun();
       }
       return newState;
-    }, function () {
-      return storage.states[index];
     }];
   };
 }

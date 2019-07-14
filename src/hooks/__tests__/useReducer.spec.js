@@ -26,7 +26,7 @@ describe('Given the useReducer hook', () => {
       const C = function () {
         const [ state, dispatch ] = useReducer(reducer, initialState);
 
-        mock(state);
+        mock(state());
         delay(10, () => dispatch({ type: 'increment' }));
         delay(20, () => dispatch({ type: 'increment' }));
         delay(30, () => dispatch({ type: 'decrement' }));
