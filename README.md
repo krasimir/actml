@@ -27,7 +27,7 @@ run(
 
 ---
 
-* [How to use it](#howtouseit)
+* [How to use it](#how-to-use-it)
 * [Basics](#basics)
   * [Children](#children)
   * [Asynchronous](#asynchronous)
