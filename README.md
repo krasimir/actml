@@ -2,9 +2,9 @@
 
 # ActML
 
-> :dizzy: ActML is a library that allows you to use JSX syntax outside of React world. It aims to provide the same experience in terms of composability and patterns. :dizzy: 
+> :dizzy: ActML is a library that allows you to use JSX syntax outside of React world. It aims to provide the same experience in terms of composability and patterns.
 
-```javascript
+```js
 /** @jsx A */
 import { A, run } from 'actml';
 
@@ -27,9 +27,21 @@ run(
 
 ---
 
+* [Basics](#basics)
 * [Installation](#installation)
 
 ---
+
+## Basics
+
+ActML looks like [React](https://reactjs.org/) but it's not about rendering UI. It's just about executing your JavaScript.
+
+```js
+const Answer = () => 42;
+run(<Answer />); // 42
+```
+
+So, why the hell I'll bring this language and instead of `Answer()` I do `<Answer />`? Well, same reason why you do `<Component />` instead of `React.createElement(Component, null)`.
 
 ## Installation
 
