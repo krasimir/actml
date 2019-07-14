@@ -6,10 +6,11 @@ import { FillContainer } from './DOM';
 import { FILTER_ALL, FILTER_ACTIVE, FILTER_COMPLETED } from './Filter';
 
 export default function Renderer({ todos, filter }) {
+  console.log(todos, filter);
   return (
     <FillContainer>
       {
-        todos
+        () => todos
         .filter(({ completed }) => {
           if (filter === FILTER_ALL) return true;
           if (filter === FILTER_ACTIVE) return !completed;

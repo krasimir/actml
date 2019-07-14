@@ -64,14 +64,15 @@ const reducer = function (todos, action) {
   }
 };
 
-export default function Store({ initialValue }) {
+export default function Store({ initialValue, children }) {
   const [ todos, , Dispatch ] = useReducer(reducer, initialValue);
   const { Subscribe } = usePubSub();
 
-  useProduct(todos);
+  useProduct(todos());
 
   return (
     <Fragment>
+      { children }
       <Subscribe type={ TOGGLE }>
         <Dispatch propsToAction={ ({ payload: todoIndex }) => toggle(todoIndex) } />
       </Subscribe>

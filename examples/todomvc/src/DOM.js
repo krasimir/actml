@@ -22,10 +22,8 @@ const header = $('.header');
 const ENTER = 13;
 const ESC = 27;
 
-export function FillContainer() {
-  const [ , content ] = useChildren();
-
-  list.innerHTML = content;
+export function FillContainer({ children }) {
+  list.innerHTML = children();
 }
 export function Container({ onUserAction }) {
   list.addEventListener('click', (e) => {
