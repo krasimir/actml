@@ -78,7 +78,7 @@ run(<X><Message /></X>); // prints Hello twice
 run(<Y><Message /></Y>); // prints Hello once
 ```
 
-If we are calling `children` we are getting back an array containing the results of the nested elements.
+If we are calling `children` we are getting back an array containing the results of the nested elements. Or if the array contains one item we get directly that item.
 
 ```js
 const X = () => 'foo';
@@ -86,8 +86,15 @@ const Y = () => 'bar';
 const Results = ({ children }) => {
   console.log(JSON.stringify(children()));
 };
-run(<Results><X /><Y /></Results>); // prints ["foo","bar"]
+run(
+  <Results>
+    <X />
+    <Y />
+  </Results>
+); // prints ["foo","bar"]
 ```
+
+Calling manually `children` means runs the children `X` and `Y` and receiving the result of them.
 
 ### Asynchronous
 
