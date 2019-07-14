@@ -8,11 +8,11 @@
 /** @jsx A */
 import { A, run } from 'actml';
 
-const Greeting = ({ name }) => {
-  return `Hello ${ name }!`;
-}
 const Message = ({ user, children }) => {
   console.log(children(user));
+}
+const Greeting = (user) => {
+  return `Hello ${ user.name }!`;
 }
 
 run(
