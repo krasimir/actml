@@ -38,9 +38,12 @@ export default function createUseStateHook(processor) {
       storage.consumer = index < storage.states.length - 1 ? storage.consumer + 1 : 0;
     }
 
+    if (__DEV__) node.log('useState:consumed', storage.states[index]);
+
     return [
       () => storage.states[index],
       (newState) => {
+        if (__DEV__) node.log('useState:new', newState);
         storage.states[index] = newState;
         if (!element.isRunning()) {
           node.rerun();

@@ -28,12 +28,16 @@ export default function Tree() {
   }
   function createNewNode(element, parent) {
     if (element) { element.initialize(getId()); }
-    return {
+
+    const node = {
       element,
       children: [],
       parent,
       cursor: 0,
       enter() {
+        if (__DEV__) {
+          if (this.logs) this.logs = [];
+        }
         log(`-> ${ this.element.name }`);
         this.element.enter();
         onNodeEnter.forEach(c => c(this));
@@ -70,6 +74,15 @@ export default function Tree() {
         return newChildNode;
       }
     };
+
+    if (__DEV__) {
+      node.log = (type, meta) => {
+        if (!('logs' in node)) node.logs = [];
+        node.logs.push({ type, meta });
+      };
+    }
+
+    return node;
   }
 
   return {
@@ -86,21 +99,25 @@ export default function Tree() {
       return ids;
     },
     diagnose() {
-      return (function loopOver(node, ind = 0) {
-        const { children, ...rest } = node.element.props ? node.element.props : {}; // eslint-disable-line no-unused-vars
+      if (__DEV__) {
+        return (function loopOver(node, ind = 0) {
+          const { children, ...rest } = node.element.props ? node.element.props : {}; // eslint-disable-line no-unused-vars
 
-        return {
-          ind,
-          name: node.element.name,
-          props: {
-            children: '<function children>',
-            ...rest
-          },
-          used: node.element.used(),
-          id: node.element.id,
-          children: node.children.map(child => loopOver(child, ind + 1))
-        };
-      })(root);
+          return {
+            ind,
+            name: node.element.name,
+            logs: node.logs,
+            props: {
+              children: '<function children>',
+              ...rest
+            },
+            used: node.element.used(),
+            id: node.element.id,
+            children: node.children.map(child => loopOver(child, ind + 1))
+          };
+        })(root);
+      }
+      throw new Error('Not available in production mode');
     },
     addNodeEnterCallback(callback) {
       onNodeEnter.push(callback);

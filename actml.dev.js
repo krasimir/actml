@@ -527,7 +527,8 @@ function Tree() {
     if (element) {
       element.initialize(getId());
     }
-    return {
+
+    var node = {
       element: element,
       children: [],
       parent: parent,
@@ -535,6 +536,9 @@ function Tree() {
       enter: function enter() {
         var _this = this;
 
+        if (true) {
+          if (this._logs) this._logs = [];
+        }
         log('-> ' + this.element.name);
         this.element.enter();
         onNodeEnter.forEach(function (c) {
@@ -583,6 +587,15 @@ function Tree() {
         return newChildNode;
       }
     };
+
+    if (true) {
+      node.log = function (type, meta) {
+        if (!('_logs' in node)) node['_logs'] = [];
+        node['_logs'].push({ type: type, meta: meta });
+      };
+    }
+
+    return node;
   }
 
   return {
@@ -597,26 +610,29 @@ function Tree() {
       return ids;
     },
     diagnose: function diagnose() {
-      return function loopOver(node) {
-        var ind = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+      if (true) {
+        return function loopOver(node) {
+          var ind = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
 
-        var _ref = node.element.props ? node.element.props : {},
-            children = _ref.children,
-            rest = _objectWithoutProperties(_ref, ['children']); // eslint-disable-line no-unused-vars
+          var _ref = node.element.props ? node.element.props : {},
+              children = _ref.children,
+              rest = _objectWithoutProperties(_ref, ['children']); // eslint-disable-line no-unused-vars
 
-        return {
-          ind: ind,
-          name: node.element.name,
-          props: _extends({
-            children: '<function children>'
-          }, rest),
-          used: node.element.used(),
-          id: node.element.id,
-          children: node.children.map(function (child) {
-            return loopOver(child, ind + 1);
-          })
-        };
-      }(root);
+          return {
+            ind: ind,
+            name: node.element.name,
+            props: _extends({
+              children: '<function children>'
+            }, rest),
+            used: node.element.used(),
+            id: node.element.id,
+            children: node.children.map(function (child) {
+              return loopOver(child, ind + 1);
+            })
+          };
+        }(root);
+      }
+      throw new Error('Not available in production mode');
     },
     addNodeEnterCallback: function addNodeEnterCallback(callback) {
       onNodeEnter.push(callback);

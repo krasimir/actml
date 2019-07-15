@@ -2,15 +2,26 @@ import isValidHookContext from './utils/isValidHookContext';
 
 var subscribers = {};
 
-const subscribe = (element, type, callback) => {
+const subscribe = (node, element, type, callback) => {
   if (!subscribers[type]) subscribers[type] = {};
+  if (__DEV__) {
+    if (!subscribers[type][element.id]) {
+      node.log('usePubSub:subscribe', type);
+    }
+  }
   subscribers[type][element.id] = callback;
   return () => {
+    if (__DEV__) {
+      node.log('usePubSub:unsubscribe', type);
+    }
     delete subscribers[type][element.id];
   };
 };
-const publish = (type, payload) => {
+const publish = (node, type, payload) => {
   if (!subscribers[type]) return;
+  if (__DEV__) {
+    node.log('usePubSub:publish:' + type, payload);
+  }
   Object.keys(subscribers[type]).forEach(id => {
     subscribers[type][id](payload);
   });
@@ -29,8 +40,8 @@ export default function createUsePubSubHook(processor) {
 
     const node = processor.node();
     const el = scopedElement || node.element;
-    const subscribeFunc = (...params) => subscribe(el, ...params);
-    const publishFunc = (...params) => publish(...params);
+    const subscribeFunc = (...params) => subscribe(node, el, ...params);
+    const publishFunc = (...params) => publish(node, ...params);
 
     return {
       subscribe: subscribeFunc,

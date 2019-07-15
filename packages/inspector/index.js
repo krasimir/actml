@@ -4,8 +4,23 @@ const REMOVE = 'REMOVE';
 
 import sanitize from './helpers/sanitize';
 
+const parseLogMeta = meta => {
+  if (typeof meta === 'undefined') return '';
+  if (typeof meta === 'string' || typeof meta === 'boolean' || typeof meta === 'number') {
+    return `(${ JSON.stringify(meta) })`;
+  }
+  if (typeof meta === 'object') {
+    if (Array.isArray(meta)) {
+      return `([...${ meta.length }])`;
+    }
+    return '(object)';
+  }
+  return `(${ typeof meta })`;
+};
+
 function printSnapshotToConsole(snapshot) {
-  let str = '';
+  const [ type, node, tree ] = snapshot;
+  let str = `${ type } <${ node.element.name }>\n`;
   let addInd = ind => {
     let s = '', i = 0;
 
@@ -13,21 +28,24 @@ function printSnapshotToConsole(snapshot) {
     return s;
   };
 
-  (function loop({ ind, name, used, children }) {
+  // console.clear();
+  (function loop({ ind, name, used, children, logs }) {
+    const logsStr = logs && logs.length > 0 ?
+      logs.map(({ type, meta }) => {
+        return `${ addInd(ind) }  ⤷ ${ type }${ parseLogMeta(meta) }`;
+      }).join('\n') + '\n' :
+      '';
+    const elStr = `${ addInd(ind) }<${ name }> (${ used })\n${ logsStr }`;
+
     if (children.length === 0) {
-      str += `${ addInd(ind) }<${ name } /> (${ used })\n`;
+      str += elStr;
       return;
     }
-    str += addInd(ind);
-    str += `<${ name }> (${ used })\n`;
+    str += elStr;
     if (children.length > 0) {
       children.forEach(child => loop(child));
     }
-    str += addInd(ind);
-    str += `</${ name }>\n`;
-  })(snapshot.tree);
-
-  console.clear();
+  })(tree);
   console.log(str);
 }
 
@@ -35,21 +53,11 @@ export default function inspector(processor) {
   const snapshots = [];
 
   function snapshot(type, node) {
-    const { children, ...rest } = node.element.props ? node.element.props : {}; // eslint-disable-line no-unused-vars
-
-    snapshots.push(sanitize({
+    snapshots.push([
       type,
-      element: {
-        name: node.element.name,
-        props: {
-          children: '<function children>',
-          ...rest
-        },
-        used: node.element.used(),
-        id: node.element.id
-      },
-      tree: processor.system().tree.diagnose()
-    }));
+      node,
+      processor.system().tree.diagnose()
+    ]);
     printSnapshotToConsole(snapshots[snapshots.length - 1]);
   }
 
