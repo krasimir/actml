@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types, no-sequences */
 /** @jsx A */
 
-import { A, run, Fragment, processor, useElement } from '../';
+import { A, run, Fragment, processor, useElement, createContext } from '../';
 import { exerciseTree, delay } from '../__helpers__/utils';
 
 describe('Given the ActML library', () => {
@@ -561,6 +561,51 @@ describe('Given the ActML library', () => {
       expect(destroyCallback).toBeCalledWith(
         expect.objectContaining({ element: expect.objectContaining({ name: 'D' })}
       ));
+    });
+  });
+  describe('when using a context', () => {
+    it('should allow to consume data from the context', async () => {
+      const Context = createContext();
+      const { Provider, Consumer } = Context;
+      const mock = jest.fn();
+      const F = () => {
+        return (
+          <Consumer>
+            { mock }
+          </Consumer>
+        );
+      };
+
+      run(
+        <Provider value='foo'>
+          <F />
+        </Provider>
+      );
+
+      expect(mock).toBeCalledWith('foo');
+    });
+    it('should throw an error if there is no provider and should return the intial value', async () => {
+      const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const mock = jest.fn();
+      const Context = createContext('boo');
+      const { Consumer } = Context;
+      const B = ({ children }) => children;
+      const F = () => {
+        return (
+          <Consumer>
+            { mock }
+          </Consumer>
+        );
+      };
+
+      run(<B><F /></B>);
+      expect(spy).toBeCalledWith(`A context consumer is used with no provider.
+  Stack:
+    <Consumer>
+    <F>
+    <B>`);
+      expect(mock).toBeCalledWith('boo');
+      spy.mockRestore();
     });
   });
 });

@@ -7,6 +7,8 @@ import createUsePubSubHook from './hooks/usePubSub';
 import createUseStateHook from './hooks/useState';
 import createUseReducerHook from './hooks/useReducer';
 import createUseEffectHook from './hooks/useEffect';
+import createUseContextHook from './hooks/useContext';
+import createContextFactory from './Context';
 
 export function createRuntime() {
   const processor = createProcessor();
@@ -26,6 +28,8 @@ export function createRuntime() {
   const usePubSub = createUsePubSubHook(processor);
   const useReducer = createUseReducerHook(useState);
   const useEffect = createUseEffectHook(processor);
+  const useContext = createUseContextHook(processor);
+  const createContext = createContextFactory(processor);
 
   return {
     A,
@@ -36,7 +40,9 @@ export function createRuntime() {
     usePubSub,
     useState,
     useReducer,
-    useEffect
+    useEffect,
+    useContext,
+    createContext
   };
 }
 

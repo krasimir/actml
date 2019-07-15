@@ -60,6 +60,81 @@ exports.default = createElement;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = createContextFactory;
+
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });
+  } else {
+    obj[key] = value;
+  }return obj;
+}
+
+/* eslint-disable consistent-return */
+var CONTEXT_KEY = '__CONTEXT_KEY__';
+
+var PUBLIC_CONTEXT_KEY = exports.PUBLIC_CONTEXT_KEY = '__PUBLIC_CONTEXT_KEY__';
+
+var ids = 0;
+
+function getId() {
+  return 'c' + ++ids;
+};
+function resolveContext(node, id) {
+  var stack = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+
+  stack.push(node.element.name);
+  if (node[CONTEXT_KEY] && id in node[CONTEXT_KEY]) {
+    return node[CONTEXT_KEY][id];
+  } else if (node.parent) {
+    return resolveContext(node.parent, id, stack);
+  }
+  console.warn('A context consumer is used with no provider.\n  Stack:\n' + stack.map(function (name) {
+    return '    <' + name + '>';
+  }).join('\n'));
+}
+
+function createContextFactory(processor) {
+  return function createContext(initialValue) {
+    var _ref3;
+
+    var id = getId();
+
+    var Provider = function Provider(_ref) {
+      var value = _ref.value,
+          children = _ref.children;
+
+      var node = processor.node();
+
+      if (!node[CONTEXT_KEY]) {
+        node[CONTEXT_KEY] = {};
+      }
+      node[CONTEXT_KEY][id] = value;
+
+      return children;
+    };
+    var Consumer = function Consumer(_ref2) {
+      var children = _ref2.children;
+
+      var node = processor.node();
+
+      children(resolveContext(node, id) || initialValue);
+    };
+
+    return _ref3 = {}, _defineProperty(_ref3, PUBLIC_CONTEXT_KEY, function () {
+      var node = processor.node();
+
+      return resolveContext(node, id) || initialValue;
+    }), _defineProperty(_ref3, 'Provider', Provider), _defineProperty(_ref3, 'Consumer', Consumer), _ref3;
+  };
+};
+
+},{}],3:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.default = createProcessor;
 
 var _isActMLElement = require('./utils/isActMLElement');
@@ -290,7 +365,7 @@ function createProcessor() {
   };
 };
 
-},{"./Queue":3,"./Tree":4,"./hooks/useEffect":5,"./hooks/usePubSub":7,"./hooks/useState":9,"./utils/isActMLElement":12}],3:[function(require,module,exports){
+},{"./Queue":4,"./Tree":5,"./hooks/useEffect":7,"./hooks/usePubSub":9,"./hooks/useState":11,"./utils/isActMLElement":14}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -391,7 +466,7 @@ function createQueue(context) {
   };
 };
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -530,7 +605,34 @@ function Tree() {
   };
 };
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _isValidHookContext = require('./utils/isValidHookContext');
+
+var _isValidHookContext2 = _interopRequireDefault(_isValidHookContext);
+
+var _Context = require('../Context');
+
+function _interopRequireDefault(obj) {
+  return obj && obj.__esModule ? obj : { default: obj };
+}
+
+var createUseElementHook = function createUseElementHook(processor) {
+  return function (Context) {
+    (0, _isValidHookContext2.default)(processor);
+
+    return Context[_Context.PUBLIC_CONTEXT_KEY]();
+  };
+};
+
+exports.default = createUseElementHook;
+
+},{"../Context":2,"./utils/isValidHookContext":12}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -653,7 +755,7 @@ createUseEffectHook.clear = function () {
   Storage.elements = {};
 };
 
-},{"./utils/isValidHookContext":10,"fast-deep-equal":13}],6:[function(require,module,exports){
+},{"./utils/isValidHookContext":12,"fast-deep-equal":15}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -678,7 +780,7 @@ var createUseElementHook = function createUseElementHook(processor) {
 
 exports.default = createUseElementHook;
 
-},{"./utils/isValidHookContext":10}],7:[function(require,module,exports){
+},{"./utils/isValidHookContext":12}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -746,7 +848,7 @@ createUsePubSubHook.clear = function () {
   subscribers = {};
 };
 
-},{"./utils/isValidHookContext":10}],8:[function(require,module,exports){
+},{"./utils/isValidHookContext":12}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -822,7 +924,7 @@ function createUseReducerHook(useState) {
   };
 }
 
-},{}],9:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -893,7 +995,7 @@ createUseStateHook.clear = function () {
   Storage.elements = {};
 };
 
-},{"./utils/isValidHookContext":10}],10:[function(require,module,exports){
+},{"./utils/isValidHookContext":12}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -909,7 +1011,7 @@ function isValidHookContext(processor) {
   }
 };
 
-},{}],11:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -949,6 +1051,14 @@ var _useEffect = require('./hooks/useEffect');
 
 var _useEffect2 = _interopRequireDefault(_useEffect);
 
+var _useContext = require('./hooks/useContext');
+
+var _useContext2 = _interopRequireDefault(_useContext);
+
+var _Context = require('./Context');
+
+var _Context2 = _interopRequireDefault(_Context);
+
 function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj };
 }
@@ -978,6 +1088,8 @@ function createRuntime() {
   var usePubSub = (0, _usePubSub2.default)(processor);
   var useReducer = (0, _useReducer2.default)(useState);
   var useEffect = (0, _useEffect2.default)(processor);
+  var useContext = (0, _useContext2.default)(processor);
+  var createContext = (0, _Context2.default)(processor);
 
   return {
     A: A,
@@ -988,7 +1100,9 @@ function createRuntime() {
     usePubSub: usePubSub,
     useState: useState,
     useReducer: useReducer,
-    useEffect: useEffect
+    useEffect: useEffect,
+    useContext: useContext,
+    createContext: createContext
   };
 }
 
@@ -997,7 +1111,7 @@ var runtime = createRuntime();
 module.exports = runtime;
 module.exports.createRuntime = createRuntime();
 
-},{"./ActElement":1,"./Processor":2,"./hooks/useEffect":5,"./hooks/useElement":6,"./hooks/usePubSub":7,"./hooks/useReducer":8,"./hooks/useState":9,"./utils/isActMLElement":12}],12:[function(require,module,exports){
+},{"./ActElement":1,"./Context":2,"./Processor":3,"./hooks/useContext":6,"./hooks/useEffect":7,"./hooks/useElement":8,"./hooks/usePubSub":9,"./hooks/useReducer":10,"./hooks/useState":11,"./utils/isActMLElement":14}],14:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1008,7 +1122,7 @@ function isActMLElement(element) {
   return element && element.__actml === true;
 };
 
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 'use strict';
 
 var isArray = Array.isArray;
@@ -1065,5 +1179,5 @@ module.exports = function equal(a, b) {
   return a!==a && b!==b;
 };
 
-},{}]},{},[11])(11)
+},{}]},{},[13])(13)
 });

@@ -102,5 +102,5 @@ export function FilterOptionsTabs({ filter }) {
     $('[data-all]').setAttribute('class', filter === FILTER_ALL ? 'selected' : '');
     $('[data-active]').setAttribute('class', filter === FILTER_ACTIVE ? 'selected' : '');
     $('[data-completed]').setAttribute('class', filter === FILTER_COMPLETED ? 'selected' : '');
-  }, [filter]);
+  }, [ filter ]);
 }
