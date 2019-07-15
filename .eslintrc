@@ -24,7 +24,8 @@
     "jest": true,
     "beforeEach": true,
     "afterEach": true,
-    "actml": true
+    "actml": true,
+    "__DEV__": true
   },
 
   "parser": "babel-eslint",

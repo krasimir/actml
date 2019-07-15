@@ -1,15 +1,17 @@
 {
   "name": "actml",
-  "version": "0.31.1",
+  "version": "0.32.0",
   "description": "Like jsx but for your business logic",
-  "main": "lib/index.js",
+  "main": "./actml.production.js",
   "scripts": {
-    "bundle": "browserify ./lib/index.js -o ./standalone/actml.js --standalone actml && uglifyjs ./standalone/actml.js -o ./standalone/actml.min.js",
+    "build-dev": "cp ./actml.js ./actml.dev.js && node ./scripts/replaceInFile.js ./actml.dev.js __DEV__ true",
+    "build-production": "cp ./actml.js ./actml.production.js && node ./scripts/replaceInFile.js ./actml.production.js __DEV__ false && uglifyjs ./actml.production.js -o ./actml.production.js --compress unused,dead_code",
+    "build": "browserify ./lib/index.js -o ./actml.js --standalone actml && yarn build-dev && yarn build-production && rm ./actml.js",
     "test": "BABEL_ENV=development ./node_modules/.bin/jest \"(.*)\\.spec\\.js\"",
     "test-watch": "BABEL_ENV=development ./node_modules/.bin/jest \"(.*)\\.spec\\.js\" --watch --verbose false",
-    "build": "rm -rf ./lib/* && ./node_modules/.bin/babel ./src --out-dir ./lib --ignore spec.js",
+    "transpile": "rm -rf ./lib/* && ./node_modules/.bin/babel ./src --out-dir ./lib --ignore spec.js",
     "dev": "./node_modules/.bin/babel ./src --out-dir ./lib --ignore spec.js --watch",
-    "release": "yarn test && yarn build && yarn bundle"
+    "release": "yarn test && yarn transpile && yarn build"
   },
   "repository": {
     "type": "git",
@@ -53,7 +55,10 @@
   },
   "jest": {
     "setupTestFrameworkScriptFile": "./jest/index.js",
-    "verbose": false
+    "verbose": false,
+    "globals": {
+      "__DEV__": true
+    }
   },
   "dependencies": {
     "fast-deep-equal": "2.0.1"

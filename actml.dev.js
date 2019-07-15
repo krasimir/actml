@@ -472,7 +472,25 @@ function createQueue(context) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _extends = Object.assign || function (target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i];for (var key in source) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        target[key] = source[key];
+      }
+    }
+  }return target;
+};
+
 exports.default = Tree;
+
+function _objectWithoutProperties(obj, keys) {
+  var target = {};for (var i in obj) {
+    if (keys.indexOf(i) >= 0) continue;if (!Object.prototype.hasOwnProperty.call(obj, i)) continue;target[i] = obj[i];
+  }return target;
+}
+
 /* eslint-disable no-use-before-define, no-return-assign, max-len */
 var LOGS = false;
 var log = function log() {
@@ -582,9 +600,16 @@ function Tree() {
       return function loopOver(node) {
         var ind = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
 
+        var _ref = node.element.props ? node.element.props : {},
+            children = _ref.children,
+            rest = _objectWithoutProperties(_ref, ['children']); // eslint-disable-line no-unused-vars
+
         return {
           ind: ind,
           name: node.element.name,
+          props: _extends({
+            children: '<function children>'
+          }, rest),
           used: node.element.used(),
           id: node.element.id,
           children: node.children.map(function (child) {
