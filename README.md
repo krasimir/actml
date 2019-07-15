@@ -28,14 +28,16 @@ run(
 ---
 
 * [How to use it](#how-to-use-it)
-* [Caveats](#caveats)
+* [Introduction](#caveats)
   * [Children](#children)
   * [Asynchronous](#asynchronous)
+  * [Context](#context)
 * [Hooks](#hooks)
   * [useState](#usestate)
   * [useEffect](#useeffect)
   * [useReducer](#usereducer)
   * [usePubSub](#usepubsub)
+  * [useContext](#usecontext)
 * [Examples](#examples)
 
 ---
@@ -133,6 +135,36 @@ run(
 
 Notice that `<Greeting>` and `<FavoriteColor>` are synchronous. ActML waits for all the children to be processed and then resolves the promise returned by the `children` call. If all the elements were synchronous they we'll get an array straight away.
 
+### Context
+
+I can't say it better than [React docs](https://reactjs.org/docs/context.html#reactcreatecontext):
+
+> Context provides a way to pass data through the component tree without having to pass props down manually at every level.
+
+```js
+import { createContext } from 'actml';
+
+const Context = createContext('<default value>');
+const { Provider, Consumer } = Context;
+
+const F = () => {
+  return (
+    <Consumer>
+      { value => console.log(value) }
+    </Consumer>
+  );
+};
+
+run(
+  <Provider value='foo'>
+    <F />
+  </Provider>
+); 
+// outputs: 'foo'
+```
+
+ActML searches for the `<Provider>` up the tree from the place where the `<Consumer>` is positioned. If it can't find the `<Provider>` then it shows a warning and delivers `<default value>` instead.
+
 ## Hooks
 
 ### useState
@@ -224,6 +256,24 @@ The `usePubSub` hook can help you if you need to communicate between elements on
 
 * `publish(<type>, <payload>)`
 * `subscribe(<type>, <callback>)`
+
+### useContext
+
+Consume the value of a context.
+
+```js
+const Context = createContext();
+const F = () => {
+  const value = useContext(Context);
+  // here value is 'foo'
+};
+
+run(
+  <Context.Provider value='foo'>
+    <F />
+  </Context.Provider>
+);
+```
 
 ## Examples
 
