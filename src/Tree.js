@@ -87,9 +87,15 @@ export default function Tree() {
     },
     diagnose() {
       return (function loopOver(node, ind = 0) {
+        const { children, ...rest } = node.element.props ? node.element.props : {}; // eslint-disable-line no-unused-vars
+
         return {
           ind,
           name: node.element.name,
+          props: {
+            children: '<function children>',
+            ...rest
+          },
           used: node.element.used(),
           id: node.element.id,
           children: node.children.map(child => loopOver(child, ind + 1))

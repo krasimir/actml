@@ -1,5 +1,8 @@
 /** @jsx A */
-import { A, run, Fragment, usePubSub, useState, useEffect } from '../../../lib';
+import { A, run, Fragment, usePubSub, useState, useEffect, processor } from '../../../lib';
+import inspector from '../../../packages/inspector';
+
+inspector(processor);
 
 import Store from './Store';
 import Renderer from './Renderer';

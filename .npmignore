@@ -9,3 +9,4 @@ src
 NOTES
 *.log
 *.lock
+packages
