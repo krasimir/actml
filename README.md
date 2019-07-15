@@ -26,7 +26,7 @@ run(
 ---
 
 * [How to use it](#how-to-use-it)
-* [Introduction](#caveats)
+* [Introduction](#introduction)
   * [Children](#children)
   * [Asynchronous](#asynchronous)
   * [Context](#context)
@@ -46,7 +46,7 @@ run(
 * ActML uses JSX so you need to have some sort of [Babel](https://babeljs.io) integration (or any other transpiler that understands [JSX](https://facebook.github.io/jsx/))
 * ActML requires you to add `/** @jsx A */` at the top of the file. Otherwise the ActML elements will be transpiled to `React.createElement`
 
-## Caveats
+## Introduction
 
 ActML looks like [React](https://reactjs.org/) but it's not about rendering UI. It's about executing your JavaScript.
 
