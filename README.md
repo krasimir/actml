@@ -94,7 +94,7 @@ run(
 ); // prints ["foo","bar"]
 ```
 
-Calling manually `children` means runs the children `X` and `Y` and receiving the result of them.
+Calling manually `children` means running the children `X` and `Y` and receiving the result of them.
 
 ### Asynchronous
 
