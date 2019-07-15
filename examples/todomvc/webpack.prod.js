@@ -1,4 +1,5 @@
 const TerserPlugin = require('terser-webpack-plugin');
+const webpack = require('webpack');
 
 module.exports = {
   entry: './src/index.js',
@@ -21,5 +22,10 @@ module.exports = {
   },
   optimization: {
     minimizer: [new TerserPlugin()]
-  }
+  },
+  plugins: [
+    new webpack.DefinePlugin({
+      __DEV__: true
+    })
+  ]
 };

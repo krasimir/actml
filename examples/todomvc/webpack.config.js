@@ -1,3 +1,5 @@
+const webpack = require('webpack');
+
 module.exports = {
   entry: ['regenerator-runtime/runtime', './src/index.js'],
   module: {
@@ -18,5 +20,10 @@ module.exports = {
     filename: 'app.js'
   },
   devtool: 'inline-source-map',
-  watch: true
+  watch: true,
+  plugins: [
+    new webpack.DefinePlugin({
+      __DEV__: true
+    })
+  ]
 };

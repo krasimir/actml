@@ -1,11 +1,11 @@
 {
   "name": "actml",
-  "version": "0.32.0",
+  "version": "0.32.1",
   "description": "Like jsx but for your business logic",
   "main": "./actml.production.js",
   "scripts": {
     "build-dev": "cp ./actml.js ./actml.dev.js && node ./scripts/replaceInFile.js ./actml.dev.js __DEV__ true",
-    "build-production": "cp ./actml.js ./actml.production.js && node ./scripts/replaceInFile.js ./actml.production.js __DEV__ false && uglifyjs ./actml.production.js -o ./actml.production.js --compress unused,dead_code",
+    "build-production": "cp ./actml.js ./actml.production.js && node ./scripts/replaceInFile.js ./actml.production.js __DEV__ false && uglifyjs ./actml.production.js -o ./actml.production.js --compress unused,dead_code --mangle",
     "build": "browserify ./lib/index.js -o ./actml.js --standalone actml && yarn build-dev && yarn build-production && rm ./actml.js",
     "test": "BABEL_ENV=development ./node_modules/.bin/jest \"(.*)\\.spec\\.js\"",
     "test-watch": "BABEL_ENV=development ./node_modules/.bin/jest \"(.*)\\.spec\\.js\" --watch --verbose false",
