@@ -1,6 +1,6 @@
 {
   "name": "actml",
-  "version": "0.32.1",
+  "version": "0.33.0",
   "description": "Like jsx but for your business logic",
   "main": "./actml.production.js",
   "scripts": {

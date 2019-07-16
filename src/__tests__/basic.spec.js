@@ -483,17 +483,17 @@ describe('Given the ActML library', () => {
     });
   });
   describe('when we use the tree\'s lifecycle callbacks', () => {
-    it('should call enter and out callbacks', async () => {
+    it('should call in and out callbacks', async () => {
       const E = () => {
         return <B><C /></B>;
       };
       const B = ({ children }) => children;
       const C = () => {};
       const calls = [];
-      const enter = node => calls.push(`<${ node.element.name }>`);
+      const inCallback = node => calls.push(`<${ node.element.name }>`);
       const out = node => calls.push(`</${ node.element.name }>`);
 
-      processor.onNodeEnter(enter);
+      processor.onNodeIn(inCallback);
       processor.onNodeOut(out);
 
       await run(<E />);

@@ -1,3 +1,5 @@
+import isValidHookContext from './utils/isValidHookContext';
+
 function createDispatchElement(dispatch) {
   return ({ action, propsToAction, ...rest }) => {
     if (action) {
@@ -10,10 +12,18 @@ function createDispatchElement(dispatch) {
   };
 }
 
-export default function createUseReducerHook(useState) {
+export default function createUseReducerHook(processor, useState) {
   return (reducer, initialState) => {
+    isValidHookContext(processor);
+
+    const node = processor.node();
     const [ state, setState ] = useState(initialState);
-    const dispatch = action => setState(reducer(state(), action));
+    const dispatch = action => {
+      if (__DEV__) {
+        node.log('useReducer:dispatch', action.type);
+      }
+      setState(reducer(state(), action));
+    };
 
     return [
       state,

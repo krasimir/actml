@@ -43,12 +43,14 @@ function resolveEffect(node, effect) {
   } else if (deps.length === 0) {
     if (node.element.used() === 1) {
       effect.cleanUp = callback();
+      if (__DEV__) node.log('useEffect:fired');
     }
   } else {
     const areEqual = depsEqual(oldDeps, deps);
 
     if (!areEqual) {
       effect.cleanUp = callback();
+      if (__DEV__) node.log('useEffect:fired');
     }
   }
 }
@@ -59,7 +61,10 @@ const createUseEffectHook = (processor) => {
     const storage = Storage.get(element);
 
     storage.effects.forEach(effect => {
-      if (effect.cleanUp) effect.cleanUp();
+      if (effect.cleanUp) {
+        effect.cleanUp();
+        if (__DEV__) node.log('useEffect:cleanUp');
+      }
     });
     Storage.cleanUp(node.element.id);
   });

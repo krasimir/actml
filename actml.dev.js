@@ -39,7 +39,7 @@ var createElement = function createElement(func, props, children) {
     isRunning: function isRunning() {
       return this.__running;
     },
-    enter: function enter() {
+    in: function _in() {
       this.__running = true;
     },
     consume: function consume() {
@@ -238,7 +238,7 @@ function createProcessor() {
 
   var processNode = function processNode(node) {
     currentNode = node;
-    node.enter();
+    node.in();
     node.rerun = function () {
       return processNode(node);
     };
@@ -341,8 +341,8 @@ function createProcessor() {
 
       return processNode(rootNode);
     },
-    onNodeEnter: function onNodeEnter(callback) {
-      tree.addNodeEnterCallback(callback);
+    onNodeIn: function onNodeIn(callback) {
+      tree.addNodeInCallback(callback);
     },
     onNodeOut: function onNodeOut(callback) {
       tree.addNodeOutCallback(callback);
@@ -500,7 +500,7 @@ var log = function log() {
 };
 
 function Tree() {
-  var onNodeEnter = [];
+  var onNodeIn = [];
   var onNodeOut = [];
   var _onNodeRemove = [];
   var root = createNewNode();
@@ -533,17 +533,17 @@ function Tree() {
       children: [],
       parent: parent,
       cursor: 0,
-      enter: function enter() {
+      in: function _in() {
         var _this = this;
 
-        if (true) {
-          if (this._logs) this._logs = [];
-        }
         log('-> ' + this.element.name);
-        this.element.enter();
-        onNodeEnter.forEach(function (c) {
+        this.element.in();
+        onNodeIn.forEach(function (c) {
           return c(_this);
         });
+        if (true) {
+          node.log('node:in');
+        }
       },
       out: function out() {
         var _this2 = this;
@@ -559,9 +559,15 @@ function Tree() {
           });
         }
         this.cursor = 0;
+        if (true) {
+          node.log('node:out');
+        }
         onNodeOut.forEach(function (c) {
           return c(_this2);
         });
+        if (true) {
+          if (this.logs) this.logs = [];
+        }
       },
       addChildNode: function addChildNode(newElement) {
         var _this3 = this;
@@ -590,8 +596,8 @@ function Tree() {
 
     if (true) {
       node.log = function (type, meta) {
-        if (!('_logs' in node)) node['_logs'] = [];
-        node['_logs'].push({ type: type, meta: meta });
+        if (!('logs' in node)) node.logs = [];
+        node.logs.push({ type: type, meta: meta, time: performance.now() });
       };
     }
 
@@ -621,6 +627,7 @@ function Tree() {
           return {
             ind: ind,
             name: node.element.name,
+            logs: node.logs,
             props: _extends({
               children: '<function children>'
             }, rest),
@@ -634,8 +641,8 @@ function Tree() {
       }
       throw new Error('Not available in production mode');
     },
-    addNodeEnterCallback: function addNodeEnterCallback(callback) {
-      onNodeEnter.push(callback);
+    addNodeInCallback: function addNodeInCallback(callback) {
+      onNodeIn.push(callback);
     },
     addNodeOutCallback: function addNodeOutCallback(callback) {
       onNodeOut.push(callback);
@@ -736,12 +743,14 @@ function resolveEffect(node, effect) {
   } else if (deps.length === 0) {
     if (node.element.used() === 1) {
       effect.cleanUp = callback();
+      if (true) node.log('useEffect:fired');
     }
   } else {
     var areEqual = depsEqual(oldDeps, deps);
 
     if (!areEqual) {
       effect.cleanUp = callback();
+      if (true) node.log('useEffect:fired');
     }
   }
 }
@@ -753,7 +762,10 @@ var createUseEffectHook = function createUseEffectHook(processor) {
     var storage = Storage.get(element);
 
     storage.effects.forEach(function (effect) {
-      if (effect.cleanUp) effect.cleanUp();
+      if (effect.cleanUp) {
+        effect.cleanUp();
+        if (true) node.log('useEffect:cleanUp');
+      }
     });
     Storage.cleanUp(node.element.id);
   });
@@ -839,15 +851,26 @@ function _interopRequireDefault(obj) {
 
 var subscribers = {};
 
-var subscribe = function subscribe(element, type, callback) {
+var subscribe = function subscribe(node, element, type, callback) {
   if (!subscribers[type]) subscribers[type] = {};
+  if (true) {
+    if (!subscribers[type][element.id]) {
+      node.log('usePubSub:subscribe', type);
+    }
+  }
   subscribers[type][element.id] = callback;
   return function () {
+    if (true) {
+      node.log('usePubSub:unsubscribe', type);
+    }
     delete subscribers[type][element.id];
   };
 };
-var publish = function publish(type, payload) {
+var publish = function publish(node, type, payload) {
   if (!subscribers[type]) return;
+  if (true) {
+    node.log('usePubSub:publish:' + type, payload);
+  }
   Object.keys(subscribers[type]).forEach(function (id) {
     subscribers[type][id](payload);
   });
@@ -871,10 +894,14 @@ function createUsePubSubHook(processor) {
         params[_key] = arguments[_key];
       }
 
-      return subscribe.apply(undefined, [el].concat(params));
+      return subscribe.apply(undefined, [node, el].concat(params));
     };
     var publishFunc = function publishFunc() {
-      return publish.apply(undefined, arguments);
+      for (var _len2 = arguments.length, params = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        params[_key2] = arguments[_key2];
+      }
+
+      return publish.apply(undefined, [node].concat(params));
     };
 
     return {
@@ -924,6 +951,14 @@ var _slicedToArray = function () {
 
 exports.default = createUseReducerHook;
 
+var _isValidHookContext = require('./utils/isValidHookContext');
+
+var _isValidHookContext2 = _interopRequireDefault(_isValidHookContext);
+
+function _interopRequireDefault(obj) {
+  return obj && obj.__esModule ? obj : { default: obj };
+}
+
 function _objectWithoutProperties(obj, keys) {
   var target = {};for (var i in obj) {
     if (keys.indexOf(i) >= 0) continue;if (!Object.prototype.hasOwnProperty.call(obj, i)) continue;target[i] = obj[i];
@@ -946,15 +981,22 @@ function createDispatchElement(dispatch) {
   };
 }
 
-function createUseReducerHook(useState) {
+function createUseReducerHook(processor, useState) {
   return function (reducer, initialState) {
+    (0, _isValidHookContext2.default)(processor);
+
+    var node = processor.node();
+
     var _useState = useState(initialState),
         _useState2 = _slicedToArray(_useState, 2),
         state = _useState2[0],
         setState = _useState2[1];
 
     var dispatch = function dispatch(action) {
-      return setState(reducer(state(), action));
+      if (true) {
+        node.log('useReducer:dispatch', action.type);
+      }
+      setState(reducer(state(), action));
     };
 
     return [state, dispatch, createDispatchElement(dispatch), // <Dispatch>
@@ -965,7 +1007,7 @@ function createUseReducerHook(useState) {
   };
 }
 
-},{}],11:[function(require,module,exports){
+},{"./utils/isValidHookContext":12}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1019,12 +1061,15 @@ function createUseStateHook(processor) {
       index = storage.consumer;
       storage.consumer = index < storage.states.length - 1 ? storage.consumer + 1 : 0;
     }
+    if (true) node.log('useState:consumed', storage.states[index]);
 
     return [function () {
       return storage.states[index];
     }, function (newState) {
+      if (true) node.log('useState:set', newState);
       storage.states[index] = newState;
       if (!element.isRunning()) {
+        if (true) node.log('useState:rerun');
         node.rerun();
       }
       return newState;
@@ -1127,7 +1172,7 @@ function createRuntime() {
   var useElement = (0, _useElement2.default)(processor);
   var useState = (0, _useState2.default)(processor);
   var usePubSub = (0, _usePubSub2.default)(processor);
-  var useReducer = (0, _useReducer2.default)(useState);
+  var useReducer = (0, _useReducer2.default)(processor, useState);
   var useEffect = (0, _useEffect2.default)(processor);
   var useContext = (0, _useContext2.default)(processor);
   var createContext = (0, _Context2.default)(processor);

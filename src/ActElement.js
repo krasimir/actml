@@ -31,7 +31,7 @@ const createElement = (func, props, children) => {
     isRunning() {
       return this.__running;
     },
-    enter() {
+    in() {
       this.__running = true;
     },
     consume() {

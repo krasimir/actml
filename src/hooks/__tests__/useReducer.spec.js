@@ -12,6 +12,7 @@ describe('Given the useReducer hook', () => {
     it('should be possible to keep state and control it via actions', async () => {
       const initialState = { count: 0 };
       const mock = jest.fn();
+      let lock = false;
 
       function reducer(state, action) {
         switch (action.type) {
@@ -27,9 +28,12 @@ describe('Given the useReducer hook', () => {
         const [ state, dispatch ] = useReducer(reducer, initialState);
 
         mock(state());
-        delay(10, () => dispatch({ type: 'increment' }));
-        delay(20, () => dispatch({ type: 'increment' }));
-        delay(30, () => dispatch({ type: 'decrement' }));
+        if (!lock) {
+          lock = true;
+          delay(10, () => dispatch({ type: 'increment' }));
+          delay(20, () => dispatch({ type: 'increment' }));
+          delay(30, () => dispatch({ type: 'increment' }));
+        }
       };
 
       await run(
@@ -38,6 +42,11 @@ describe('Given the useReducer hook', () => {
         </Fragment>
       );
       await delay(40);
+      expect(mock).toBeCalledTimes(4);
+      expect(mock).toBeCalledWith({ count: 0 });
+      expect(mock).toBeCalledWith({ count: 1 });
+      expect(mock).toBeCalledWith({ count: 2 });
+      expect(mock).toBeCalledWith({ count: 3 });
     });
   });
   describe('when we use the Dispatch element', () => {

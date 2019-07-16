@@ -3,7 +3,7 @@ const LOGS = false;
 const log = (...something) => LOGS ? console.log(...something) : null;
 
 export default function Tree() {
-  var onNodeEnter = [];
+  var onNodeIn = [];
   var onNodeOut = [];
   var onNodeRemove = [];
   var root = createNewNode();
@@ -34,10 +34,13 @@ export default function Tree() {
       children: [],
       parent,
       cursor: 0,
-      enter() {
+      in() {
         log(`-> ${ this.element.name }`);
-        this.element.enter();
-        onNodeEnter.forEach(c => c(this));
+        this.element.in();
+        onNodeIn.forEach(c => c(this));
+        if (__DEV__) {
+          node.log('node:in');
+        }
       },
       out() {
         log(`<- ${ this.element.name }`);
@@ -49,6 +52,9 @@ export default function Tree() {
             .forEach(removedNode => onNodeRemove.forEach(c => c(removedNode)));
         }
         this.cursor = 0;
+        if (__DEV__) {
+          node.log('node:out');
+        }
         onNodeOut.forEach(c => c(this));
         if (__DEV__) {
           if (this.logs) this.logs = [];
@@ -78,7 +84,7 @@ export default function Tree() {
     if (__DEV__) {
       node.log = (type, meta) => {
         if (!('logs' in node)) node.logs = [];
-        node.logs.push({ type, meta });
+        node.logs.push({ type, meta, time: performance.now() });
       };
     }
 
@@ -119,8 +125,8 @@ export default function Tree() {
       }
       throw new Error('Not available in production mode');
     },
-    addNodeEnterCallback(callback) {
-      onNodeEnter.push(callback);
+    addNodeInCallback(callback) {
+      onNodeIn.push(callback);
     },
     addNodeOutCallback(callback) {
       onNodeOut.push(callback);

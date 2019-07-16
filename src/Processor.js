@@ -59,7 +59,7 @@ export default function createProcessor() {
 
   const processNode = function (node) {
     currentNode = node;
-    node.enter();
+    node.in();
     node.rerun = () => processNode(node);
     node.element.mergeProps({
       children: createChildrenFunc(node, processNode)
@@ -160,8 +160,8 @@ export default function createProcessor() {
 
       return processNode(rootNode);
     },
-    onNodeEnter(callback) {
-      tree.addNodeEnterCallback(callback);
+    onNodeIn(callback) {
+      tree.addNodeInCallback(callback);
     },
     onNodeOut(callback) {
       tree.addNodeOutCallback(callback);

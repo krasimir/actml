@@ -1,11 +1,20 @@
-const ENTER = 'ENTER';
+const IN = 'IN';
 const OUT = 'OUT';
 const REMOVE = 'REMOVE';
 
 import sanitize from './helpers/sanitize';
 
-const addInd = ind => {
+const isRunningInNode =
+  (typeof process !== 'undefined') &&
+  (typeof process.release !== 'undefined') &&
+  (process.release.name === 'node');
+
+const trim = (str, len, emp = '...') => str.length > len ? str.substr(0, len) + emp : str;
+const getIndMargin = ind => {
   return `margin-left: ${ ind * 20 }px;`;
+};
+const getIndSpaces = ind => {
+  return [...Array(ind * 2).keys()].map(x => ' ').join('');
 };
 const parseLogMeta = meta => {
   if (typeof meta === 'undefined') return '';
@@ -16,37 +25,71 @@ const parseLogMeta = meta => {
     if (Array.isArray(meta)) {
       return `([...${ meta.length }])`;
     }
-    return '(object)';
+    return `(${ trim(JSON.stringify(sanitize(meta)), 50) })`;
   }
   return `(${ typeof meta })`;
 };
 
-const STYLES = {
-  default: (ind) => 'display: inline-block;' + addInd(ind),
-  hook: (ind) => 'color: #999;' + addInd(ind),
-  current: (ind) => 'font-weight: bold; border: solid 1px #999; border-radius: 2px; padding: 1px 0;' + addInd(ind),
-  entrance: (ind) => 'color: #FFF;background: #4d4d4d;' + addInd(ind)
+const print = {
+  entrance: (what, ind) => {
+    if (!isRunningInNode) {
+      return [
+        null,
+        `%c${ what }`,
+        'color: #b0b0b0;' + getIndMargin(ind)
+      ];
+    }
+    return [ null, '\x1b[38m%s\x1b[0m', `${ getIndSpaces(ind) + what }`];
+  },
+  default: (what, ind) => {
+    if (!isRunningInNode) {
+      return [
+        null,
+        `%c${ what }`,
+        getIndMargin(ind)
+      ];
+    }
+    return [ null, `${ getIndSpaces(ind) + what }` ];
+  },
+  hook: (what, ind, time) => {
+    if (!isRunningInNode) {
+      return [
+        time,
+        `%c${ what }`,
+        'color: #999;' + getIndMargin(ind)
+      ];
+    }
+    return [ time, '\x1b[34m%s\x1b[0m', `${ getIndSpaces(ind) + what }` ];
+  },
+  current: (what, ind) => {
+    if (!isRunningInNode) {
+      return [
+        null,
+        `%c${ what }`,
+        'font-weight: bold; border: solid 1px #999; border-radius: 2px; padding: 1px 0;' + getIndMargin(ind)
+      ];
+    }
+    return [ null, getIndSpaces(ind) + `\x1b[100m${ what }\x1b[0m` ];
+  }
 };
 
 function printSnapshotToConsole(snapshot) {
   const [ type, node, tree ] = snapshot;
 
   let printLines = [
-    [ `→ ${ type } <${ node.element.name }>`, STYLES.entrance(0) ]
+    print.entrance('', 0)
   ];
 
   printLines = printLines.concat((function loop({ id, ind, name, used, children, logs }) {
     let lines = [];
+    let elementOpenTag = `<${ name }${ used > 0 ? `(${ used })` : '' }>`;
 
     lines.push(
-      [
-        `<${ name }${ children.length === 0 ? ' /' : ''}> (${ used })`,
-        id === node.element.id ? STYLES.current(ind) : STYLES.default(ind)
-      ],
+      id === node.element.id ? print.current(elementOpenTag, ind) : print.default(elementOpenTag, ind)
     );
     if (logs && logs.length > 0) {
-      lines = lines.concat(logs.map(({ type, meta }) => {
-        return [ `⤷ ${ type }${ parseLogMeta(meta) }`, STYLES.hook(ind) ];
+      lines = lines.concat(logs.map(({ type, meta, time }) => {
+        return print.hook(`⤷ ${ type }${ parseLogMeta(meta) }`, ind, time);
       }));
     }
     if (children.length > 0) {
@@ -54,22 +97,28 @@ function printSnapshotToConsole(snapshot) {
         lines = lines.concat(loop(child));
       });
       lines.push(
-        [
-          `</${ name }>`,
-          id === node.element.id ? STYLES.current(ind) : STYLES.default(ind)
-        ],
+        id === node.element.id ? print.current(`</${ name }>`, ind) : print.default(`</${ name }>`, ind)
       );
     }
     return lines;
   })(tree));
 
-  console.clear();
-  printLines.forEach(line => {
-    console.log(`%c${ line[0] }`, line[1]);
+  // console.clear();
+  const sortedHookTimes = printLines
+    .filter(([ time ]) => time !== null)
+    .map(([ time ]) => time)
+    .sort((a, b) => a > b ? 1 : -1);
+
+  printLines.forEach(([ time, ...line ]) => {
+    if (sortedHookTimes.length > 0 && time) {
+      console.log(...line, sortedHookTimes.findIndex(t => t === time));
+    } else {
+      console.log(...line);
+    }
   });
 }
 
-export default function inspector(processor) {
+export default function inspector(processor, options = {}) {
   const snapshots = [];
 
   function snapshot(type, node) {
@@ -78,10 +127,10 @@ export default function inspector(processor) {
       node,
       processor.system().tree.diagnose()
     ]);
-    printSnapshotToConsole(snapshots[snapshots.length - 1]);
+    printSnapshotToConsole(snapshots[snapshots.length - 1], options);
   }
 
-  processor.onNodeEnter(node => snapshot(ENTER, node));
+  // processor.onNodeIn(node => snapshot(IN, node));
   processor.onNodeOut(node => snapshot(OUT, node));
-  processor.onNodeRemove(node => snapshot(REMOVE, node));
+  // processor.onNodeRemove(node => snapshot(REMOVE, node));
 };

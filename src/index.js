@@ -26,7 +26,7 @@ export function createRuntime() {
   const useElement = createUseElementHook(processor);
   const useState = createUseStateHook(processor);
   const usePubSub = createUsePubSubHook(processor);
-  const useReducer = createUseReducerHook(useState);
+  const useReducer = createUseReducerHook(processor, useState);
   const useEffect = createUseEffectHook(processor);
   const useContext = createUseContextHook(processor);
   const createContext = createContextFactory(processor);
