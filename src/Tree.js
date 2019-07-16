@@ -35,9 +35,6 @@ export default function Tree() {
       parent,
       cursor: 0,
       enter() {
-        if (__DEV__) {
-          if (this.logs) this.logs = [];
-        }
         log(`-> ${ this.element.name }`);
         this.element.enter();
         onNodeEnter.forEach(c => c(this));
@@ -53,6 +50,9 @@ export default function Tree() {
         }
         this.cursor = 0;
         onNodeOut.forEach(c => c(this));
+        if (__DEV__) {
+          if (this.logs) this.logs = [];
+        }
       },
       addChildNode(newElement) {
         const childNode = this.children[ this.cursor ];
