@@ -1,8 +1,9 @@
 /** @jsx A */
 import { A, run, Fragment, usePubSub, useState, useEffect, processor } from '../../../lib';
-import inspector from '../../../packages/inspector';
+import inspector from 'actml-inspector';
 
 inspector.watch(processor);
+console.log(inspector);
 
 import Store from './Store';
 import Renderer from './Renderer';
