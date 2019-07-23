@@ -1,7 +1,7 @@
 {
   "name": "actml",
   "version": "0.33.0",
-  "description": "Like jsx but for your business logic",
+  "description": "React custom renderer for your business logic",
   "main": "./actml.production.js",
   "scripts": {
     "build-dev": "cp ./actml.js ./actml.dev.js && node ./scripts/replaceInFile.js ./actml.dev.js __DEV__ true",
@@ -45,7 +45,9 @@
     "jest": "23.5.0",
     "redux": "4.0.0",
     "regenerator-runtime": "0.12.1",
-    "uglify-js": "^3.0.28"
+    "uglify-js": "^3.0.28",
+    "react": "16.8.6",
+    "react-reconciler": "0.20.4"
   },
   "browserify": {
     "transform": [
@@ -58,8 +60,5 @@
     "globals": {
       "__DEV__": true
     }
-  },
-  "dependencies": {
-    "fast-deep-equal": "2.0.1"
   }
 }
