@@ -32,6 +32,14 @@ describe('Given the ActML library', () => {
       expect(mock).toBeCalledTimes(1);
       expect(getByText('Hello world')).toBeDefined();
     });
+    it('should pass down props to our function', () => {
+      const mock = jest.fn().mockImplementation(({ message }) => <p>{ message }</p>);
+      const A = actml(mock);
+      const { container } = render(<A message='foo bar'/>);
+
+      expect(mock).toBeCalledWith(expect.objectContaining({ message: 'foo bar' }));
+      exerciseHTML(container, '<p>foo bar</p>');
+    });
   });
   describe('when we want to render children', () => {
     it('should pass the `children` prop down to our function', () => {
