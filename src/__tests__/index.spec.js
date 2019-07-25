@@ -1,14 +1,9 @@
 /* eslint-disable react/prop-types, max-len */
 import React from 'react';
 import { render, act } from '@testing-library/react';
+import { delay, exerciseHTML } from '../__helpers__';
 
 import actml from '../index';
-
-const delay = (time) => new Promise(done => setTimeout(done, time));
-const cleanHTML = html => html.toString().trim().replace(new RegExp('\\n', 'gi'), '').replace(new RegExp(' {2}', 'g'), '');
-const exerciseHTML = (container, expectation) => {
-  expect(cleanHTML(container.innerHTML)).toEqual(cleanHTML(expectation));
-};
 
 describe('Given the ActML library', () => {
   describe('when rendering an ActML element', () => {
@@ -40,18 +35,18 @@ describe('Given the ActML library', () => {
       expect(mock).toBeCalledWith(expect.objectContaining({ message: 'foo bar' }));
       exerciseHTML(container, '<p>foo bar</p>');
     });
-  });
-  describe('when we want to render children', () => {
-    it('should pass the `children` prop down to our function', () => {
-      const B = ({ children }) => {
-        return <p>{ children }</p>;
-      };
-      const A = actml(({ children, render }) => {
-        render(<B>{ children }</B>);
-      });
-      const { container } = render(<A>Hello world</A>);
+    describe('when we want to render children', () => {
+      it('should pass the `children` prop down to our function', () => {
+        const B = ({ children }) => {
+          return <p>{ children }</p>;
+        };
+        const A = actml(({ children, render }) => {
+          render(<B>{ children }</B>);
+        });
+        const { container } = render(<A>Hello world</A>);
 
-      exerciseHTML(container, '<p>Hello world</p>');
+        exerciseHTML(container, '<p>Hello world</p>');
+      });
     });
   });
   describe('when we use an async function', () => {
